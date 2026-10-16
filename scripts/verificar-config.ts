@@ -26,10 +26,11 @@ else if (env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || env.TURNSTILE_SECRET_KEY) problem
 else (prod ? warnings : ok).push(prod ? "Turnstile desligado: só o limite por IP/CPF segura robôs no checkout" : "anti-robô desligado (normal em dev)");
 
 const mode = paymentMode();
+if (mode === "demo") warnings.push("MODO DEMONSTRAÇÃO ligado (PAYMENT_PROVIDER=demo): ninguém paga e o site mostra a faixa. Antes das vendas reais: troque para mercadopago e apague os pedidos de teste.");
 if (mode === "off") {
   if (env.PAYMENT_PROVIDER === "mercadopago") problems.push("PAYMENT_PROVIDER=mercadopago mas MP_ACCESS_TOKEN está vazio");
   else if (env.PAYMENT_PROVIDER === "mock" && prod) problems.push("PAYMENT_PROVIDER=mock não funciona em produção (daria ingresso de graça)");
-  else problems.push(`PAYMENT_PROVIDER="${env.PAYMENT_PROVIDER ?? ""}" inválido: use "mercadopago" (ou "mock" só em dev)`);
+  else problems.push(`PAYMENT_PROVIDER="${env.PAYMENT_PROVIDER ?? ""}" inválido: use "mercadopago" (ou "mock" só em dev, "demo" para apresentação)`);
 } else ok.push(`pagamento: ${mode}`);
 
 if (mode === "mercadopago") {

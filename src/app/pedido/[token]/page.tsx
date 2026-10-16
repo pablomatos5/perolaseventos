@@ -10,7 +10,7 @@ import { formatBRL, formatDateTime } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
 import { reconcilePayment } from "@/lib/mercadopago";
 import { RESERVATION_MINUTES } from "@/lib/orders";
-import { paymentMode } from "@/lib/payment-mode";
+import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { ticketLinkToken, ticketToken, verifyOrderToken } from "@/lib/tokens";
 import { headers } from "next/headers";
 
@@ -111,9 +111,9 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
               <AutoRefresh seconds={5} />
             </>
           )}
-          {mode === "mock" && (
+          {isSimulated(mode) && (
             <form action={simulatePaymentAction.bind(null, token)} className="mt-6">
-              <button className="btn solid w-full">Simular pagamento aprovado (dev)</button>
+              <button className="btn solid w-full">{mode === "demo" ? "Simular pagamento (demonstração)" : "Simular pagamento aprovado (dev)"}</button>
             </form>
           )}
         </section>

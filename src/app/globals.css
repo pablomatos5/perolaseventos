@@ -1419,3 +1419,18 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   from { transform: scaleY(0); }
   to { transform: scaleY(1); }
 }
+
+/* ───────── Modo demonstração: faixa fixa no topo ───────── */
+.demo-ribbon {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  padding: 0.45rem 1rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #140c26;
+  background: linear-gradient(90deg, #ffe3b8, #f3c27e, #c98f4a);
+}

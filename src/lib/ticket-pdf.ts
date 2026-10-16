@@ -3,6 +3,7 @@ import path from "node:path";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb, degrees, type PDFFont, type PDFImage, type PDFPage, type RGB } from "pdf-lib";
 import { formatBRL } from "@/lib/format";
+import { isDemo } from "@/lib/payment-mode";
 import { qrMatrix } from "@/lib/qr";
 import { ticketToken } from "@/lib/tokens";
 
@@ -176,6 +177,18 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCod
     ry -= 3;
   }
   center(p, "perolaseventos.store  ·  @perolaseventos", 30, F.sansBold, 7.5, C.gold, 1.5);
+
+  // ── modo demonstração: marca d'água, para ninguém confundir com ingresso de verdade ──
+  if (isDemo()) {
+    const label = "DEMONSTRAÇÃO";
+    const size = 46;
+    const w = F.sansBold.widthOfTextAtSize(label, size);
+    const a = (32 * Math.PI) / 180;
+    for (const cy of [H * 0.66, H * 0.3]) {
+      p.drawText(label, { x: W / 2 - (w / 2) * Math.cos(a), y: cy - (w / 2) * Math.sin(a), size, font: F.sansBold, color: C.gold, opacity: 0.16, rotate: degrees(32) });
+    }
+    center(p, "INGRESSO DE DEMONSTRAÇÃO · NÃO VALE PARA O EVENTO", 48, F.sansBold, 7, hex("#d64545"), 1.2);
+  }
 
   // ── carimbo de usado ──
   if (t.usedAt) {

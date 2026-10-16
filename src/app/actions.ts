@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { deliverTickets } from "@/lib/delivery";
 import { createCheckout } from "@/lib/mercadopago";
 import { createReservation, markOrderPaid, SaleError } from "@/lib/orders";
-import { paymentMode } from "@/lib/payment-mode";
+import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { allow, clientIp } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
 import { verifyTurnstile } from "@/lib/turnstile";
@@ -100,7 +100,7 @@ export async function payAction(token: string) {
 
 /** Só funciona com PAYMENT_PROVIDER=mock fora de produção. Em produção, quem confirma é o webhook. */
 export async function simulatePaymentAction(token: string) {
-  if (paymentMode() !== "mock") throw new Error("Simulação desligada");
+  if (!isSimulated()) throw new Error("Simulação desligada");
   const orderId = verifyOrderToken(token);
   if (!orderId) throw new Error("Pedido inválido");
   const order = await db.order.findUniqueOrThrow({ where: { id: orderId } });
