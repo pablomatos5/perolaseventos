@@ -65,6 +65,17 @@ ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. PD
 - Backup: `/opt/perolaseventos-backup.sh` às 04:20 → `/opt/perolaseventos-backups` (14 dias). **Cópia fora da VPS: pendente.**
 - **Demo sem domínio:** container `perolas-tunel` (Cloudflare quick tunnel, rede perolas_edge). URL atual `https://notebooks-idle-trades-squad.trycloudflare.com` — **muda se o container/VPS reiniciar** (`docker logs perolas-tunel | grep trycloudflare`). Remover quando o domínio estiver no ar: `docker rm -f perolas-tunel`.
 
+## Feito em 16/10 (noite)
+- No ar em https://perolaseventos.store (HTTPS). Logo novo (caixa-alta fina + pérola no lugar do O, selo 2K27),
+  céu do amanhecer com brilhos de 4 pontas, sereias encostadas na borda (esfumado no alfa do webp), relatos em carrossel.
+- **Ingressos**: sem meia-entrada. Cada setor vende **Masculino** e **Feminino** (`Ticket.gender`; preço feminino em
+  `Batch.femalePriceCents`, vazio = mesmo preço do masculino — os preços reais ainda dependem da Pérolas).
+- **Taxa de serviço R$ 2,50 por ingresso** (`SERVICE_FEE_CENTS` em `src/lib/format.ts`), dos desenvolvedores: somada no
+  total, linha própria no Mercado Pago, `Order.feeCents`; o painel mostra a receita da Pérolas sem a taxa e a taxa à parte.
+  O repasse é manual (o Mercado Pago recebe tudo na conta da Pérolas); split automático exigiria Mercado Pago marketplace.
+- Entrega só por **e-mail (PDF anexo) + PDF para baixar na página do pedido**; opção de WhatsApp removida.
+- DJ Caçulinha e Guilherme Menezes anunciados no banco de produção (sem foto: aparecem as iniciais).
+
 ## Pendências / próximos passos (em ordem)
 0. **AGORA — foto e vídeo das 2 novas atrações**, igual ao card do Baltazar (foto na frente; ao virar, vídeo do show).
    - Fonte: Instagram deles. O usuário deu permissão para **só ver e baixar** (nunca curtir, seguir, comentar,
@@ -93,6 +104,9 @@ ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. PD
 6. Mais atrações conforme forem anunciadas (banco: `name, genre, instagram, imageUrl, videoUrl, headliner, announced`; vídeo com `node_modules/ffmpeg-static/ffmpeg.exe`). WhatsApp oficial quando a Meta aprovar.
 
 ## Armadilhas conhecidas
+- **Migração em produção**: o serviço `migrate` usa imagem própria (target deps). Depois de mudar `prisma/`, rode
+  `docker compose -f docker-compose.prod.yml --profile tools build migrate` ANTES do `run --rm migrate` (senão ele
+  diz "No pending migrations" com a imagem velha). Ordem: backup (pg_dump) → build app → build+run migrate → up app.
 - O `next dev` às vezes **não percebe mudança no `globals.css`**: depois de editar, salve de novo (`printf '\n' >> src/app/globals.css`) e confira o CSS compilado.
 - Mudou schema do Prisma? `npx prisma migrate dev` + `npx prisma generate` **e reinicie o `npm run dev`** (o cliente fica em memória).
 - Ao parar o dev server em segundo plano, o processo do Next pode ficar órfão na porta 3000 — mate pelo PID (`Get-NetTCPConnection -LocalPort 3000`).

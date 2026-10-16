@@ -74,7 +74,7 @@ async function EventPage() {
       imageUrl: a.imageUrl || undefined,
     })),
     ...(soonCount > 0
-      ? [{ key: "em-breve", mystery: true, big: `+${soonCount} atrações em breve`, small: ["Os anúncios saem no @perolaseventos"] }]
+      ? [{ key: "em-breve", mystery: true, big: `+${soonCount} ${soonCount === 1 ? "atração" : "atrações"} em breve`, small: ["Os anúncios saem no @perolaseventos"] }]
       : []),
     { key: "convite", eyebrow: "Lotes abertos", big: "A virada que você merece", cta: { label: "Garantir meu ingresso", href: "#ingressos" } },
   ];
