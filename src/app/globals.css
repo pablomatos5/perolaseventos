@@ -1265,32 +1265,38 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .beach-steps > * { fill: rgb(110 74 34 / 0.28); }
 
 /* ───────── "Quem viveu, conta": vídeos da edição passada em formato story ───────── */
-.story-marquee {
-  overflow: hidden;
-  padding-block: 0.5rem 1rem;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
-}
 .story-rail {
   display: flex;
-  width: max-content;
+  gap: clamp(0.85rem, 2vw, 1.25rem);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
   list-style: none;
-  padding: 0;
   margin: 0;
-  animation: sponsor-scroll 70s linear infinite;
-  will-change: transform;
-  backface-visibility: hidden;
+  /* alinha o primeiro card com o texto e deixa o próximo "espiando" na borda */
+  padding: 0.5rem max(1.25rem, calc((100vw - 72rem) / 2 + 2rem)) 1rem;
+  scroll-padding-inline: max(1.25rem, calc((100vw - 72rem) / 2 + 2rem));
 }
-/* margem (não gap): as duas metades ficam idênticas e o -50% encaixa sem salto */
-.story-rail > li { flex: 0 0 clamp(14.5rem, 68vw, 19rem); padding-right: clamp(0.85rem, 2vw, 1.25rem); box-sizing: content-box; }
-.story-marquee:hover .story-rail,
-.story-marquee:focus-within .story-rail,
-.story-marquee.is-paused .story-rail { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) {
-  .story-marquee { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-  .story-rail { animation: none; }
-  .story-rail > li { scroll-snap-align: center; }
+.story-rail::-webkit-scrollbar { display: none; }
+.story-rail > li { flex: 0 0 clamp(14.5rem, 72vw, 19rem); scroll-snap-align: start; }
+.story-nav { display: flex; gap: 0.6rem; }
+.story-nav button {
+  display: grid;
+  place-items: center;
+  width: 2.9rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgb(162 111 50 / 0.45);
+  background: linear-gradient(160deg, #fff, #efe6ff);
+  color: #5440a8;
+  box-shadow: 0 0.5rem 1.2rem -0.5rem rgb(84 64 168 / 0.45);
+  font-size: 1.2rem;
 }
+.story-nav button:active { scale: 0.94; }
+.story-dots { display: flex; gap: 0.4rem; align-items: center; }
+.story-dots i { width: 0.45rem; aspect-ratio: 1; border-radius: 50%; background: rgb(84 64 168 / 0.25); transition: background 0.3s, scale 0.3s; }
+.story-dots i.is-on { background: #a26f32; scale: 1.3; }
 .story-card {
   position: relative;
   margin: 0;
@@ -1582,11 +1588,11 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .perolas-logo { display: grid; justify-items: center; }
 .perolas-logo-kicker {
   font-weight: 600;
-  font-size: clamp(0.66rem, 1.3vw, 0.85rem);
-  letter-spacing: 0.62em;
-  margin-right: -0.62em;
+  font-size: clamp(0.8rem, 1.5vw, 1.05rem);
+  letter-spacing: 0.58em;
+  margin-right: -0.58em;
   text-transform: uppercase;
-  color: #9a6a2e;
+  color: #7d5122;
   text-shadow: 0 0 0.6em rgb(255 244 228), 0 0 1.2em rgb(255 236 214 / 0.9);
 }
 .perolas-logo-name {
@@ -1600,11 +1606,11 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   letter-spacing: 0.14em;
   margin-right: -0.14em;
   /* violeta-noite com brilho de madrepérola atravessando as letras */
-  background: linear-gradient(172deg, #2b1f6b 18%, #6a4ecf 46%, #b99af7 52%, #6a4ecf 58%, #2b1f6b 86%);
+  background: linear-gradient(172deg, #241a5c 15%, #4b37a8 44%, #7d63dc 51%, #4b37a8 58%, #241a5c 88%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0.04em 0 rgb(255 255 255 / 0.7)) drop-shadow(0 0 0.35em rgb(255 255 255 / 0.45));
+  filter: drop-shadow(0 0.035em 0 rgb(255 255 255 / 0.85)) drop-shadow(0 0 0.3em rgb(255 255 255 / 0.6));
 }
 .perolas-logo-pearl {
   display: inline-block;
@@ -1637,14 +1643,14 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .perolas-logo-year b {
   font-weight: inherit;
   padding: 0 0.04em;
-  background: linear-gradient(180deg, #9b6f35 0%, #e2bb72 48%, #8c6230 100%);
+  background: linear-gradient(180deg, #7d5424 0%, #c9944a 46%, #e7bf78 56%, #6e4a1c 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 0.12em rgb(255 240 210 / 0.9));
+  filter: drop-shadow(0 0.03em 0 rgb(255 248 236 / 0.9)) drop-shadow(0 0 0.25em rgb(255 244 228 / 0.95));
 }
-.perolas-logo-year i { width: clamp(2.5rem, 9vw, 6rem); height: 1px; background: linear-gradient(90deg, transparent, #b98444); }
-.perolas-logo-year i:last-child { background: linear-gradient(90deg, #b98444, transparent); }
+.perolas-logo-year i { width: clamp(2.5rem, 9vw, 6rem); height: 1.5px; background: linear-gradient(90deg, transparent, #9a6a2e); }
+.perolas-logo-year i:last-child { background: linear-gradient(90deg, #9a6a2e, transparent); }
 .hero-tagline { margin-top: 1.1rem; font-size: clamp(0.62rem, 1.3vw, 0.82rem); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: #5440a8; }
 .hero-countdown { --fg-faint: rgb(69 53 143 / 0.75); }
 .hero-countdown .font-display { color: #45358f; }
@@ -1702,8 +1708,11 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 @media (max-width: 767px) {
   /* menor no celular: a cabeça fica abaixo do botão; alto do recorte mais esfumado */
   /* celular: as duas sereias embaixo, nos cantos, emoldurando a pérola */
-  .hero-mermaid { height: 36svh; bottom: 2.75rem; }
-  .hero-copy { justify-content: flex-start; padding-top: 2.5svh; }
+  .hero-mermaid { height: 50svh; bottom: 3rem; }
+  .hero-mermaid.is-left { left: -16vw; }
+  .hero-mermaid.is-right { right: -16vw; }
+  .hero-copy { flex: none; justify-content: flex-start; padding-top: 2.5svh; }
+  .pearl-horizon { height: 42svh; margin-top: 1rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .light-swirls .swirl { animation: none; stroke-dashoffset: 0; }

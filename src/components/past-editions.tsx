@@ -7,15 +7,68 @@ import { Bubbles } from "@/components/sea-decor";
 
 /**
  * "Quem viveu, conta": vídeos da edição passada em formato de story, cada um com um relato por cima.
- * Faixa sempre girando, como a dos patrocinadores: a lista aparece 2x e anda -50% em loop, então o fim
- * encaixa no começo sem salto. Para com o mouse em cima, com foco ou com o som de um vídeo ligado.
+ * Carrossel: arrasta com o dedo (scroll-snap), setas e pontinhos, e passa sozinho a cada poucos segundos.
+ * Para enquanto a pessoa mexe nele e enquanto um vídeo está com som.
  * Leve no celular: preload="none", só toca (mudo) o vídeo que está quase todo visível e pausa o resto;
  * tocar no vídeo liga o som dele e muta os outros. Sem animação: vira rolagem manual e nada toca sozinho.
  */
+// largura de um card + espaço entre eles
+function stepPx(rail: HTMLElement) {
+  const li = rail.querySelector("li");
+  return li ? li.getBoundingClientRect().width + parseFloat(getComputedStyle(rail).columnGap || "0") : 0;
+}
+
+/** Anda um card; no fim volta ao começo (e vice-versa). */
+function go(rail: HTMLElement, dir: 1 | -1) {
+  const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4;
+  if (dir === 1 && atEnd) rail.scrollTo({ left: 0, behavior: "smooth" });
+  else if (dir === -1 && rail.scrollLeft <= 4) rail.scrollTo({ left: rail.scrollWidth, behavior: "smooth" });
+  else rail.scrollBy({ left: dir * stepPx(rail), behavior: "smooth" });
+}
+
 export function PastEditions() {
   const [soundOn, setSoundOn] = useState<number | null>(null);
   const refs = useRef<(HTMLVideoElement | null)[]>([]);
-  const loop = [0, 1].flatMap((copy) => pastVideos.map((v) => ({ v, copy })));
+  const railRef = useRef<HTMLUListElement>(null);
+  const holdUntil = useRef(0); // pausa o automático até este instante (a pessoa está mexendo)
+  const [active, setActive] = useState(0);
+  const soundRef = useRef<number | null>(null);
+  soundRef.current = soundOn;
+
+  const nudge = (dir: 1 | -1) => {
+    holdUntil.current = Date.now() + 8000;
+    if (railRef.current) go(railRef.current, dir);
+  };
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const hold = () => (holdUntil.current = Date.now() + 8000);
+    const onScroll = () => {
+      const step = stepPx(rail);
+      if (step) setActive(Math.min(pastVideos.length - 1, Math.round(rail.scrollLeft / step)));
+    };
+    rail.addEventListener("pointerdown", hold);
+    rail.addEventListener("touchstart", hold, { passive: true });
+    rail.addEventListener("wheel", hold, { passive: true });
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timer = reduced
+      ? 0
+      : window.setInterval(() => {
+          if (document.hidden || soundRef.current !== null || Date.now() < holdUntil.current) return;
+          const r = rail.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > innerHeight) return; // fora da tela: não anda
+          go(rail, 1);
+        }, 3800);
+    return () => {
+      clearInterval(timer);
+      rail.removeEventListener("pointerdown", hold);
+      rail.removeEventListener("touchstart", hold);
+      rail.removeEventListener("wheel", hold);
+      rail.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -81,10 +134,10 @@ export function PastEditions() {
         <p className="mt-4 max-w-xl text-fg-muted">Um pouco da última virada, direto do nosso Instagram. Toque no vídeo para ouvir.</p>
       </div>
 
-      <div className={`story-marquee mt-10${soundOn !== null ? " is-paused" : ""}`}>
-        <ul className="story-rail">
-          {loop.map(({ v, copy }, i) => (
-            <li key={`${copy}-${v.src}`} aria-hidden={copy > 0 || undefined}>
+      <div className="mt-10">
+        <ul ref={railRef} className="story-rail" aria-label="Vídeos da edição 2026">
+          {pastVideos.map((v, i) => (
+            <li key={v.src}>
               <figure className="story-card">
                 <video
                   ref={(el) => {
@@ -103,7 +156,6 @@ export function PastEditions() {
                   type="button"
                   className="story-hit"
                   onClick={() => toggleSound(i)}
-                  tabIndex={copy > 0 ? -1 : undefined}
                   aria-pressed={soundOn === i}
                   aria-label={soundOn === i ? "Desligar o som" : "Ligar o som"}
                 >
@@ -123,6 +175,21 @@ export function PastEditions() {
             </li>
           ))}
         </ul>
+        <div className="mx-auto mt-4 flex w-full max-w-6xl items-center justify-between px-5 md:px-8">
+          <div className="story-dots" aria-hidden>
+            {pastVideos.map((v, i) => (
+              <i key={v.src} className={i === active ? "is-on" : ""} />
+            ))}
+          </div>
+          <div className="story-nav">
+            <button type="button" onClick={() => nudge(-1)} aria-label="Vídeo anterior">
+              ‹
+            </button>
+            <button type="button" onClick={() => nudge(1)} aria-label="Próximo vídeo">
+              ›
+            </button>
+          </div>
+        </div>
       </div>
       <p className="mx-auto mt-6 w-full max-w-6xl px-5 text-xs text-fg-faint md:px-8">
         Vídeos:{" "}
