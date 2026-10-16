@@ -45,7 +45,21 @@ async function main() {
             videoUrl: "/atracoes/baltazar.mp4",
             sortOrder: 1,
           },
-          ...[2, 3, 4].map((n) => ({ name: "", announced: false, sortOrder: n })),
+          {
+            name: "DJ Caçulinha",
+            genre: "2ª atração confirmada",
+            instagram: "djcaculinha_ofc",
+            imageUrl: "", // foto e vídeo do Instagram dele ainda a baixar (vazio = arte da Pérolas)
+            sortOrder: 2,
+          },
+          {
+            name: "Guilherme Menezes",
+            genre: "3ª atração confirmada",
+            instagram: "guilhermemenezesgm",
+            imageUrl: "",
+            sortOrder: 3,
+          },
+          { name: "", announced: false, sortOrder: 4 },
         ],
       },
       ticketTypes: {
