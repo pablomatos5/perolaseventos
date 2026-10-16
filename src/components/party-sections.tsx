@@ -41,7 +41,7 @@ export function PartyDetails({ highlights }: { highlights: Highlight[] }) {
 export function Lineup({ attractions }: { attractions: Attraction[] }) {
   if (!attractions.length) return null;
   return (
-    <section className="relative overflow-hidden border-y border-line bg-bg-alt/40 py-20 md:py-28">
+    <section className="relative overflow-hidden py-20 md:py-28">
       <div className="ambient-glow -right-40 top-10 size-[28rem] bg-ocean opacity-20" />
       <div className="relative mx-auto w-full max-w-6xl px-5 md:px-8">
         <span className="eyebrow rule">Atrações</span>

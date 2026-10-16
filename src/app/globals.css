@@ -76,11 +76,11 @@
   --shell-c: #3a2475;
   --bowl-a: #9a7ef0;
   --bowl-b: #2a1960;
-  --sky-top: #5a45c4;
-  --sky-mid: #b99af7;
+  --sky-top: #8a74e2;
+  --sky-mid: #cdb6f6;
   --sky-horizon: #ffc9a3;
   --sky-glow: 255 214 178;
-  --sea: #8a72e6;
+  --sea: #9a84e8;
 }
 
 @theme inline {
@@ -234,8 +234,8 @@ body {
 /* ───────── Praia: a onda vai e deixa as informações na areia ───────── */
 .beach {
   /* areia pêssego/creme da paleta 2027; --wave-body = cor da base da onda (emenda com a espuma do SVG) */
-  --sand-1: #ffe8cc;
-  --sand-2: #f4c6a3;
+  --sand-1: #fdf0e6;
+  --sand-2: #f4d5c8;
   --wave-body: #a58ce9;
   /* ponta da onda: água rasa, clara e transparente (mesma cor do fim do degradê da onda) */
   --wave-edge: color-mix(in srgb, color-mix(in srgb, var(--wave-body), #fff 35%) 40%, transparent);
@@ -247,6 +247,9 @@ body {
     radial-gradient(circle at 70% 60%, rgb(120 80 30 / 0.18) 0 1px, transparent 1.5px) 0 0 / 11px 11px,
     linear-gradient(180deg, var(--sand-1), var(--sand-2));
   contain: layout paint;
+  /* a base da praia some no céu de fundo (qualquer que seja a cor dele ali): sem faixa */
+  -webkit-mask-image: linear-gradient(180deg, #000 84%, transparent);
+  mask-image: linear-gradient(180deg, #000 84%, transparent);
 }
 /* faixa de mar fixa no topo, de onde a onda sai */
 .beach::before {
@@ -262,7 +265,10 @@ body {
   inset: 0;
   z-index: 3;
   /* mar das artes 2027: violeta no fundo, lavanda na beira; termina na cor da espuma do SVG (sem degrau) */
-  background: linear-gradient(180deg, #5a45c4 0%, var(--sea) 55%, var(--wave-body) 100%);
+  background:
+    radial-gradient(circle, rgb(255 246 228 / 0.9) 0 1px, transparent 1.6px) 0 0 / 23px 19px,
+    radial-gradient(circle, rgb(255 255 255 / 0.6) 0 0.8px, transparent 1.3px) 9px 11px / 31px 27px,
+    linear-gradient(180deg, #8a74e2 0%, var(--sea) 55%, var(--wave-body) 100%);
   transform: translateY(-84%);
   will-change: transform;
 }
@@ -281,7 +287,7 @@ body {
   height: 200%;
   background:
     linear-gradient(105deg, transparent 20%, rgb(255 250 240 / 0.14) 38%, transparent 52%, rgb(255 250 240 / 0.08) 70%, transparent 82%),
-    linear-gradient(180deg, rgb(196 120 92 / 0.34), rgb(196 120 92 / 0.24) 70%, rgb(196 120 92 / 0.18));
+    linear-gradient(180deg, rgb(176 120 150 / 0.3), rgb(176 120 150 / 0.2) 70%, rgb(176 120 150 / 0.14));
   /* camada com o dobro da altura da praia e a borda ondulada da última onda no meio (máscara fixa).
      Ela sobe para a areia secar: -1,5% = molhada até 97% da tela; -33,5% = só a faixa junto ao mar */
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cfilter id='b'%3E%3CfeGaussianBlur stdDeviation='0 2.5'/%3E%3C/filter%3E%3Cpath filter='url(%23b)' d='M0 0H400V97C350 105 320 90 270 98S180 108 130 97S40 91 0 100Z'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
@@ -713,16 +719,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .marquee-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; }
 }
-/* areia escurece para a noite na base: passagem suave para as seções escuras */
-.beach::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 12%;
-  background: linear-gradient(180deg, transparent, var(--bg));
-  z-index: 4;
-  pointer-events: none;
-}
 /* ───────── Cards de atração (estilo Curativa: moldura interna, mídia em cima, título com itálico) ───────── */
 .tilt {
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
@@ -832,7 +828,7 @@ body {
 /* ───────── Faixa rolando (roleta) ───────── */
 .ticker {
   border-block: 1px solid var(--line-soft);
-  background: var(--bg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35) 20%, rgb(255 255 255 / 0.35) 80%, transparent);
   padding-block: 1.4rem;
 }
 .ticker-item {
@@ -1132,55 +1128,55 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   pointer-events: none;
   overflow: hidden;
   contain: strict;
-  /* céu claro da campanha: lavanda-azulado no alto, rosa no meio, pêssego embaixo */
+  /* céu do amanhecer das artes 2027: violeta-lavanda no alto (onde as estrelas aparecem), rosa no meio,
+     pêssego embaixo; um clarão dourado baixo, como o sol nascendo atrás da pérola */
   background:
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgb(255 255 255 / 0.55), transparent 70%),
-    radial-gradient(ellipse 50% 35% at 15% 75%, rgb(255 227 178 / 0.45), transparent 70%),
-    linear-gradient(180deg, #d3d4ff 0%, #e2d5fb 30%, #f4d2e8 62%, #ffdccb 86%, #ffe7d2 100%);
+    radial-gradient(ellipse 70% 38% at 50% 108%, rgb(255 226 190 / 0.7), transparent 70%),
+    linear-gradient(180deg, #ad9ff1 0%, #c3b0f4 18%, #dcc0f0 42%, #f1c7df 66%, #fcd3c8 86%, #ffdfcb 100%);
 }
 .starfield > i { position: absolute; inset: 0; animation: star-twinkle 5s ease-in-out infinite alternate; will-change: opacity; }
 /* estrelas pequenas paradas: menos camadas animadas do tamanho da tela (pesam na memória do celular) */
-.starfield > i:nth-child(1) { animation: none; will-change: auto; opacity: 0.75; }
+.starfield > i:nth-child(1) { animation: none; will-change: auto; opacity: 1; }
 .starfield > i:nth-child(1) {
   background-image:
-    radial-gradient(1px 1px at 55px 237px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 40px 6px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 165px 207px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 93px 204px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 92px 178px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 304px 91px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 141px 147px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 312px 39px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 174px 154px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 34px 130px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 130px 217px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 259px 116px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 80px 172px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 177px 112px, rgb(255 255 255 / 0.9), transparent);
+    radial-gradient(1.3px 1.3px at 55px 237px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 40px 6px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 165px 207px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 93px 204px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 92px 178px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 304px 91px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 141px 147px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 312px 39px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 174px 154px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 34px 130px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 130px 217px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 259px 116px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 80px 172px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 177px 112px, rgb(255 255 255 / 0.9), transparent);
   background-size: 313px 313px;
 }
 .starfield > i:nth-child(2) {
   background-image:
-    radial-gradient(1.6px 1.6px at 203px 232px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 195px 83px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 443px 405px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 239px 191px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 377px 403px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 161px 314px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 431px 63px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 394px 437px, rgb(255 236 214 / 0.95), transparent),
-    radial-gradient(1.6px 1.6px at 451px 98px, rgb(255 236 214 / 0.95), transparent);
+    radial-gradient(1.6px 1.6px at 203px 232px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 195px 83px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 443px 405px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 239px 191px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 377px 403px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 161px 314px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 431px 63px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 394px 437px, rgb(255 248 236), transparent),
+    radial-gradient(1.6px 1.6px at 451px 98px, rgb(255 248 236), transparent);
   background-size: 457px 457px;
   animation-duration: 7s;
   animation-delay: -3s;
 }
 .starfield > i:nth-child(3) {
   background-image:
-    radial-gradient(2.4px 2.4px at 63px 333px, rgb(233 220 255 / 0.95), transparent),
-    radial-gradient(2.4px 2.4px at 487px 264px, rgb(233 220 255 / 0.95), transparent),
-    radial-gradient(2.4px 2.4px at 537px 100px, rgb(233 220 255 / 0.95), transparent),
-    radial-gradient(2.4px 2.4px at 280px 424px, rgb(233 220 255 / 0.95), transparent),
-    radial-gradient(2.4px 2.4px at 395px 581px, rgb(233 220 255 / 0.95), transparent);
+    radial-gradient(2.8px 2.8px at 63px 333px, rgb(255 255 255), transparent),
+    radial-gradient(2.8px 2.8px at 487px 264px, rgb(255 255 255), transparent),
+    radial-gradient(2.8px 2.8px at 537px 100px, rgb(255 255 255), transparent),
+    radial-gradient(2.8px 2.8px at 280px 424px, rgb(255 255 255), transparent),
+    radial-gradient(2.8px 2.8px at 395px 581px, rgb(255 255 255), transparent);
   background-size: 641px 641px;
   animation-duration: 9s;
   animation-delay: -6s;
@@ -1191,10 +1187,32 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   width: var(--s, 5px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff, #f1e7ff 45%, #c9b4ef);
-  box-shadow: 0 0 10px 2px rgb(var(--pearl-glow) / 0.55);
+  background: radial-gradient(circle at 35% 30%, #fff, #f6eeff 45%, #c9b4ef);
+  box-shadow: 0 0 12px 3px rgb(255 255 255 / 0.85), 0 0 26px 6px rgb(255 214 178 / 0.5);
   animation: pearl-glint 6s ease-in-out infinite;
 }
+/* brilhos de 4 pontas (a estrela da marca): brancos no alto, dourados embaixo, piscando devagar */
+.starfield > s {
+  position: absolute;
+  width: var(--s, 14px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0c.6 6.2 5.8 11.4 12 12-6.2.6-11.4 5.8-12 12-.6-6.2-5.8-11.4-12-12C6.2 11.4 11.4 6.2 12 0Z' fill='%23fff'/%3E%3C/svg%3E") center / 100% no-repeat,
+    radial-gradient(circle, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0) 45%);
+  animation: sparkle 5s ease-in-out infinite;
+}
+.starfield > s.gold {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0c.6 6.2 5.8 11.4 12 12-6.2.6-11.4 5.8-12 12-.6-6.2-5.8-11.4-12-12C6.2 11.4 11.4 6.2 12 0Z' fill='%23fff3dc'/%3E%3C/svg%3E") center / 100% no-repeat,
+    radial-gradient(circle, rgb(240 190 110 / 0.85), rgb(240 190 110 / 0) 50%);
+}
+@keyframes sparkle {
+  0%, 100% { opacity: 0.15; scale: 0.5; rotate: 0deg; }
+  50% { opacity: 1; scale: 1; rotate: 45deg; }
+}
+/* fios de luz dourada parados no céu, como nas artes (desenhados uma vez, sem animação) */
+.starfield > svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.55; }
 @keyframes star-twinkle {
   from { opacity: 0.35; }
   to { opacity: 1; }
@@ -1204,7 +1222,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   50% { opacity: 1; scale: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .starfield > i, .starfield > b { animation: none; }
+  .starfield > i, .starfield > b, .starfield > s { animation: none; }
 }
 
 /* ───────── Pegada na areia (canto inferior esquerdo da praia) ───────── */
@@ -1565,7 +1583,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .hero-countdown { --fg-faint: rgb(69 53 143 / 0.75); }
 .hero-countdown .font-display { color: #45358f; }
 /* o mar continua até as ondas (sem a faixa do céu entre eles) */
-.hero-2027 .ocean-waves { background: linear-gradient(180deg, #a58ce9, var(--sea)); }
+.hero-2027 .ocean-waves { z-index: 2; background: linear-gradient(180deg, #a58ce9, var(--sea)); }
 
 /* pérola sobre o mar com os raios do amanhecer */
 .pearl-horizon { --pw: clamp(3.6rem, 7.5vw, 5.4rem); position: relative; z-index: 2; height: clamp(7.5rem, 22svh, 12rem); margin-top: 0.5rem; }
