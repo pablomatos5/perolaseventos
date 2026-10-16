@@ -6,12 +6,15 @@ import { pastVideos } from "@/content/site";
 
 /**
  * "Quem viveu, conta": vídeos da edição passada em formato de story, cada um com um relato por cima.
+ * Faixa sempre girando, como a dos patrocinadores: a lista aparece 2x e anda -50% em loop, então o fim
+ * encaixa no começo sem salto. Para com o mouse em cima, com foco ou com o som de um vídeo ligado.
  * Leve no celular: preload="none", só toca (mudo) o vídeo que está quase todo visível e pausa o resto;
- * tocar no vídeo liga o som dele e muta os outros. Sem animação: nada toca sozinho.
+ * tocar no vídeo liga o som dele e muta os outros. Sem animação: vira rolagem manual e nada toca sozinho.
  */
 export function PastEditions() {
   const [soundOn, setSoundOn] = useState<number | null>(null);
   const refs = useRef<(HTMLVideoElement | null)[]>([]);
+  const loop = [0, 1].flatMap((copy) => pastVideos.map((v) => ({ v, copy })));
 
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -76,46 +79,49 @@ export function PastEditions() {
         <p className="mt-4 max-w-xl text-fg-muted">Um pouco da última virada, direto do nosso Instagram. Toque no vídeo para ouvir.</p>
       </div>
 
-      <ul className="story-rail mt-10">
-        {pastVideos.map((v, i) => (
-          <li key={v.src}>
-            <figure className="story-card">
-              <video
-                ref={(el) => {
-                  refs.current[i] = el;
-                }}
-                src={v.src}
-                poster={v.poster}
-                muted
-                loop
-                playsInline
-                preload="none"
-                className="story-video"
-                aria-label={v.alt}
-              />
-              <button
-                type="button"
-                className="story-hit"
-                onClick={() => toggleSound(i)}
-                aria-pressed={soundOn === i}
-                aria-label={soundOn === i ? "Desligar o som" : "Ligar o som"}
-              >
-                <span className="story-sound" aria-hidden>
-                  {soundOn === i ? "🔊" : "🔇"}
-                </span>
-              </button>
-              {v.quote && (
-                <figcaption className="story-caption">
-                  <blockquote className="font-display text-xl leading-snug italic md:text-2xl">“{v.quote}”</blockquote>
-                  <span className="mt-2 block text-[0.65rem] uppercase tracking-[0.22em] text-white/70">
-                    {v.author} · {v.role}
+      <div className={`story-marquee mt-10${soundOn !== null ? " is-paused" : ""}`}>
+        <ul className="story-rail">
+          {loop.map(({ v, copy }, i) => (
+            <li key={`${copy}-${v.src}`} aria-hidden={copy > 0 || undefined}>
+              <figure className="story-card">
+                <video
+                  ref={(el) => {
+                    refs.current[i] = el;
+                  }}
+                  src={v.src}
+                  poster={v.poster}
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  className="story-video"
+                  aria-label={v.alt}
+                />
+                <button
+                  type="button"
+                  className="story-hit"
+                  onClick={() => toggleSound(i)}
+                  tabIndex={copy > 0 ? -1 : undefined}
+                  aria-pressed={soundOn === i}
+                  aria-label={soundOn === i ? "Desligar o som" : "Ligar o som"}
+                >
+                  <span className="story-sound" aria-hidden>
+                    {soundOn === i ? "🔊" : "🔇"}
                   </span>
-                </figcaption>
-              )}
-            </figure>
-          </li>
-        ))}
-      </ul>
+                </button>
+                {v.quote && (
+                  <figcaption className="story-caption">
+                    <blockquote className="font-display text-xl leading-snug italic md:text-2xl">“{v.quote}”</blockquote>
+                    <span className="mt-2 block text-[0.65rem] uppercase tracking-[0.22em] text-white/70">
+                      {v.author} · {v.role}
+                    </span>
+                  </figcaption>
+                )}
+              </figure>
+            </li>
+          ))}
+        </ul>
+      </div>
       <p className="mx-auto mt-6 w-full max-w-6xl px-5 text-xs text-fg-faint md:px-8">
         Vídeos:{" "}
         <a className="underline-offset-4 hover:underline" href="https://www.instagram.com/perolaseventos/reels/" target="_blank" rel="noopener noreferrer">

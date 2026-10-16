@@ -1222,20 +1222,32 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .beach-steps > * { fill: rgb(110 74 34 / 0.28); }
 
 /* ───────── "Quem viveu, conta": vídeos da edição passada em formato story ───────── */
+.story-marquee {
+  overflow: hidden;
+  padding-block: 0.5rem 1rem;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
 .story-rail {
   display: flex;
-  gap: clamp(0.85rem, 2vw, 1.25rem);
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
+  width: max-content;
   list-style: none;
+  padding: 0;
   margin: 0;
-  /* alinha o primeiro card com o texto e deixa o último "espiando" na borda */
-  padding: 0.5rem max(1.25rem, calc((100vw - 72rem) / 2 + 2rem)) 1rem;
-  scroll-padding-inline: max(1.25rem, calc((100vw - 72rem) / 2 + 2rem));
+  animation: sponsor-scroll 70s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
 }
-.story-rail::-webkit-scrollbar { display: none; }
-.story-rail > li { flex: 0 0 clamp(14.5rem, 68vw, 19rem); scroll-snap-align: start; }
+/* margem (não gap): as duas metades ficam idênticas e o -50% encaixa sem salto */
+.story-rail > li { flex: 0 0 clamp(14.5rem, 68vw, 19rem); padding-right: clamp(0.85rem, 2vw, 1.25rem); box-sizing: content-box; }
+.story-marquee:hover .story-rail,
+.story-marquee:focus-within .story-rail,
+.story-marquee.is-paused .story-rail { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .story-marquee { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .story-rail { animation: none; }
+  .story-rail > li { scroll-snap-align: center; }
+}
 .story-card {
   position: relative;
   margin: 0;
@@ -1484,7 +1496,8 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .hero-btn { color: #fff; border-color: rgb(255 255 255 / 0.55); background: rgb(255 255 255 / 0.08); }
 .hero-btn:hover { border-color: #fff; background: rgb(255 255 255 / 0.18); }
 
-/* sereia da arte oficial: borda esfumada para se fundir no céu do site */
+/* sereia da arte oficial, encostada na borda da página. O esfumado (lado de dentro, topo e base) vem
+   gravado no canal alfa do próprio webp: funciona em qualquer navegador, sem mask-image. */
 .hero-mermaid {
   position: absolute;
   z-index: 1;
@@ -1492,20 +1505,10 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   height: min(90svh, 54rem);
   width: auto;
   pointer-events: none;
-  /* bordas esfumadas nas 4 direções (o recorte tem o céu da arte original atrás) */
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(90deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
-  mask-composite: intersect;
   animation: fade-in 1.4s ease-out 0.2s both;
 }
-.hero-mermaid.is-right { right: max(-3rem, calc((100vw - 96rem) / 2)); }
-/* a da esquerda olha para a direita: esfumado espelhado (o lado de fora some na borda da tela) */
-.hero-mermaid.is-left {
-  left: max(-3rem, calc((100vw - 96rem) / 2));
-  -webkit-mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
-  mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
-}
+.hero-mermaid.is-right { right: 0; }
+.hero-mermaid.is-left { left: 0; }
 .hero-save {
   display: flex;
   flex-wrap: wrap;
@@ -1602,20 +1605,20 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%);
   mask-image: linear-gradient(180deg, transparent, #000 30%);
 }
+/* base do mar se dissolve na água das ondas logo abaixo (sem degrau de cor) */
+.pearl-horizon::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  height: 42%;
+  background: linear-gradient(180deg, rgb(165 140 233 / 0), rgb(165 140 233 / 0.55) 55%, #a58ce9);
+  pointer-events: none;
+}
 @media (max-width: 767px) {
   /* menor no celular: a cabeça fica abaixo do botão; alto do recorte mais esfumado */
   /* celular: as duas sereias embaixo, nos cantos, emoldurando a pérola */
   .hero-mermaid { height: 36svh; bottom: 2.75rem; }
-  .hero-mermaid.is-right {
-    right: -9vw;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
-  }
-  .hero-mermaid.is-left {
-    left: -9vw;
-    -webkit-mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
-    mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
-  }
   .hero-copy { justify-content: flex-start; padding-top: 2.5svh; }
 }
 @media (prefers-reduced-motion: reduce) {
