@@ -32,6 +32,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // build enxuto para a imagem Docker da VPS (Dockerfile copia .next/standalone)
+  output: "standalone",
   poweredByHeader: false,
   // fontes do ingresso em PDF são lidas do disco em tempo de execução: incluir no build
   outputFileTracingIncludes: {

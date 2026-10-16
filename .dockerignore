@@ -1,0 +1,11 @@
+.git
+.next
+node_modules
+src/generated
+.env*
+!.env.example
+*.log
+.midia-bruta
+.claude
+.vscode
+tsconfig.tsbuildinfo

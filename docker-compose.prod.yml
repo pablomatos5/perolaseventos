@@ -1,0 +1,60 @@
+# Produção na VPS compartilhada (Nexos + jessassinaturas). O app entra também na rede externa
+# "nexos_default" para o nginx do Nexos alcançá-lo pelo nome (perolas-app:3000), sem publicar porta.
+# Vhost: /opt/sites-extra/conf/perolaseventos.store.conf (mudança: nginx -t + reload, nunca restart).
+#
+# .env da VPS (não versionado): POSTGRES_PASSWORD forte e
+#   DATABASE_URL="postgresql://perolas:SENHA@db:5432/perolas?schema=public"
+# mais TICKET_SECRET, ADMIN_PASSWORD, APP_URL, PAYMENT_PROVIDER... (ver .env.example e npm run check:config).
+networks:
+  default:
+  proxy:
+    name: nexos_default
+    external: true
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: perolas-db
+    restart: unless-stopped
+    networks: [default]
+    environment:
+      POSTGRES_USER: perolas
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: perolas
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perolas -d perolas"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 512m
+    # Sem "ports": o banco não fica exposto fora da rede do compose.
+
+  migrate:
+    build: { context: ., target: deps }
+    env_file: .env
+    command: npx prisma migrate deploy
+    networks: [default]
+    depends_on: { db: { condition: service_healthy } }
+    profiles: ["tools"]
+
+  seed:
+    build: { context: ., target: deps }
+    env_file: .env
+    command: npx tsx prisma/seed.ts
+    networks: [default]
+    depends_on: { db: { condition: service_healthy } }
+    profiles: ["tools"]
+
+  app:
+    build: .
+    container_name: perolas-app
+    restart: unless-stopped
+    env_file: .env
+    networks: [default, proxy]
+    depends_on: { db: { condition: service_healthy } }
+    mem_limit: 768m
+
+volumes:
+  pgdata:
