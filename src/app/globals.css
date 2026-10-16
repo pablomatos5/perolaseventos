@@ -47,15 +47,16 @@
 /* 2K27 "Um novo ciclo. Infinitas possibilidades." — paleta das artes oficiais da campanha 2027:
    #0B1A3D azul-noite · #6A4ECF violeta · #B99AF7 lavanda · #F7A8C7 rosa · #FFC9A3 pêssego · #FFE3B2 creme · #F7F5F0 off-white */
 [data-edition="2k27"] {
-  --bg: #100d35;
-  --bg-alt: #1e1956;
-  --surface: rgb(255 255 255 / 0.05);
-  --fg: #f7f5f0;
-  --fg-muted: rgb(247 245 240 / 0.76);
-  --fg-faint: rgb(247 245 240 / 0.5);
-  --accent: #f3c98c;
-  --accent-2: #ffe3b2;
-  --accent-ink: #c8955a;
+  /* céu claro (lavanda-azulado → rosa → pêssego): texto violeta-escuro, destaques em dourado-caramelo */
+  --bg: #f1ebfb;
+  --bg-alt: #ffffff;
+  --surface: rgb(255 255 255 / 0.55);
+  --fg: #2e2466;
+  --fg-muted: rgb(46 36 102 / 0.76);
+  --fg-faint: rgb(46 36 102 / 0.55);
+  --accent: #a26f32;
+  --accent-2: #d9a860;
+  --accent-ink: #7d5424;
   --on-accent: #2a1a3d;
   --rose: #f7a8c7;
   --peach: #ffc9a3;
@@ -63,8 +64,8 @@
   --lavender: #b99af7;
   --ocean: #b99af7;
   --ocean-deep: #3c2f96;
-  --line: rgb(255 201 163 / 0.26);
-  --line-soft: rgb(255 201 163 / 0.12);
+  --line: rgb(140 98 48 / 0.3);
+  --line-soft: rgb(106 78 207 / 0.16);
 
   --pearl-hi: #ffffff;
   --pearl-mid: #f7efe6;
@@ -166,10 +167,10 @@ body {
   cursor: not-allowed;
 }
 .btn.solid {
-  background: linear-gradient(135deg, var(--accent-2), var(--accent) 55%, var(--accent-ink));
+  background: linear-gradient(135deg, #ffe3b2, #f3c98c 55%, #c8955a);
   color: var(--on-accent);
   border-color: transparent;
-  box-shadow: 0 10px 40px -12px var(--accent);
+  box-shadow: 0 10px 36px -12px rgb(200 149 90 / 0.9);
 }
 .btn.solid:hover {
   filter: brightness(1.08);
@@ -177,12 +178,10 @@ body {
 
 .glass-card {
   /* sem backdrop-filter: no celular ele era recalculado a cada quadro do céu estrelado animado atrás */
-  background:
-    linear-gradient(160deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.015) 45%),
-    color-mix(in srgb, var(--bg-alt) 78%, transparent);
-  border: 1px solid var(--line-soft);
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.82), rgb(255 255 255 / 0.55));
+  border: 1px solid rgb(255 255 255 / 0.9);
   border-radius: var(--radius-card);
-  box-shadow: 0 20px 40px -20px rgb(0 0 0 / 0.8);
+  box-shadow: 0 18px 40px -22px rgb(74 57 184 / 0.4);
 }
 
 /* a pérola: só gradientes CSS, sem WebGL (leve) */
@@ -1126,7 +1125,19 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
    Camada fixa atrás de tudo (z-index -1): aparece só onde a seção não tem fundo próprio
    (o hero e a praia cobrem). Três ladrilhos de tamanhos diferentes para não se ver repetição;
    só opacity anima, então é barato até no celular. */
-.starfield { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: strict; }
+.starfield {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+  /* céu claro da campanha: lavanda-azulado no alto, rosa no meio, pêssego embaixo */
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgb(255 255 255 / 0.55), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 15% 75%, rgb(255 227 178 / 0.45), transparent 70%),
+    linear-gradient(180deg, #d3d4ff 0%, #e2d5fb 30%, #f4d2e8 62%, #ffdccb 86%, #ffe7d2 100%);
+}
 .starfield > i { position: absolute; inset: 0; animation: star-twinkle 5s ease-in-out infinite alternate; will-change: opacity; }
 /* estrelas pequenas paradas: menos camadas animadas do tamanho da tela (pesam na memória do celular) */
 .starfield > i:nth-child(1) { animation: none; will-change: auto; opacity: 0.75; }
@@ -1477,7 +1488,6 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .hero-mermaid {
   position: absolute;
   z-index: 1;
-  right: max(-3rem, calc((100vw - 84rem) / 2));
   bottom: clamp(2.5rem, 6vw, 4.5rem);
   height: min(90svh, 54rem);
   width: auto;
@@ -1489,6 +1499,27 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   mask-composite: intersect;
   animation: fade-in 1.4s ease-out 0.2s both;
 }
+.hero-mermaid.is-right { right: max(-3rem, calc((100vw - 96rem) / 2)); }
+/* a da esquerda olha para a direita: esfumado espelhado (o lado de fora some na borda da tela) */
+.hero-mermaid.is-left {
+  left: max(-3rem, calc((100vw - 96rem) / 2));
+  -webkit-mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
+  mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 16%, #000 84%, transparent);
+}
+.hero-save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.7rem;
+  margin-top: 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgb(61 47 122 / 0.85);
+}
+.hero-save svg { color: #b4843f; }
 
 /* logo: serifa clássica dourada com a estrela de 4 pontas dentro do O */
 .perolas-logo { display: grid; justify-items: center; }
@@ -1528,7 +1559,6 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .perolas-logo-year i { width: clamp(2.5rem, 8vw, 5.5rem); height: 1px; background: linear-gradient(90deg, transparent, currentColor); }
 .perolas-logo-year i:last-child { background: linear-gradient(90deg, currentColor, transparent); margin-left: -0.45em; }
 .hero-tagline { margin-top: 1.1rem; font-size: clamp(0.62rem, 1.3vw, 0.82rem); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: #5440a8; }
-.hero-when { margin-top: 0.55rem; font-size: 0.66rem; letter-spacing: 0.22em; text-transform: uppercase; color: rgb(61 47 122 / 0.78); }
 .hero-countdown { --fg-faint: rgb(69 53 143 / 0.75); }
 .hero-countdown .font-display { color: #45358f; }
 /* o mar continua até as ondas (sem a faixa do céu entre eles) */
@@ -1574,12 +1604,17 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 }
 @media (max-width: 767px) {
   /* menor no celular: a cabeça fica abaixo do botão; alto do recorte mais esfumado */
-  .hero-mermaid {
-    height: 47svh;
-    right: -15vw;
-    bottom: 2.5rem;
+  /* celular: as duas sereias embaixo, nos cantos, emoldurando a pérola */
+  .hero-mermaid { height: 36svh; bottom: 2.75rem; }
+  .hero-mermaid.is-right {
+    right: -9vw;
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
+  }
+  .hero-mermaid.is-left {
+    left: -9vw;
+    -webkit-mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
+    mask-image: linear-gradient(270deg, transparent, #000 34%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 30%, #000 86%, transparent);
   }
   .hero-copy { justify-content: flex-start; padding-top: 2.5svh; }
 }
@@ -1587,82 +1622,3 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   .light-swirls .swirl { animation: none; stroke-dashoffset: 0; }
   .hero-mermaid, .pearl-2027 { animation: none; }
 }
-
-/* ───────── "Save the date" (como o post oficial 2027): sereia à esquerda, data à direita ───────── */
-.save-date {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  min-height: min(92svh, 46rem);
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 70% 42%, rgb(255 240 226 / 0.9), rgb(255 227 178 / 0.35) 28%, transparent 52%),
-    linear-gradient(180deg, #4b39b8 0%, #8a6fe3 22%, #c9a5ee 45%, #f2b1cf 62%, #ffc9a3 80%, #c7a8f2 100%);
-  color: #3d2f7a;
-}
-.save-date-mermaid {
-  position: absolute;
-  z-index: -1;
-  left: max(-4rem, calc((100vw - 84rem) / 2));
-  bottom: 0;
-  height: 100%;
-  width: auto;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 12%);
-  -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 12%);
-  mask-composite: intersect;
-}
-.save-date-copy {
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 0.5rem;
-  margin-left: auto;
-  width: min(100%, 34rem);
-  padding: 4rem 1.5rem 4.5rem;
-  margin-right: max(1.25rem, calc((100vw - 72rem) / 2));
-  text-align: center;
-}
-.save-date-rule { display: flex; align-items: center; gap: 0.75rem; color: #6a4ecf; }
-.save-date-rule i { width: clamp(3rem, 9vw, 5.5rem); height: 1px; background: currentColor; opacity: 0.6; }
-.save-date-title {
-  display: grid;
-  font-family: var(--font-cormorant), Georgia, serif;
-  font-weight: 500;
-  font-size: clamp(4rem, 11vw, 7.5rem);
-  line-height: 0.92;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, #9b6f35 0%, #d6ad66 50%, #8c6230 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.save-date-title small {
-  font-family: var(--font-montserrat), system-ui, sans-serif;
-  font-size: 0.28em;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  margin: 0.15em 0;
-  color: #6a4ecf;
-  -webkit-text-fill-color: #6a4ecf;
-}
-.save-date-when { display: grid; justify-items: center; margin-top: 0.75rem; line-height: 1; }
-.save-date-when strong { font-family: var(--font-cormorant), Georgia, serif; font-weight: 500; font-size: clamp(3.4rem, 8vw, 5rem); color: #8c6230; }
-.save-date-when span { margin-top: 0.4rem; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: #5440a8; }
-.save-date-venue { font-family: var(--font-cormorant), Georgia, serif; font-size: clamp(1.6rem, 4vw, 2.3rem); text-transform: uppercase; letter-spacing: 0.06em; color: #5440a8; }
-@media (max-width: 767px) {
-  /* celular: texto em cima, sereia embaixo à esquerda (como no post, só que empilhado) */
-  .save-date { min-height: 0; padding-bottom: 62svh; }
-  .save-date-mermaid {
-    height: 66svh;
-    top: auto;
-    left: -8vw;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 38%);
-    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 38%);
-  }
-  .save-date-copy { margin: 0 auto; padding: 3.5rem 1.25rem 0; }
-}
-
-
-

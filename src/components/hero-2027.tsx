@@ -72,10 +72,17 @@ export function PearlHorizon() {
   );
 }
 
-/** A sereia da campanha (arte oficial), sentada nas pedras à direita. */
-export function HeroMermaid() {
+/**
+ * As duas sereias da campanha (artes oficiais "Save the date" e "31 dezembro"), uma em cada canto,
+ * olhando para o centro, como no banner de divulgação da Pérolas.
+ */
+export function HeroMermaids() {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027
-    <img src="/2027/sereia-dir.webp" alt="Sereia da campanha Réveillon Pérolas 2027" className="hero-mermaid" fetchPriority="high" />
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027 */}
+      <img src="/2027/sereia-esq.webp" alt="" className="hero-mermaid is-left" fetchPriority="high" />
+      {/* eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027 */}
+      <img src="/2027/sereia-dir.webp" alt="Sereias da campanha Réveillon Pérolas 2027" className="hero-mermaid is-right" fetchPriority="high" />
+    </>
   );
 }

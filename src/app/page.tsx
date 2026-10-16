@@ -3,19 +3,18 @@ import { Suspense } from "react";
 import { TideReveal, type TideStep } from "@/components/tide-reveal";
 import { Countdown } from "@/components/countdown";
 import { Lineup, PartyDetails } from "@/components/party-sections";
-import { HeroMermaid, LightSwirls, PearlHorizon, PerolasLogo } from "@/components/hero-2027";
+import { HeroMermaids, LightSwirls, PearlHorizon, PerolasLogo, Star4 } from "@/components/hero-2027";
 import { OceanWaves, Sparkles } from "@/components/shell-opening";
 import { Campaign, Faq, Story, Ticker } from "@/components/story-sections";
 import { PastEditions } from "@/components/past-editions";
 import { PearlDrop } from "@/components/pearl-drop";
 import { StickyBuy } from "@/components/sticky-buy";
-import { SaveTheDate } from "@/components/save-the-date";
 import { Starfield } from "@/components/starfield";
 import { campaign } from "@/content/site";
 import { TicketPicker, type PickerType } from "@/components/ticket-picker";
 import { currentBatch } from "@/lib/batches";
 import { db } from "@/lib/db";
-import { formatDateTime, halfPrice } from "@/lib/format";
+import { halfPrice } from "@/lib/format";
 
 export default function Home() {
   return (
@@ -89,7 +88,7 @@ async function EventPage() {
         <div className="hero-sky-2027" aria-hidden />
         <Sparkles />
         <LightSwirls />
-        <HeroMermaid />
+        <HeroMermaids />
 
         <header className="relative z-10 flex items-center justify-between px-5 py-5 md:px-12">
           <span className="hero-brand">Pérolas</span>
@@ -103,8 +102,13 @@ async function EventPage() {
           <p className="hero-tagline rv" style={{ animationDelay: "0.5s" }}>
             {campaign.tagline}
           </p>
-          <p className="hero-when rv" style={{ animationDelay: "0.6s" }}>
-            {formatDateTime(event.startsAt)} · {event.venue}
+          {/* "Save the date" do post oficial, dentro do topo */}
+          <p className="hero-save rv" style={{ animationDelay: "0.6s" }}>
+            <span>Save the date</span>
+            <Star4 className="size-2.5" />
+            <span>{event.startsAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", timeZone: "America/Belem" })}</span>
+            <Star4 className="size-2.5" />
+            <span>{event.venue}</span>
           </p>
           <div className="hero-countdown rv mt-5" style={{ animationDelay: "0.75s" }}>
             <Countdown target={new Date(Date.UTC(event.startsAt.getUTCFullYear(), 0, 1, 3)).toISOString()} />
@@ -123,12 +127,6 @@ async function EventPage() {
       <Campaign />
       <PartyDetails highlights={event.highlights} />
       <Lineup attractions={event.attractions} />
-
-      <SaveTheDate
-        day={event.startsAt.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "America/Belem" })}
-        month={event.startsAt.toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Belem" })}
-        venue={event.venue}
-      />
 
       <section id="ingressos" className="mx-auto w-full max-w-6xl scroll-mt-8 px-5 py-20 md:px-8 md:py-28">
         <span className="eyebrow rule">Ingressos</span>
