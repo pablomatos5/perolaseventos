@@ -26,13 +26,21 @@ npm run db:migrate / db:seed / test:mp / check:config
 ## Fatos levantados (Instagram, out/2026)
 2026 = 5ª edição, Ponte do Assunção, 7h open bar, 500+ participantes, 70% vendidos em 20/12. Line-up 2026: Davi Alencar (@davialenncar), Rebelo (@rebelodj_), DJ Ferrugem (@dj.ferrugem), Swing do Panda (@swingdopanda). **1ª atração 2027: Baltazar (@alexandrebaltazar_)**, anunciada em 10/09/2026 no destaque 2K27. Campanha 2027: "Uma nova era, infinitas possibilidades." / "Algo grandioso. Algo único. Algo Pérolas."
 
+## Produção (VPS) — estado em 16/10/2026
+- Repo **privado**: github.com/pablomatos5/perolaseventos (branch main). Deploy: `git archive HEAD | ssh root@92.112.178.48 'tar -x -C /opt/perolaseventos'` (chave `~/.ssh/nexos_deploy`) + `docker compose -f docker-compose.prod.yml up -d --build app` (build na VPS, ~3 min; carga sobe, Nexos/jess seguiram 200).
+- **Isolamento (exigência do usuário: cada site da VPS é um trabalho separado):** rede própria `perolas_edge` (só `perolas-app` + `nexos-nginx-1`, ligado com `docker network connect`, sem restart); banco `perolas-db` em rede `internal`; volume, `.env` (600, só na VPS), certificados (`/opt/sites-extra/perolas/{certs,acme}`), backup e túnel próprios; `mem_limit`. Testado: perolas-app NÃO alcança nexos-db/redis/web nem jessassinaturas; nexos não resolve perolas-db. **Se o nginx do Nexos for recriado: `docker network connect perolas_edge nexos-nginx-1`.**
+- Vhost fase 1 (só HTTP) em `/opt/sites-extra/conf/perolaseventos.store.conf` (fonte: `infra/`). Fase 2 (HTTPS): `infra/perolaseventos.store.https.conf`, depois do certificado.
+- `.env` da VPS: `PAYMENT_PROVIDER=demo` (faixa + pagamento simulado + marca d'água no PDF), senhas novas; senha do painel copiada para `.env.producao-acessos` (local, ignorado pelo git).
+- Backup: `/opt/perolaseventos-backup.sh` às 04:20 → `/opt/perolaseventos-backups` (14 dias). **Cópia fora da VPS: pendente.**
+- **Demo sem domínio:** container `perolas-tunel` (Cloudflare quick tunnel, rede perolas_edge). URL atual `https://notebooks-idle-trades-squad.trycloudflare.com` — **muda se o container/VPS reiniciar** (`docker logs perolas-tunel | grep trycloudflare`). Remover quando o domínio estiver no ar: `docker rm -f perolas-tunel`.
+
 ## Pendências / próximos passos (em ordem)
-1. **Git**: ainda NÃO há repositório. `git init`, primeiro commit (checar `.gitignore`: `.env*`, `src/generated`, `.midia-bruta/`), repo privado no GitHub.
-2. Conferir no desktop/celular os **cards viráveis grandes** (`.card-rail-xl` em `globals.css`, `attraction-cards.tsx`) — último ajuste feito, só olhei rápido.
-3. **Confirmar com a Pérolas**: preços/lotes reais (seed tem valores FICTÍCIOS), local de 2027 (está "Ponte do Assunção", que foi 2026), patrocinadores 2027, autorização de uso das fotos dos artistas.
-4. **Deploy no VPS Hostinger** (KVM2, Ubuntu 24.04, IP 92.112.178.48, tudo em Docker): seguir padrão do `/opt/jessassinaturas` → `/opt/ingressos` com compose (app + Postgres 17 próprio, `mem_limit`), vhost em `/opt/sites-extra/conf/perolaseventos.store.conf` no nginx compartilhado do nexos (`nginx -t` antes do reload), certbot, **build no GitHub Actions** (não buildar no VPS). Domínio: perolaseventos.store. Backup diário do banco **com cópia fora do VPS**. Em produção: remover `DATABASE_POOL_MAX`, `PAYMENT_PROVIDER=mercadopago`, `NODE_ENV=production npm run check:config`.
-5. Ligar Resend (SPF/DKIM do domínio) e, quando a Meta aprovar, WhatsApp oficial.
-6. Melhorias: offline da portaria, app na maquininha smart (depende da adquirente), mais atrações conforme forem anunciadas (cadastrar no banco: `name, genre, instagram, imageUrl, videoUrl, headliner, announced`; vídeo: cortar/comprimir com `node_modules/ffmpeg-static/ffmpeg.exe`, ver README).
+1. **Domínio perolaseventos.store**: está registrado mas NÃO resolve (NXDOMAIN em 16/10). Usuário confere no hPanel (verificação de e-mail do titular / nameservers) e cria A `@` e `www` → 92.112.178.48. O token do MCP da Hostinger em `~/.claude.json` está revogado (401) — trocar pelo token novo para eu poder mexer no DNS.
+2. Com o domínio resolvendo: certbot webroot em `/opt/sites-extra/perolas` (`docker run --rm -v /opt/sites-extra/perolas/certs:/etc/letsencrypt -v /opt/sites-extra/perolas/acme:/var/www/certbot certbot/certbot certonly --webroot -w /var/www/certbot -d perolaseventos.store -d www.perolaseventos.store`), instalar o vhost https, `nginx -t` + reload, cron de renovação próprio, remover o túnel.
+3. **Confirmar com a Pérolas**: preços/lotes reais (seed tem valores FICTÍCIOS), local de 2027 (está "Ponte do Assunção", que foi 2026), patrocinadores 2027 (Bió Costa = cartaz de casa de apostas, não publicado), uso das fotos/vídeos, textos de termos e privacidade (+ CNPJ).
+4. **Antes das vendas reais**: `PAYMENT_PROVIDER=mercadopago` + chaves, apagar pedidos de teste, `check:config` em produção, Resend (SPF/DKIM), backup fora da VPS, trocar o túnel pelo domínio.
+5. Termos de compra e política de privacidade (+ aceite no checkout, anonimização após o evento).
+6. Mais atrações conforme forem anunciadas (banco: `name, genre, instagram, imageUrl, videoUrl, headliner, announced`; vídeo com `node_modules/ffmpeg-static/ffmpeg.exe`). WhatsApp oficial quando a Meta aprovar.
 
 ## Armadilhas conhecidas
 - O `next dev` às vezes **não percebe mudança no `globals.css`**: depois de editar, salve de novo (`printf '\n' >> src/app/globals.css`) e confira o CSS compilado.
@@ -40,3 +48,6 @@ npm run db:migrate / db:seed / test:mp / check:config
 - Ao parar o dev server em segundo plano, o processo do Next pode ficar órfão na porta 3000 — mate pelo PID (`Get-NetTCPConnection -LocalPort 3000`).
 - `prisma dev` é PGlite: todos os nomes de banco são o mesmo banco; por isso o shadow DB usa a porta separada (51215) e o pool é 1 conexão em dev.
 - Imagens do Instagram: `og:image` vem com ícone de play desenhado; use o `currentSrc` das miniaturas da grade do perfil (resolução maior, sem ícone).
+- Vídeos do Instagram só com sessão logada: Chrome visível com `--remote-debugging-port` (o usuário loga), capturar respostas de rede com `video_versions` (script na sessão de 16/10). Apagar o perfil do Chrome depois.
+- Testes: `npm run test:qr` (QR: adulteração, chute, leitura óptica degradada) não usa banco. `npm run test:mp` usa o banco direto: rodar com o `npm run dev` parado (PGlite derruba conexões simultâneas).
+- Animações: nada de `backdrop-filter`, `filter` animado, `box-shadow` animado ou `mask-position` animado (travavam o celular). Pérolas que seguem a rolagem usam `animation-timeline` (CSS) com JS só de reserva.
