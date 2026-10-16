@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Event {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  edition     String // ex.: "2K27" — também escolhe o tema de cores
+  startsAt    DateTime
+  venue       String
+  city        String
+  description String
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  ticketTypes TicketType[]
+  orders      Order[]
+  highlights  Highlight[]
+  attractions Attraction[]
+}
+
+/// Detalhes da festa mostrados na seção "A festa" (open bar, estrutura, local...).
+model Highlight {
+  id          String @id @default(cuid())
+  eventId     String
+  event       Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  icon        String // chave do ícone: bar, river, fireworks, crown, music, food, security...
+  title       String
+  description String
+  sortOrder   Int    @default(0)
+}
+
+/// Line-up. `announced = false` aparece como "Em breve" (para anunciar aos poucos, como no Instagram).
+model Attraction {
+  id        String  @id @default(cuid())
+  eventId   String
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  genre     String  @default("")
+  time      String  @default("") // texto livre: "23h", "Virada", "02h"
+  announced Boolean @default(true)
+  headliner Boolean @default(false)
+  instagram String  @default("") // @ sem arroba, ex.: rebelodj_
+  imageUrl  String  @default("") // foto oficial do artista (vazio = arte da Pérolas)
+  videoUrl  String  @default("") // vídeo curto (mudo) que toca no verso do card
+  sortOrder Int     @default(0)
+}
+
+/// Setor/tipo de ingresso (Pista, Camarote...). Cada um tem a própria sequência de lotes.
+model TicketType {
+  id               String   @id @default(cuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name             String
+  description      String   @default("")
+  sortOrder        Int      @default(0)
+  allowHalfPrice   Boolean  @default(true)
+  maxPerOrder      Int      @default(10)
+  paused           Boolean  @default(false)
+  batches          Batch[]
+  tickets          Ticket[]
+}
+
+/// Lote. Encerra no que vier primeiro: esgotar `quantity` ou passar de `endsAt`.
+/// `closedAt` preenchido = encerrado para sempre (o lote não reabre com sobras de reservas expiradas).
+model Batch {
+  id             String     @id @default(cuid())
+  ticketTypeId   String
+  ticketType     TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+  name           String // "1º lote"
+  sortOrder      Int
+  priceCents     Int
+  halfPriceCents Int? // vazio = metade do preço
+  quantity       Int
+  startsAt       DateTime?
+  endsAt         DateTime?
+  closedAt       DateTime?
+  hidden         Boolean    @default(false) // cortesia/lista: não aparece no site
+  tickets        Ticket[]
+
+  @@unique([ticketTypeId, sortOrder])
+}
+
+enum OrderStatus {
+  PENDING // reservado, aguardando pagamento
+  PAID
+  EXPIRED
+  CANCELED
+  REFUNDED
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  code          String      @unique // código curto mostrado ao cliente
+  eventId       String
+  event         Event       @relation(fields: [eventId], references: [id])
+  buyerName     String
+  email         String
+  phone         String
+  cpf           String
+  whatsappOptIn Boolean     @default(false)
+  status        OrderStatus @default(PENDING)
+  totalCents    Int
+  expiresAt     DateTime
+  paidAt        DateTime?
+  paymentRef    String? // id da cobrança no gateway
+  paidLate      Boolean     @default(false) // pagamento chegou depois da reserva expirar
+  createdAt     DateTime    @default(now())
+  tickets       Ticket[]
+  deliveries    Delivery[]
+
+  @@index([status, expiresAt])
+}
+
+enum TicketStatus {
+  RESERVED
+  VALID
+  CANCELED
+}
+
+model Ticket {
+  id           String       @id @default(cuid())
+  orderId      String
+  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ticketTypeId String
+  ticketType   TicketType   @relation(fields: [ticketTypeId], references: [id])
+  batchId      String
+  batch        Batch        @relation(fields: [batchId], references: [id])
+  priceCents   Int // preço travado no momento da reserva
+  isHalf       Boolean      @default(false)
+  holderName   String
+  status       TicketStatus @default(RESERVED)
+  usedAt       DateTime?
+  usedBy       String? // qual aparelho da portaria validou
+  createdAt    DateTime     @default(now())
+
+  @@index([batchId, status])
+}
+
+enum DeliveryChannel {
+  EMAIL
+  WHATSAPP
+}
+
+/// Registro de cada envio do ingresso, para o painel mostrar falhas e permitir reenviar.
+model Delivery {
+  id        String          @id @default(cuid())
+  orderId   String
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  channel   DeliveryChannel
+  ok        Boolean
+  detail    String          @default("")
+  createdAt DateTime        @default(now())
+}
