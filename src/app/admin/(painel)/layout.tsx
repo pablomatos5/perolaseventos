@@ -11,7 +11,8 @@ const NAV = [
   { href: "/admin", label: "Vendas e lotes" },
   { href: "/admin/pedidos", label: "Pedidos" },
   { href: "/admin/cortesias", label: "Cortesias" },
-  { href: "/portaria", label: "Portaria ↗" },
+  { href: "/admin/portaria", label: "Portaria" },
+  { href: "/admin/registro", label: "Registro" },
 ];
 
 export default function PainelLayout({ children }: LayoutProps<"/admin">) {

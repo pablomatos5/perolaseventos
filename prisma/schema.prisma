@@ -137,6 +137,9 @@ model Ticket {
   status       TicketStatus @default(RESERVED)
   usedAt       DateTime?
   usedBy       String? // qual aparelho da portaria validou
+  checkinMethod String? // "qr", "manual" (busca por nome) ou "offline" (sincronizado depois)
+  // Versão do QR: reemitir/transferir soma 1 e o QR (e o link individual) anterior para de valer.
+  qrVersion    Int          @default(0)
   createdAt    DateTime     @default(now())
 
   @@index([batchId, status])
@@ -156,4 +159,26 @@ model Delivery {
   ok        Boolean
   detail    String          @default("")
   createdAt DateTime        @default(now())
+}
+
+/// Celular/maquininha autorizado a validar ingressos. O aparelho guarda um código secreto;
+/// aqui fica só o hash dele. Revogar = o aparelho para de funcionar na hora.
+model PortariaDevice {
+  id         String    @id @default(cuid())
+  name       String // "Portão 1", "Camarote"...
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime?
+  revokedAt  DateTime?
+}
+
+/// Quem fez o quê: ações do painel, entradas manuais na portaria, trocas de titular e reemissões.
+model AuditLog {
+  id     String   @id @default(cuid())
+  at     DateTime @default(now())
+  actor  String // "painel", "portaria: Portão 1", "cliente"...
+  action String
+  detail String   @default("")
+
+  @@index([at])
 }

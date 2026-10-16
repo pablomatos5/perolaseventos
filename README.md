@@ -19,7 +19,10 @@ Copie `.env.example` para `.env` e gere um `TICKET_SECRET` novo. A URL do banco 
 |---|---|
 | `/` | Evento, lote atual de cada setor, checkout |
 | `/pedido/<token>` | Pagamento (simulado em dev) e, depois de pago, os QR codes |
-| `/portaria` | Leitor: câmera do celular/maquininha ou leitor pistola (PIN em `PORTARIA_PIN`) |
+| `/portaria` | Leitor: câmera (com lanterna), leitor pistola ou busca por nome; funciona **sem internet** (lista baixada + fila que sincroniza) |
+| `/admin/portaria` | Autorizar/desautorizar cada aparelho da portaria (QR de ativação; substitui o antigo PIN) |
+| `/admin/registro` | Registro de ações: viradas de lote, cortesias, reemissões, entradas manuais, trocas de titular |
+| `/i/<token>` | Ingresso individual (link que o comprador manda a quem vai usar) |
 | `POST /api/checkin` | Validação usada pela portaria |
 | `/admin` | Painel (senha em `ADMIN_PASSWORD`): vendas e receita por lote, virada manual, reabrir lote, pausar setor, ajustar quantidade |
 | `/admin/pedidos` | Busca por código, nome, e-mail, CPF ou celular; ver ingressos e **reenviar** |
@@ -41,6 +44,11 @@ Testar no celular na mesma rede: `http://<IP-do-PC>:3000` (o `next.config.ts` j�
 - **QR** é `PE1.<id>.<HMAC>`: sem o `TICKET_SECRET` ninguém fabrica ingresso.
 - **Portaria**: o check-in é um `UPDATE … WHERE usedAt IS NULL` atômico. O mesmo QR lido em vários aparelhos ao mesmo tempo libera uma vez só.
 - **Pagamento confirmado** é idempotente: webhook repetido não emite ingresso duplicado.
+- **QR com versão**: reemitir (painel) ou trocar o titular (cliente) gera QR novo e o anterior é recusado ("QR antigo"). Ingressos de versão 0 usam o formato original `PE1`.
+- **Portaria offline**: o aparelho baixa `/api/portaria/lista` (hash SHA-256 de cada QR, sem a chave secreta), valida sem sinal e sincroniza em `/api/portaria/sync`; conflito entre aparelhos aparece na tela e no registro.
+- **Freios de abuso** (`src/lib/rate-limit.ts`, em memória): 6 reservas/10 min por IP, 1 reserva aberta por CPF, login do painel trava 15 min após 5 erros, portaria trava após 10 chaves erradas. Turnstile opcional no checkout.
+- **IP do cliente** vem de `X-Real-IP`: no nginx use `proxy_set_header X-Real-IP $remote_addr;` (senão todos parecem o mesmo IP e o cliente poderia forjar o cabeçalho).
+- **Cabeçalhos de segurança** em `next.config.ts` (CSP e HSTS só em produção).
 
 ## Mercado Pago (Pix e cartão)
 

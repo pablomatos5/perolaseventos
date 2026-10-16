@@ -5,12 +5,14 @@ import QRCode from "qrcode";
 import { Suspense } from "react";
 import { payAction, simulatePaymentAction } from "@/app/actions";
 import { AutoRefresh } from "@/components/auto-refresh";
+import { HolderForm, SaveTicketButton, ShareTicketButton } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
 import { formatBRL, formatDateTime } from "@/lib/format";
 import { reconcilePayment } from "@/lib/mercadopago";
 import { RESERVATION_MINUTES } from "@/lib/orders";
 import { paymentMode } from "@/lib/payment-mode";
-import { ticketToken, verifyOrderToken } from "@/lib/tokens";
+import { ticketLinkToken, ticketToken, verifyOrderToken } from "@/lib/tokens";
+import { headers } from "next/headers";
 
 export const metadata = { title: "Seu pedido · Pérolas", robots: { index: false } };
 
@@ -40,6 +42,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
     await reconcilePayment(paymentId).catch((e) => console.error("[mercadopago] conciliação no retorno falhou:", e));
   }
   const declined = query.status === "rejected" || query.collection_status === "rejected";
+  const existing = query.reserva === "existente";
   const checkoutFailed = query.erro === "pagamento";
 
   const order = await db.order.findUnique({
@@ -49,6 +52,10 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
   if (!order) notFound();
 
   const expired = order.status === "EXPIRED" || (order.status === "PENDING" && order.expiresAt < new Date());
+  // endereço pelo qual a página foi aberta (domínio em produção, IP da rede em testes no celular)
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const origin = `${h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || /^\d/.test(host) ? "http" : "https")}://${host}`;
 
   return (
     <main className="mx-auto w-full max-w-3xl px-5 py-12 md:py-20">
@@ -73,6 +80,11 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
             Reserva válida até <strong className="text-fg">{order.expiresAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Belem" })}</strong>.
             Depois disso os ingressos voltam para a venda.
           </p>
+          {existing && (
+            <p role="status" className="mt-4 rounded-lg bg-accent/15 px-4 py-3 text-sm text-accent">
+              Você já tinha uma reserva em andamento com este CPF. Finalize o pagamento dela (ou espere ela expirar para fazer outra).
+            </p>
+          )}
           {checkoutFailed && (
             <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
               Não conseguimos abrir o pagamento agora. Tente de novo em instantes.
@@ -122,9 +134,14 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           <p className="text-sm text-fg-muted">
             Mostre o QR na entrada. Cada ingresso vale para <strong className="text-fg">uma pessoa e uma entrada</strong>: depois de lido, o mesmo QR não passa de novo, então não compartilhe prints.
           </p>
+          <p className="rounded-lg bg-surface px-4 py-3 text-sm text-fg-muted">
+            <strong className="text-fg">Na festa pode faltar sinal.</strong> Toque em “Salvar ingresso” agora: a imagem fica na sua galeria e abre sem internet.
+            Ingresso de outra pessoa? Troque o nome e use “Enviar a quem vai usar”.
+          </p>
           {await Promise.all(
             order.tickets.map(async (t, i) => {
-              const qr = await QRCode.toDataURL(ticketToken(t.id), { margin: 1, width: 360, errorCorrectionLevel: "M" });
+              const qr = await QRCode.toDataURL(ticketToken(t.id, t.qrVersion), { margin: 1, width: 360, errorCorrectionLevel: "M" });
+              const editable = !t.usedAt && t.status === "VALID" && order.event.startsAt > new Date();
               return (
                 <article key={t.id} className="glass-card grid items-center gap-6 p-6 sm:grid-cols-[auto_1fr]">
                   {/* fundo branco: leitor lê melhor com contraste máximo, inclusive com brilho baixo */}
@@ -138,6 +155,27 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                     </p>
                     <p className="mt-3 text-sm">{t.holderName}</p>
                     {t.usedAt && <p className="mt-3 text-sm text-accent">Utilizado em {formatDateTime(t.usedAt)}</p>}
+                    {t.status === "VALID" && !t.usedAt && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <SaveTicketButton
+                          ticket={{
+                            qr,
+                            holder: t.holderName,
+                            title: `${order.event.name} ${order.event.edition}`,
+                            when: `${formatDateTime(order.event.startsAt)} · ${order.event.venue}`,
+                            type: `${t.ticketType.name} · ${t.batch.name} · ${t.isHalf ? "Meia (leve documento)" : "Inteira"}`,
+                            label: `Ingresso ${i + 1} de ${order.tickets.length} · Pedido ${order.code}`,
+                            fileName: `ingresso-perolas-${order.code}-${i + 1}`,
+                          }}
+                        />
+                        <ShareTicketButton url={`${origin}/i/${ticketLinkToken(t.id, t.qrVersion)}`} holder={t.holderName} />
+                      </div>
+                    )}
+                    {editable && (
+                      <div className="mt-3">
+                        <HolderForm orderToken={token} ticketId={t.id} holder={t.holderName} />
+                      </div>
+                    )}
                   </div>
                 </article>
               );

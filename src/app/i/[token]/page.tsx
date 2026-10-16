@@ -1,0 +1,93 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
+import QRCode from "qrcode";
+import { Suspense } from "react";
+import { SaveTicketButton } from "@/components/ticket-actions";
+import { db } from "@/lib/db";
+import { formatDateTime } from "@/lib/format";
+import { ticketToken, verifyTicketLinkToken } from "@/lib/tokens";
+
+export const metadata = { title: "Seu ingresso · Pérolas", robots: { index: false } };
+
+/** Ingresso individual: o link que o comprador manda a quem vai usar. Morre quando o QR é reemitido. */
+export default function SingleTicketPage({ params }: PageProps<"/i/[token]">) {
+  return (
+    <Suspense fallback={<div className="grid min-h-svh place-items-center text-fg-faint">Carregando…</div>}>
+      <SingleTicket params={params} />
+    </Suspense>
+  );
+}
+
+async function SingleTicket({ params }: { params: Promise<{ token: string }> }) {
+  await connection();
+  const parsed = verifyTicketLinkToken(decodeURIComponent((await params).token));
+  if (!parsed) notFound();
+
+  const t = await db.ticket.findUnique({
+    where: { id: parsed.id },
+    include: { ticketType: true, batch: true, order: { include: { event: true } } },
+  });
+  if (!t || t.order.status !== "PAID") notFound();
+  const event = t.order.event;
+  const stale = t.qrVersion !== parsed.version;
+
+  return (
+    <main className="mx-auto w-full max-w-md px-5 py-12">
+      <Link href="/" className="font-display text-2xl italic">
+        Pérolas
+      </Link>
+      <span className="eyebrow rule mt-10 flex">
+        {event.name} {event.edition}
+      </span>
+      {stale || t.status !== "VALID" ? (
+        <>
+          <h1 className="display mt-4 text-[clamp(2rem,7vw,3rem)]!">
+            Link <em>sem validade</em>
+          </h1>
+          <p className="mt-4 text-fg-muted">
+            Este ingresso foi transferido, reemitido ou cancelado, e este link não vale mais na entrada. Peça o link novo a quem comprou.
+          </p>
+        </>
+      ) : (
+        <TicketBody
+          qr={await QRCode.toDataURL(ticketToken(t.id, t.qrVersion), { margin: 1, width: 360, errorCorrectionLevel: "M" })}
+          holder={t.holderName}
+          used={t.usedAt}
+          title={`${event.name} ${event.edition}`}
+          when={`${formatDateTime(event.startsAt)} · ${event.venue}`}
+          type={`${t.ticketType.name} · ${t.batch.name} · ${t.isHalf ? "Meia (leve documento)" : "Inteira"}`}
+          code={t.order.code}
+        />
+      )}
+    </main>
+  );
+}
+
+function TicketBody(p: { qr: string; holder: string; used: Date | null; title: string; when: string; type: string; code: string }) {
+  return (
+    <>
+      <h1 className="display mt-4 text-[clamp(2rem,7vw,3rem)]!">
+        Te vemos na <em>virada</em>
+      </h1>
+      <p className="mt-2 text-sm text-fg-muted">{p.when}</p>
+      <article className="glass-card mt-8 grid justify-items-center gap-5 p-6 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element -- data URL gerada no servidor */}
+        <img src={p.qr} alt="QR code do ingresso" className={`size-64 rounded-xl bg-white p-2 ${p.used ? "opacity-30" : ""}`} />
+        <div>
+          <h2 className="font-display text-3xl">{p.holder}</h2>
+          <p className="mt-1 text-sm text-fg-muted">{p.type}</p>
+          {p.used && <p className="mt-3 text-sm text-accent">Utilizado em {formatDateTime(p.used)}</p>}
+        </div>
+        {!p.used && (
+          <SaveTicketButton
+            ticket={{ qr: p.qr, holder: p.holder, title: p.title, when: p.when, type: p.type, label: `Pedido ${p.code}`, fileName: `ingresso-perolas-${p.code}` }}
+          />
+        )}
+      </article>
+      <p className="mt-6 text-xs leading-relaxed text-fg-faint">
+        Vale uma entrada. Salve a imagem: na festa pode faltar sinal. Se quem comprou trocar o nome deste ingresso, este QR deixa de valer.
+      </p>
+    </>
+  );
+}

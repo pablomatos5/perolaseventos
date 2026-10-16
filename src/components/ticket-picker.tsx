@@ -2,7 +2,11 @@
 
 import { useActionState, useState } from "react";
 import { reserveAction } from "@/app/actions";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { formatBRL } from "@/lib/format";
+
+// Chave pública do anti-robô (embutida no build). Vazia = checkout sem o quadradinho.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 export type PickerType = {
   id: string;
@@ -128,6 +132,11 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
           <span className="text-sm text-fg-muted">{count} ingresso(s)</span>
           <span className="font-display text-4xl">{formatBRL(total)}</span>
         </div>
+        {TURNSTILE_SITE_KEY && (
+          <div className="mt-6">
+            <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} resetKey={state} />
+          </div>
+        )}
         {state?.error && (
           <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
             {state.error}

@@ -5,7 +5,8 @@ import { activeEvent } from "@/lib/admin-data";
 import { db } from "@/lib/db";
 import { orderLink } from "@/lib/delivery";
 import { formatBRL, formatDateTime } from "@/lib/format";
-import { resendAction } from "../../actions";
+import { reissueAction, resendAction } from "../../actions";
+import { ConfirmButton } from "../../forms";
 
 const STATUS: Record<string, string> = {
   PENDING: "aguardando pagamento",
@@ -105,6 +106,14 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                   </a>
                   <form action={resendAction.bind(null, o.id)}>
                     <button className="btn solid px-4! py-2!">Reenviar</button>
+                  </form>
+                  <form action={reissueAction.bind(null, o.id)}>
+                    <ConfirmButton
+                      className="btn px-4! py-2!"
+                      message={`Reemitir os QR do pedido ${o.code}? Os QR atuais (e prints) deixam de valer e o cliente recebe o link de novo.`}
+                    >
+                      Reemitir QR
+                    </ConfirmButton>
                   </form>
                 </div>
               )}

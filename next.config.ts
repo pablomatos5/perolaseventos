@@ -1,7 +1,45 @@
 import type { NextConfig } from "next";
 
+// Cabeçalhos de segurança em todas as respostas. A CSP só vale em produção (o `next dev` precisa de eval).
+// 'unsafe-inline' em script: o Next injeta scripts inline de hidratação; sem nonce isso é o necessário.
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "media-src 'self'",
+  "font-src 'self'",
+  "connect-src 'self' https://challenges.cloudflare.com",
+  "frame-src https://challenges.cloudflare.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join("; ");
+
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  // o link do pedido (/pedido/<token>) nunca vaza inteiro para outros sites
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // câmera só para a portaria (mesmo site); o resto desligado
+  { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=()" },
+  ...(process.env.NODE_ENV === "production"
+    ? [
+        { key: "Content-Security-Policy", value: csp },
+        { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+      ]
+    : []),
+];
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  poweredByHeader: false,
+  async headers() {
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // páginas com dados pessoais/QR: nunca em cache compartilhado
+      { source: "/(pedido|i|admin|portaria)/:path*", headers: [{ key: "Cache-Control", value: "private, no-store" }] },
+    ];
+  },
   cacheComponents: true,
   partialPrefetching: true,
   // Só afeta o `next dev`: libera abrir o site pelo IP da rede local (testar no celular).

@@ -13,7 +13,6 @@ const need = (key: string, why: string) => (env[key] ? ok.push(key) : problems.p
 
 need("DATABASE_URL", "sem banco o site não abre");
 need("APP_URL", "usado nos links do e-mail e no retorno do pagamento");
-need("PORTARIA_PIN", "sem PIN ninguém valida ingresso na portaria");
 if ((env.ADMIN_PASSWORD ?? "").length < 8) problems.push("ADMIN_PASSWORD ausente ou com menos de 8 caracteres: painel /admin fica trancado");
 else ok.push("ADMIN_PASSWORD");
 if (prod && env.DATABASE_POOL_MAX === "1") warnings.push("DATABASE_POOL_MAX=1 é só para o banco local de dev: remova em produção");
@@ -21,7 +20,10 @@ if ((env.TICKET_SECRET ?? "").length < 32) problems.push("TICKET_SECRET ausente 
 else ok.push("TICKET_SECRET");
 
 if (prod && !env.APP_URL?.startsWith("https://")) problems.push("APP_URL precisa ser https:// em produção");
-if (prod && (env.PORTARIA_PIN ?? "").length < 6) warnings.push("PORTARIA_PIN curto: use 6+ dígitos em produção");
+if (env.PORTARIA_PIN) warnings.push("PORTARIA_PIN não é mais usado: aparelhos da portaria são autorizados no painel (/admin/portaria). Pode apagar.");
+if (env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY) ok.push("anti-robô: Cloudflare Turnstile");
+else if (env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || env.TURNSTILE_SECRET_KEY) problems.push("Turnstile pela metade: preencha NEXT_PUBLIC_TURNSTILE_SITE_KEY e TURNSTILE_SECRET_KEY (ou nenhum)");
+else (prod ? warnings : ok).push(prod ? "Turnstile desligado: só o limite por IP/CPF segura robôs no checkout" : "anti-robô desligado (normal em dev)");
 
 const mode = paymentMode();
 if (mode === "off") {
