@@ -23,11 +23,17 @@ export function PerkTrail({ items }: { items: TrailItem[] }) {
       return;
     }
 
+    // Com animação ligada à rolagem (Chrome, Safari 26+) o navegador move a pérola e o fio (.trail.sd no CSS),
+    // colados na rolagem e sem tremer no celular; o JS só acende os itens. Sem suporte, o JS move tudo.
+    const native = typeof CSS !== "undefined" && CSS.supports("animation-timeline: view()");
+    if (native) root.classList.add("sd");
+
     // centro de cada ícone (px a partir do topo da trilha), recalculado ao redimensionar
     let centers: number[] = [];
     let height = 1;
     const measure = () => {
       height = root.offsetHeight || 1;
+      root.style.setProperty("--trail-h", `${height}px`);
       const top = root.getBoundingClientRect().top;
       centers = stops.map((s) => {
         const r = s.querySelector<HTMLElement>(".trail-icon")!.getBoundingClientRect();
@@ -41,8 +47,10 @@ export function PerkTrail({ items }: { items: TrailItem[] }) {
       const top = root.getBoundingClientRect().top;
       // a pérola fica a 62% da altura da tela; a trilha "anda" por baixo dela
       const y = Math.min(Math.max(innerHeight * 0.62 - top, 0), height);
-      pearl.style.transform = `translate3d(-50%, ${y.toFixed(1)}px, 0)`;
-      fill.style.transform = `scaleY(${(y / height).toFixed(4)})`;
+      if (!native) {
+        pearl.style.transform = `translate3d(-50%, ${y.toFixed(1)}px, 0)`;
+        fill.style.transform = `scaleY(${(y / height).toFixed(4)})`;
+      }
       stops.forEach((s, i) => s.classList.toggle("is-on", y >= centers[i] - 8));
     };
     const onScroll = () => {

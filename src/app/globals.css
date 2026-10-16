@@ -1377,3 +1377,45 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   .trail-pearl, .trail-fill { display: none; }
   .trail-icon, .trail-text, .trail-icon path { transition: none; }
 }
+
+/* ───────── Animações ligadas à rolagem (o navegador move, sem JS a cada quadro) ─────────
+   Pérola do topo caindo no mar e pérola da trilha "Uma noite para colecionar". O JS mede as distâncias
+   (--fall, --fall-range, --trail-h) e liga a classe .sd só onde há suporte; senão continua o modo JS. */
+@supports (animation-timeline: scroll()) {
+  .shell-pearl.sd {
+    animation: pearl-fall linear both;
+    animation-duration: 1ms; /* navegadores sem "auto" */
+    animation-duration: auto;
+    animation-timeline: scroll(root);
+    animation-range: 0px var(--fall-range, 400px);
+    transition: none;
+  }
+}
+@keyframes pearl-fall {
+  0% { translate: 0 0; scale: 1; opacity: 1; animation-timing-function: ease-in-out; }
+  92% { translate: 0 var(--fall, 0px); scale: 0.75; opacity: 1; animation-timing-function: ease-in; }
+  100% { translate: 0 calc(var(--fall, 0px) + 18px); scale: 0.35; opacity: 0; }
+}
+.trail { view-timeline: --trail block; }
+@supports (animation-timeline: view()) {
+  /* a pérola fica a 62% da altura da tela: começa quando o topo da trilha passa por ali e termina com o fim */
+  .trail.sd .trail-pearl,
+  .trail.sd .trail-fill {
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-duration: 1ms;
+    animation-duration: auto;
+    animation-timeline: --trail;
+    animation-range: cover 38vh cover calc(100% - 62vh);
+  }
+  .trail.sd .trail-pearl { animation-name: trail-pearl; }
+  .trail.sd .trail-fill { animation-name: trail-fill; }
+}
+@keyframes trail-pearl {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(-50%, var(--trail-h, 0px), 0); }
+}
+@keyframes trail-fill {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
