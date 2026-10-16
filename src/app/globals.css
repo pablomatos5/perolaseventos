@@ -1708,11 +1708,11 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 @media (max-width: 767px) {
   /* menor no celular: a cabeça fica abaixo do botão; alto do recorte mais esfumado */
   /* celular: as duas sereias embaixo, nos cantos, emoldurando a pérola */
-  .hero-mermaid { height: 50svh; bottom: 3rem; }
+  .hero-mermaid { height: 52svh; bottom: calc(3rem + 8svh); }
   .hero-mermaid.is-left { left: -16vw; }
   .hero-mermaid.is-right { right: -16vw; }
   .hero-copy { flex: none; justify-content: flex-start; padding-top: 2.5svh; }
-  .pearl-horizon { height: 42svh; margin-top: 1rem; }
+  .pearl-horizon { height: 50svh; margin-top: 1rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .light-swirls .swirl { animation: none; stroke-dashoffset: 0; }
