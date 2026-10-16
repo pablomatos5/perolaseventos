@@ -29,15 +29,20 @@ export function PartyDetails({ highlights }: { highlights: Highlight[] }) {
       <h2 className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
         Uma noite para <em>colecionar</em>
       </h2>
-      <div className="mt-12 grid gap-px overflow-hidden rounded-[var(--radius-card)] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-        {highlights.map((h) => (
-          <article key={h.id} className="group bg-bg p-7 transition-colors duration-500 hover:bg-bg-alt md:p-9">
-            <Icon name={h.icon} />
-            <h3 className="mt-5 font-display text-2xl">{h.title}</h3>
-            <p className="mt-2 text-sm text-fg-muted">{h.description}</p>
-          </article>
+      <ol className="perk-grid mt-14 md:mt-20">
+        {highlights.map((h, i) => (
+          <li key={h.id} className="perk">
+            <span className="perk-icon">
+              <Icon name={h.icon} />
+            </span>
+            <div>
+              <span className="perk-num">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="font-display text-2xl leading-tight md:text-[1.7rem]">{h.title}</h3>
+              <p className="mt-1.5 text-sm text-fg-muted">{h.description}</p>
+            </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }

@@ -119,21 +119,44 @@ export function Faq() {
 }
 
 /** Campanha 2027: os três pilares do story oficial + fechamento. */
+/**
+ * Campanha 2027 como um colar: fio dourado com as três pérolas-pilar penduradas
+ * (no desktop o fio faz a curva do colar; no celular desce na vertical).
+ */
 export function Campaign() {
+  const [lead, rest] = splitTagline(campaign.tagline);
   return (
-    <section className="relative overflow-hidden py-20 text-center md:py-28">
-      <div className="ambient-glow left-1/2 top-1/2 size-[30rem] -translate-x-1/2 -translate-y-1/2 bg-ocean opacity-20" />
+    <section className="relative overflow-hidden py-24 text-center md:py-32">
+      <div className="ambient-glow left-1/2 top-1/2 size-[34rem] -translate-x-1/2 -translate-y-1/2 bg-ocean opacity-25" />
       <div className="relative mx-auto max-w-5xl px-5">
-        <span className="eyebrow">6ª edição · {campaign.tagline}</span>
-        <ul className="mt-10 grid gap-8 sm:grid-cols-3">
-          {campaign.pillars.map((p) => (
-            <li key={p} className="glass-card px-6 py-8">
-              <span className="mx-auto mb-4 block size-2 rotate-45 bg-accent" />
-              <p className="font-display text-2xl">{p}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-14 font-display text-[clamp(1.8rem,4vw,3rem)] font-light italic">
+        <span className="eyebrow">6ª edição · campanha 2027</span>
+        <h2 className="display mt-5 text-[clamp(2.3rem,6vw,4.6rem)]!">
+          {lead} <em>{rest}</em>
+        </h2>
+
+        <div className="necklace mt-12 md:mt-16">
+          <svg className="necklace-thread" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden>
+            <path d="M0 4 Q 50 52 100 4" fill="none" stroke="url(#necklace-gold)" strokeWidth="0.35" vectorEffect="non-scaling-stroke" />
+            <defs>
+              <linearGradient id="necklace-gold" x1="0" x2="1">
+                <stop offset="0" stopColor="var(--accent)" stopOpacity="0" />
+                <stop offset="0.2" stopColor="var(--accent-2)" />
+                <stop offset="0.8" stopColor="var(--accent-2)" />
+                <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <ul className="necklace-pearls">
+            {campaign.pillars.map((p, i) => (
+              <li key={p} style={{ "--i": i } as React.CSSProperties}>
+                <span className="pearl necklace-pearl" aria-hidden />
+                <p className="font-display text-[1.65rem] leading-tight md:text-3xl">{p}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="mt-16 font-display text-[clamp(1.9rem,4.5vw,3.2rem)] font-light italic md:mt-20">
           {campaign.closing.map((c, i) => (
             <span key={c} className={i === campaign.closing.length - 1 ? "text-accent" : ""}>
               {c}{" "}
@@ -143,6 +166,12 @@ export function Campaign() {
       </div>
     </section>
   );
+}
+
+/** "Uma nova era, infinitas possibilidades." → ["Uma nova era,", "infinitas possibilidades."] (2ª parte em destaque). */
+function splitTagline(t: string): [string, string] {
+  const i = t.indexOf(",");
+  return i === -1 ? ["", t] : [t.slice(0, i + 1), t.slice(i + 1).trim()];
 }
 
 /** Faixa rolando com ✦ entre os itens (a "roleta"). Lista duplicada para o loop não ter emenda. */
