@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { payAction, simulatePaymentAction } from "@/app/actions";
 import { AutoRefresh } from "@/components/auto-refresh";
-import { HolderForm, SaveTicketButton, ShareTicketButton } from "@/components/ticket-actions";
+import { HolderForm, ShareTicketButton } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
 import { formatBRL, formatDateTime } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
@@ -134,10 +134,15 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           <p className="text-sm text-fg-muted">
             Mostre o QR na entrada. Cada ingresso vale para <strong className="text-fg">uma pessoa e uma entrada</strong>: depois de lido, o mesmo QR não passa de novo, então não compartilhe prints.
           </p>
-          <p className="rounded-lg bg-surface px-4 py-3 text-sm text-fg-muted">
-            <strong className="text-fg">Na festa pode faltar sinal.</strong> Toque em “Salvar ingresso” agora: a imagem fica na sua galeria e abre sem internet.
-            Ingresso de outra pessoa? Troque o nome e use “Enviar a quem vai usar”.
-          </p>
+          <div className="glass-card flex flex-wrap items-center justify-between gap-4 p-5">
+            <p className="max-w-md text-sm text-fg-muted">
+              <strong className="text-fg">Na festa pode faltar sinal.</strong> Baixe o PDF agora: ele fica no celular e abre sem internet (também dá para imprimir).
+              Ingresso de outra pessoa? Troque o nome e use “Enviar a quem vai usar”.
+            </p>
+            <a href={`/pedido/${token}/pdf`} className="btn solid" download>
+              Baixar ingressos (PDF)
+            </a>
+          </div>
           {await Promise.all(
             order.tickets.map(async (t, i) => {
               const qr = await qrDataUrl(ticketToken(t.id, t.qrVersion));
@@ -157,17 +162,9 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                     {t.usedAt && <p className="mt-3 text-sm text-accent">Utilizado em {formatDateTime(t.usedAt)}</p>}
                     {t.status === "VALID" && !t.usedAt && (
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <SaveTicketButton
-                          ticket={{
-                            qr,
-                            holder: t.holderName,
-                            title: `${order.event.name} ${order.event.edition}`,
-                            when: `${formatDateTime(order.event.startsAt)} · ${order.event.venue}`,
-                            type: `${t.ticketType.name} · ${t.batch.name} · ${t.isHalf ? "Meia (leve documento)" : "Inteira"}`,
-                            label: `Ingresso ${i + 1} de ${order.tickets.length} · Pedido ${order.code}`,
-                            fileName: `ingresso-perolas-${order.code}-${i + 1}`,
-                          }}
-                        />
+                        <a href={`/i/${ticketLinkToken(t.id, t.qrVersion)}/pdf`} className="btn px-4! py-2!" download>
+                          Baixar PDF
+                        </a>
                         <ShareTicketButton url={`${origin}/i/${ticketLinkToken(t.id, t.qrVersion)}`} holder={t.holderName} />
                       </div>
                     )}

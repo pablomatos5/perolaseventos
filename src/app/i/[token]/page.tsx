@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { SaveTicketButton } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
@@ -51,6 +50,7 @@ async function SingleTicket({ params }: { params: Promise<{ token: string }> }) 
         </>
       ) : (
         <TicketBody
+          pdf={`/i/${encodeURIComponent((await params).token)}/pdf`}
           qr={await qrDataUrl(ticketToken(t.id, t.qrVersion))}
           holder={t.holderName}
           used={t.usedAt}
@@ -64,7 +64,7 @@ async function SingleTicket({ params }: { params: Promise<{ token: string }> }) 
   );
 }
 
-function TicketBody(p: { qr: string; holder: string; used: Date | null; title: string; when: string; type: string; code: string }) {
+function TicketBody(p: { pdf: string; qr: string; holder: string; used: Date | null; title: string; when: string; type: string; code: string }) {
   return (
     <>
       <h1 className="display mt-4 text-[clamp(2rem,7vw,3rem)]!">
@@ -80,13 +80,13 @@ function TicketBody(p: { qr: string; holder: string; used: Date | null; title: s
           {p.used && <p className="mt-3 text-sm text-accent">Utilizado em {formatDateTime(p.used)}</p>}
         </div>
         {!p.used && (
-          <SaveTicketButton
-            ticket={{ qr: p.qr, holder: p.holder, title: p.title, when: p.when, type: p.type, label: `Pedido ${p.code}`, fileName: `ingresso-perolas-${p.code}` }}
-          />
+          <a href={p.pdf} className="btn solid" download>
+            Baixar ingresso (PDF)
+          </a>
         )}
       </article>
       <p className="mt-6 text-xs leading-relaxed text-fg-faint">
-        Vale uma entrada. Salve a imagem: na festa pode faltar sinal. Se quem comprou trocar o nome deste ingresso, este QR deixa de valer.
+        Vale uma entrada. Baixe o PDF: na festa pode faltar sinal. Se quem comprou trocar o nome deste ingresso, este QR deixa de valer.
       </p>
     </>
   );

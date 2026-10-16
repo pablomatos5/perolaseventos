@@ -33,6 +33,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // fontes do ingresso em PDF são lidas do disco em tempo de execução: incluir no build
+  outputFileTracingIncludes: {
+    "/pedido/[token]/pdf": ["./assets/fonts/**", "./assets/pdf/**"],
+    "/i/[token]/pdf": ["./assets/fonts/**", "./assets/pdf/**"],
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
