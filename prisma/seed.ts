@@ -21,14 +21,14 @@ async function main() {
       city: "Cametá · PA",
       description: "O réveillon mais exclusivo de Cametá. Sete horas de open bar, atrações e a virada à beira do rio.",
       published: true,
-      // Textos da própria Pérolas (Instagram). O local de 2027 ainda NÃO foi anunciado: confirmar.
+      // Textos da própria Pérolas (Instagram). Local de 2027 confirmado no post oficial: Ponte do Assunção.
       highlights: {
         create: [
           { icon: "bar", title: "7 horas de open bar", description: "O open bar mais desejado de Cametá, do começo da festa ao amanhecer.", sortOrder: 1 },
           { icon: "crown", title: "Experiência premium", description: "Atmosfera encantadora, num cenário deslumbrante para brindar à vida.", sortOrder: 2 },
           { icon: "music", title: "Line-up a noite toda", description: "Atrações se revezando no palco até o primeiro sol do ano.", sortOrder: 3 },
           { icon: "fireworks", title: "Surpresas que transformam", description: "Detalhes que encantam e momentos guardados só para quem estiver lá.", sortOrder: 4 },
-          { icon: "river", title: "Virada à beira do rio", description: "Em 2026 foi na Ponte do Assunção. O cenário de 2027 será anunciado em breve.", sortOrder: 5 },
+          { icon: "river", title: "Virada à beira do rio", description: "A virada de 2027 é de novo na Ponte do Assunção, de frente para o rio.", sortOrder: 5 },
           { icon: "security", title: "Entrada por QR code", description: "Ingresso nominal no celular, validado na portaria. Sem fila de papel, sem falsificação.", sortOrder: 6 },
         ],
       },

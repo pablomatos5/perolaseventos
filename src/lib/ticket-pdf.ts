@@ -39,6 +39,12 @@ const C = {
   faint: rgb(0.55, 0.52, 0.64),
   pearl: hex("#f4ecff"),
   ink: hex("#140c26"),
+  // identidade 2027 (artes oficiais): texto escuro sobre o degradê violeta → pêssego
+  violet: hex("#6a4ecf"),
+  deep: hex("#2e2466"),
+  soft: hex("#4f4488"),
+  brown: hex("#8c6230"),
+  cream: hex("#ffe3b2"),
 };
 function hex(h: string): RGB {
   const n = parseInt(h.slice(1), 16);
@@ -47,7 +53,7 @@ function hex(h: string): RGB {
 
 const FONT_DIR = path.join(process.cwd(), "assets", "fonts");
 let fontBytes: Promise<Record<string, Uint8Array>> | null = null;
-let glowBytes: Promise<Uint8Array> | null = null;
+let bgBytes: Promise<Uint8Array> | null = null;
 function loadFonts() {
   const files = {
     display: "CormorantGaramond-LightItalic.ttf",
@@ -84,7 +90,8 @@ export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tic
     sansBold: await doc.embedFont(b.sansBold, { subset: true }),
   };
   const total = opts.totalInOrder ?? opts.tickets.length;
-  const glow = await doc.embedPng(await (glowBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo.png"))));
+  // fundo: degradê das artes 2027 (assets/pdf/fundo-2027.png esticado, sem faixas)
+  const glow = await doc.embedPng(await (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png"))));
   opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total));
   return doc.save();
 }
@@ -92,32 +99,49 @@ export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tic
 type Fonts = Record<"display" | "serif" | "serifItalic" | "sans" | "sansMedium" | "sansBold", PDFFont>;
 
 function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number) {
-  // ── fundo: noite lilás, mais clara no topo ──
-  p.drawRectangle({ x: 0, y: 0, width: W, height: H, color: C.bg });
-  // brilho lilás no topo: imagem de degradê (assets/pdf/topo.png) esticada, sem faixas visíveis
-  p.drawImage(glow, { x: 0, y: H - 380, width: W, height: 380 });
-  // estrelas fixas (posições determinísticas)
-  const stars = [[40, 770, 1.1], [92, 744, 0.7], [318, 786, 0.9], [372, 742, 1.2], [356, 700, 0.6], [58, 690, 0.8], [384, 640, 0.7], [24, 612, 0.6]];
-  for (const [x, y, r] of stars) p.drawCircle({ x, y, size: r, color: C.white, opacity: 0.7 });
+  // ── fundo: céu da campanha 2027 (violeta no alto → pêssego embaixo) ──
+  p.drawImage(glow, { x: 0, y: 0, width: W, height: H });
+  // estrelas fixas no céu (posições determinísticas)
+  const stars = [[40, 50, 1.1], [92, 76, 0.7], [318, 34, 0.9], [372, 78, 1.2], [356, 120, 0.6], [58, 130, 0.8], [384, 180, 0.7], [24, 208, 0.6], [210, 22, 0.8]];
+  for (const [x, dy, r] of stars) p.drawCircle({ x, y: H - dy, size: r, color: C.white, opacity: 0.8 });
+  drawStar(p, 330, H - 60, 7, C.cream, 0.9);
+  drawStar(p, 82, H - 168, 5, C.cream, 0.7);
 
-  // ── concha em linhas douradas + pérola ──
-  drawShell(p, W / 2, H - 40, 0.36);
+  // ── pérola com brilho, como na arte principal ──
+  const py = H - 78;
+  p.drawCircle({ x: W / 2, y: py, size: 34, color: C.cream, opacity: 0.18 });
+  p.drawCircle({ x: W / 2, y: py, size: 22, color: C.cream, opacity: 0.28 });
+  p.drawCircle({ x: W / 2, y: py, size: 15, color: hex("#f7efe6") });
+  p.drawCircle({ x: W / 2 - 4.5, y: py + 4.5, size: 5.5, color: C.white, opacity: 0.95 });
 
-  // ── título ──
-  center(p, "RÉVEILLON", H - 168, F.sansBold, 9, C.gold, 4);
-  center(p, "Pérolas", H - 222, F.display, 58, C.white);
-  center(p, `${ev.edition.toUpperCase()}  ·  6ª EDIÇÃO`, H - 248, F.sansMedium, 8.5, C.goldLight, 3);
+  // ── logo RÉVEILLON PÉROLAS 2027, com a estrela de 4 pontas no O ──
+  const year = ev.edition.replace(/^2K/i, "20");
+  center(p, "RÉVEILLON", H - 132, F.sansMedium, 9.5, C.cream, 4.5);
+  const name = "PÉROLAS";
+  const ns = 50;
+  const sp = 1.5;
+  const nw = F.serif.widthOfTextAtSize(name, ns) + (name.length - 1) * sp;
+  text(p, name, (W - nw) / 2, H - 182, F.serif, ns, C.cream, sp);
+  // estrela dentro do O (4ª letra)
+  const before = F.serif.widthOfTextAtSize("PÉR", ns) + 3 * sp;
+  const ow = F.serif.widthOfTextAtSize("O", ns);
+  drawStar(p, (W - nw) / 2 + before + ow / 2, H - 182 + ns * 0.34, 6.5, C.cream, 1);
+  const yw = F.sansMedium.widthOfTextAtSize(year, 13) + (year.length - 1) * 5;
+  center(p, year, H - 210, F.sansMedium, 13, C.cream, 5);
+  p.drawLine({ start: { x: W / 2 - yw / 2 - 62, y: H - 205 }, end: { x: W / 2 - yw / 2 - 12, y: H - 205 }, thickness: 0.6, color: C.cream, opacity: 0.8 });
+  p.drawLine({ start: { x: W / 2 + yw / 2 + 12, y: H - 205 }, end: { x: W / 2 + yw / 2 + 62, y: H - 205 }, thickness: 0.6, color: C.cream, opacity: 0.8 });
+  center(p, "UM NOVO CICLO. INFINITAS POSSIBILIDADES.", H - 236, F.sansBold, 6.8, C.white, 2.4);
 
   // ── painel de informações ──
   const top = H - 272;
   const panelH = 196;
-  roundRect(p, M, top - panelH, W - 2 * M, panelH, 14, C.bgAlt, 0.9, C.gold, 0.35);
+  roundRect(p, M, top - panelH, W - 2 * M, panelH, 14, C.white, 0.62, C.brown, 0.4);
   const colL = M + 18;
   const colR = W / 2 + 8;
   const cell = (x: number, y: number, label: string, value: string, sub?: string) => {
-    text(p, label, x, y, F.sansBold, 7, C.gold, 2.2);
-    text(p, fit(value, F.serif, 17, W / 2 - 46), x, y - 20, F.serif, 17, C.white);
-    if (sub) text(p, fit(sub, F.sans, 8.5, W / 2 - 46), x, y - 34, F.sans, 8.5, C.muted);
+    text(p, label, x, y, F.sansBold, 7, C.violet, 2.2);
+    text(p, fit(value, F.serif, 17, W / 2 - 46), x, y - 20, F.serif, 17, C.deep);
+    if (sub) text(p, fit(sub, F.sans, 8.5, W / 2 - 46), x, y - 34, F.sans, 8.5, C.soft);
   };
   cell(colL, top - 26, "DATA", dateLong(ev.startsAt), weekday(ev.startsAt));
   cell(colR, top - 26, "HORÁRIO", `A partir das ${hour(ev.startsAt)}`, "Abertura dos portões");
@@ -128,14 +152,13 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCod
 
   // ── titular ──
   const hy = top - panelH - 34;
-  center(p, "TITULAR", hy, F.sansBold, 7, C.gold, 2.2);
-  center(p, fit(t.holder, F.serifItalic, 25, W - 2 * M), hy - 28, F.serifItalic, 25, C.white);
+  center(p, "TITULAR", hy, F.sansBold, 7, C.violet, 2.2);
+  center(p, fit(t.holder, F.serifItalic, 25, W - 2 * M), hy - 28, F.serifItalic, 25, C.deep);
 
   // ── picote do canhoto ──
   const cutY = hy - 52;
-  for (let x = M; x < W - M; x += 9) p.drawLine({ start: { x, y: cutY }, end: { x: x + 4.5, y: cutY }, thickness: 0.8, color: C.gold, opacity: 0.55 });
-  p.drawCircle({ x: 0, y: cutY, size: 13, color: C.ink });
-  p.drawCircle({ x: W, y: cutY, size: 13, color: C.ink });
+  for (let x = M; x < W - M; x += 9) p.drawLine({ start: { x, y: cutY }, end: { x: x + 4.5, y: cutY }, thickness: 0.8, color: C.brown, opacity: 0.6 });
+  drawStar(p, W / 2, cutY, 4.5, C.brown, 0.8);
 
   // ── QR em vetor sobre branco (a matriz já inclui a margem de 4 módulos exigida) ──
   const qrSize = 214;
@@ -158,8 +181,8 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCod
     }
   }
   p.drawSvgPath(d, { x: qrX, y: qrY + qrSize, color: rgb(0, 0, 0) });
-  center(p, `Ingresso ${n} de ${total}  ·  Pedido ${orderCode}`, qrY - 30, F.sansMedium, 9, C.white);
-  center(p, `Nº ${t.id.slice(-10).toUpperCase()}${t.qrVersion ? ` · v${t.qrVersion}` : ""}`, qrY - 44, F.sans, 7.5, C.faint, 1);
+  center(p, `Ingresso ${n} de ${total}  ·  Pedido ${orderCode}`, qrY - 30, F.sansMedium, 9, C.deep);
+  center(p, `Nº ${t.id.slice(-10).toUpperCase()}${t.qrVersion ? ` · v${t.qrVersion}` : ""}`, qrY - 44, F.sans, 7.5, C.soft, 1);
 
   // ── regras ──
   const rules = [
@@ -171,12 +194,12 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCod
   let ry = qrY - 70;
   for (const r of rules) {
     for (const line of wrap(r, F.sans, 7.6, W - 2 * M - 10)) {
-      center(p, line, ry, F.sans, 7.6, C.muted);
+      center(p, line, ry, F.sans, 7.6, C.soft);
       ry -= 11;
     }
     ry -= 3;
   }
-  center(p, "perolaseventos.store  ·  @perolaseventos", 30, F.sansBold, 7.5, C.gold, 1.5);
+  center(p, "perolaseventos.store  ·  @perolaseventos", 30, F.sansBold, 7.5, C.brown, 1.5);
 
   // ── modo demonstração: marca d'água, para ninguém confundir com ingresso de verdade ──
   if (isDemo()) {
@@ -185,7 +208,7 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCod
     const w = F.sansBold.widthOfTextAtSize(label, size);
     const a = (32 * Math.PI) / 180;
     for (const cy of [H * 0.66, H * 0.3]) {
-      p.drawText(label, { x: W / 2 - (w / 2) * Math.cos(a), y: cy - (w / 2) * Math.sin(a), size, font: F.sansBold, color: C.gold, opacity: 0.16, rotate: degrees(32) });
+      p.drawText(label, { x: W / 2 - (w / 2) * Math.cos(a), y: cy - (w / 2) * Math.sin(a), size, font: F.sansBold, color: C.violet, opacity: 0.12, rotate: degrees(32) });
     }
     center(p, "INGRESSO DE DEMONSTRAÇÃO · NÃO VALE PARA O EVENTO", 48, F.sansBold, 7, hex("#d64545"), 1.2);
   }
@@ -242,43 +265,14 @@ function roundRect(p: PDFPage, x: number, y: number, w: number, h: number, r: nu
   p.drawSvgPath(d, { x, y: y + h, color: fill, opacity: fillOpacity, borderColor: border, borderWidth: border ? 0.8 : 0, borderOpacity });
 }
 
-/** Concha em linhas douradas (mesma geometria da concha do topo do site, viewBox 400x320). */
-function drawShell(p: PDFPage, cx: number, topY: number, s: number) {
-  const HX = 200, HY = 214, R = 170, LOBES = 9, START = 196, END = 344, step = (END - START) / LOBES;
-  const pt = (r: number, deg: number) => ({ x: HX + r * Math.cos((deg * Math.PI) / 180), y: HY + r * Math.sin((deg * Math.PI) / 180) });
-  const f = (n: number) => n.toFixed(1);
-  const scallop = (rad: number, bulge: number) => {
-    const a = pt(rad, START);
-    let d = `M ${f(a.x)} ${f(a.y)}`;
-    for (let i = 0; i < LOBES; i++) {
-      const c = pt(rad * bulge, START + (i + 0.5) * step);
-      const e = pt(rad, START + (i + 1) * step);
-      d += ` Q ${f(c.x)} ${f(c.y)} ${f(e.x)} ${f(e.y)}`;
-    }
-    return d;
-  };
-  const x = cx - 200 * s;
-  const draw = (d: string, width: number, opacity: number) => p.drawSvgPath(d, { x, y: topY, scale: s, borderColor: C.gold, borderWidth: width, borderOpacity: opacity });
-  const outer = scallop(R, 1.09);
-  const a0 = pt(R, START);
-  draw(`M ${HX} ${HY} L ${f(a0.x)} ${f(a0.y)} ${outer.slice(outer.indexOf("Q"))} L ${HX} ${HY}`, 1.4, 1);
-  [0.8, 0.61, 0.43].forEach((k, i) => draw(scallop(R * k, 1.08 - i * 0.01), 1, 0.8 - i * 0.15));
-  for (let i = 1; i < LOBES; i++) {
-    const deg = START + i * step;
-    const a = pt(24, deg), c = pt(R * 0.55, deg + 2.5), b = pt(R * 0.97, deg);
-    draw(`M ${f(a.x)} ${f(a.y)} Q ${f(c.x)} ${f(c.y)} ${f(b.x)} ${f(b.y)}`, 0.7, 0.5);
-  }
-  // pérola
-  const py = topY - 196 * s;
-  p.drawCircle({ x: cx, y: py, size: 24 * s * 1.6, color: C.gold, opacity: 0.12 });
-  p.drawCircle({ x: cx, y: py, size: 16 * s * 1.6, color: C.pearl });
-  p.drawCircle({ x: cx - 5 * s, y: py + 5 * s, size: 6 * s * 1.6, color: C.white, opacity: 0.9 });
-  // base da concha
-  let lip = "M 52 216";
-  for (let i = 0; i < 8; i++) lip += ` Q ${f(52 + i * 37 + 18.5)} ${i % 2 ? 224 : 207} ${f(52 + (i + 1) * 37)} 216`;
-  draw(lip, 1.3, 1);
-  [1, 0.74].forEach((k, i) => {
-    const half = 148 * k, depth = 82 * k;
-    draw(`M ${f(200 - half)} 216 C ${f(200 - half * 0.9)} ${f(216 + depth)}, ${f(200 + half * 0.9)} ${f(216 + depth)}, ${f(200 + half)} 216`, 1.2, 0.9 - i * 0.3);
+/** Estrela de 4 pontas da marca 2027 (mesmo desenho do site), centrada em (cx, cy) com raio r. */
+function drawStar(p: PDFPage, cx: number, cy: number, r: number, color: RGB, opacity: number) {
+  const k = r / 12;
+  p.drawSvgPath("M12 0c.6 6.2 5.8 11.4 12 12-6.2.6-11.4 5.8-12 12-.6-6.2-5.8-11.4-12-12C6.2 11.4 11.4 6.2 12 0Z", {
+    x: cx - 12 * k,
+    y: cy + 12 * k,
+    scale: k,
+    color,
+    opacity,
   });
 }
