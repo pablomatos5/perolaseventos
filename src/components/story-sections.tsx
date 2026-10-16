@@ -14,12 +14,12 @@ export function Story() {
               </span>
             ))}
           </p>
-          <dl className="mt-12 grid grid-cols-3 gap-4 border-t border-line pt-8">
+          <dl className="mt-12 grid grid-cols-3 gap-3 border-t border-line pt-8 sm:gap-4">
             {stats.map((s) => (
               <div key={s.label}>
                 <dt className="sr-only">{s.label}</dt>
                 <dd className="font-display text-4xl text-accent-2 md:text-5xl">{s.value}</dd>
-                <dd className="mt-1 text-xs uppercase tracking-[0.18em] text-fg-faint">{s.label}</dd>
+                <dd className="mt-1 text-[0.62rem] leading-snug uppercase tracking-[0.1em] text-fg-faint sm:text-xs sm:tracking-[0.18em]">{s.label}</dd>
               </div>
             ))}
           </dl>
