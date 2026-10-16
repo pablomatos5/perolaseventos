@@ -82,8 +82,11 @@ ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. PD
      está anunciado). Depois das fotos: deploy (ver acima) e no banco da VPS:
      `docker exec perolas-db psql -U perolas -d perolas -c "update \"Attraction\" set name=..., genre=..., instagram=..., \"imageUrl\"=..., \"videoUrl\"=..., announced=true where \"sortOrder\"=2"` (idem 3).
      Perguntar ao usuário antes de publicar no servidor.
-1. **Domínio perolaseventos.store**: está registrado mas NÃO resolve (NXDOMAIN em 16/10). Usuário confere no hPanel (verificação de e-mail do titular / nameservers) e cria A `@` e `www` → 92.112.178.48. O token do MCP da Hostinger em `~/.claude.json` está revogado (401) — trocar pelo token novo para eu poder mexer no DNS.
-2. Com o domínio resolvendo: certbot webroot em `/opt/sites-extra/perolas` (`docker run --rm -v /opt/sites-extra/perolas/certs:/etc/letsencrypt -v /opt/sites-extra/perolas/acme:/var/www/certbot certbot/certbot certonly --webroot -w /var/www/certbot -d perolaseventos.store -d www.perolaseventos.store`), instalar o vhost https, `nginx -t` + reload, cron de renovação próprio, remover o túnel.
+1. ~~Domínio e HTTPS~~ **NO AR em 16/10 (18:23)**: https://perolaseventos.store (www e http redirecionam). DNS na
+   Hostinger (A `@` → 92.112.178.48, www = CNAME), certificado Let's Encrypt em `/opt/sites-extra/perolas/certs`
+   (vence em ~90 dias), vhost fase 2 instalado (backup da fase 1 em `/opt/sites-extra/perolas/vhost-fase1.bak`).
+2. **Pendente**: cron de renovação próprio do certificado (perguntar ao usuário antes de mexer no crontab) e remover o
+   túnel (`docker rm -f perolas-tunel`).
 3. **Confirmar com a Pérolas**: preços/lotes reais (seed tem valores FICTÍCIOS), patrocinadores 2027 (Bió Costa = cartaz de casa de apostas, não publicado), uso das fotos/vídeos, textos de termos e privacidade (+ CNPJ).
 4. **Antes das vendas reais**: `PAYMENT_PROVIDER=mercadopago` + chaves, apagar pedidos de teste, `check:config` em produção, Resend (SPF/DKIM), backup fora da VPS, trocar o túnel pelo domínio.
 5. Termos de compra e política de privacidade (+ aceite no checkout, anonimização após o evento).
