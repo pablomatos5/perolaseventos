@@ -19,9 +19,11 @@ const COLORS: Record<Result["result"], string> = {
   error: "bg-yellow-400 text-black",
 };
 
+let audio: AudioContext | null = null;
 function beep(ok: boolean) {
   try {
-    const ctx = new AudioContext();
+    const ctx = (audio ??= new AudioContext());
+    if (ctx.state === "suspended") void ctx.resume();
     const osc = ctx.createOscillator();
     osc.frequency.value = ok ? 880 : 220;
     osc.connect(ctx.destination);

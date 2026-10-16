@@ -45,30 +45,53 @@ export function Story() {
   );
 }
 
-/** Faixa de patrocinadores rolando (texto, sem logos de terceiros até a Pérolas mandar os arquivos). */
-export function Sponsors() {
-  const row = [...sponsors2026, ...sponsors2026];
+type Sponsor = (typeof sponsors2026)[number];
+
+function SponsorTile({ s, hidden }: { s: Sponsor; hidden?: boolean }) {
+  const inner = (
+    <>
+      <span className={`sponsor-art ${s.light ? "is-light" : ""} ${s.image ? "" : "is-text"}`}>
+        {s.image ? (
+          // eslint-disable-next-line @next/next/no-img-element -- recorte já otimizado em /public
+          <img src={s.image} alt="" loading="lazy" decoding="async" />
+        ) : (
+          <span className="font-display text-3xl leading-tight italic">{s.name}</span>
+        )}
+      </span>
+      <span className="mt-3 block font-display text-xl italic">{s.name}</span>
+      {s.instagram && <span className="block text-xs tracking-wide text-fg-faint">@{s.instagram}</span>}
+    </>
+  );
+  // cópias da faixa (para o loop sem emenda) ficam fora do Tab e dos leitores de tela
+  const a11y = hidden ? { tabIndex: -1, "aria-hidden": true as const } : {};
+  return s.instagram ? (
+    <a href={`https://www.instagram.com/${s.instagram}/`} target="_blank" rel="noopener noreferrer" className="sponsor-tile" {...a11y}>
+      {inner}
+    </a>
+  ) : (
+    <div className="sponsor-tile" {...a11y}>
+      {inner}
+    </div>
+  );
+}
+
+/**
+ * Patrocinadores numa faixa sempre em movimento (mesmo esquema dos cartazes da jessassinaturas):
+ * a lista aparece 4x e a faixa anda -50% em loop linear, então o fim encaixa no começo sem salto.
+ * Para quando o mouse passa por cima ou um link recebe foco; sem animação vira rolagem manual.
+ */
+export function SponsorCarousel() {
+  const loop = [0, 1, 2, 3].flatMap((copy) => sponsors2026.map((s) => ({ s, copy })));
   return (
-    <section className="border-y border-line py-10" aria-labelledby="sponsors-title">
-      <p id="sponsors-title" className="eyebrow mb-6 w-full justify-center">
-        Quem brindou com a gente em 2026
-      </p>
-      <div className="marquee" aria-hidden>
-        <div className="marquee-track">
-          {row.map((name, i) => (
-            <span key={i} className="flex items-center gap-10 whitespace-nowrap font-display text-2xl text-fg-muted italic md:text-3xl">
-              {name}
-              <span className="size-1.5 rotate-45 bg-accent" />
-            </span>
-          ))}
-        </div>
-      </div>
-      <ul className="sr-only">
-        {sponsors2026.map((s) => (
-          <li key={s}>{s}</li>
+    <div className="sponsor-marquee">
+      <ul className="sponsor-track" aria-label="Patrocinadores">
+        {loop.map(({ s, copy }) => (
+          <li key={`${copy}-${s.name}`}>
+            <SponsorTile s={s} hidden={copy > 0} />
+          </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }
 
@@ -83,7 +106,7 @@ export function Faq() {
       <div className="mt-10 divide-y divide-line border-y border-line">
         {faq.map((f) => (
           <details key={f.q} className="faq group py-5">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 text-lg">
               {f.q}
               <span className="text-2xl text-accent transition-transform duration-300 group-open:rotate-45">+</span>
             </summary>

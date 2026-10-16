@@ -1,5 +1,5 @@
-import { AttractionCards, PastLineupCards } from "@/components/attraction-cards";
-import { pastLineup } from "@/content/site";
+import { AttractionCards } from "@/components/attraction-cards";
+import { SponsorCarousel } from "@/components/story-sections";
 import type { Attraction, Highlight } from "@/generated/prisma/client";
 
 // Ícones em linha fina (stroke = currentColor), desenhados para o tamanho 28px.
@@ -69,9 +69,12 @@ export function Lineup({ attractions }: { attractions: Attraction[] }) {
           />
         </div>
 
-        <h3 className="eyebrow rule mt-20">Já passaram pelo palco</h3>
-        <div className="mt-8">
-          <PastLineupCards artists={pastLineup} />
+        <span className="eyebrow rule mt-24 flex">Patrocinadores</span>
+        <h3 className="display mt-4 text-[clamp(2rem,4.5vw,3.4rem)]!">
+          Quem brindou com a gente em <em>2026</em>
+        </h3>
+        <div className="mt-10">
+          <SponsorCarousel />
         </div>
       </div>
     </section>

@@ -24,11 +24,11 @@ type Qty = Record<string, { full: number; half: number }>;
 function Stepper({ value, onChange, max, label }: { value: number; onChange: (v: number) => void; max: number; label: string }) {
   return (
     <div className="flex items-center gap-3" role="group" aria-label={label}>
-      <button type="button" className="size-9 rounded-full border border-line text-lg disabled:opacity-30" onClick={() => onChange(value - 1)} disabled={value <= 0} aria-label={`Menos ${label}`}>
+      <button type="button" className="size-11 rounded-full border border-line text-lg disabled:opacity-30" onClick={() => onChange(value - 1)} disabled={value <= 0} aria-label={`Menos ${label}`}>
         −
       </button>
       <span className="w-5 text-center tabular-nums">{value}</span>
-      <button type="button" className="size-9 rounded-full border border-line text-lg disabled:opacity-30" onClick={() => onChange(value + 1)} disabled={value >= max} aria-label={`Mais ${label}`}>
+      <button type="button" className="size-11 rounded-full border border-line text-lg disabled:opacity-30" onClick={() => onChange(value + 1)} disabled={value >= max} aria-label={`Mais ${label}`}>
         +
       </button>
     </div>
@@ -63,7 +63,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
                   <p className="mt-1 max-w-md text-sm text-fg-muted">{t.description}</p>
                 </div>
                 {t.status === "open" && (
-                  <div className="text-right">
+                  <div className="w-full sm:w-auto sm:text-right">
                     <span className="eyebrow">{t.batchName}</span>
                     <div className="font-display text-4xl text-accent">{formatBRL(t.priceCents)}</div>
                     {t.allowHalf && <div className="text-xs text-fg-faint">meia {formatBRL(t.halfCents)}</div>}
@@ -117,9 +117,9 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
           <Field name="buyerName" label="Nome completo" autoComplete="name" />
           <Field name="email" label="E-mail" type="email" autoComplete="email" />
           <Field name="phone" label="Celular com DDD" type="tel" autoComplete="tel" inputMode="numeric" />
-          <Field name="cpf" label="CPF" inputMode="numeric" />
-          <label className="flex items-start gap-3 text-sm text-fg-muted">
-            <input type="checkbox" name="whatsappOptIn" defaultChecked className="mt-1 accent-[var(--accent)]" />
+          <Field name="cpf" label="CPF" inputMode="numeric" maxLength={14} />
+          <label className="flex cursor-pointer items-start gap-3 py-1 text-sm text-fg-muted">
+            <input type="checkbox" name="whatsappOptIn" defaultChecked className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]" />
             Quero receber o ingresso também pelo WhatsApp
           </label>
         </div>

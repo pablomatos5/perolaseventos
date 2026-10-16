@@ -272,7 +272,7 @@ function VideoFlipCard({ a }: { a: CardAttraction }) {
         </span>
         <span className="flip-face flip-back">
           <span className="attraction-card video-back">
-            <video ref={video} src={a.videoUrl} loop playsInline preload="none" className="video-fill" />
+            <video ref={video} src={a.videoUrl} poster={showBack ? a.videoUrl?.replace(/\.mp4$/, "-poster.jpg") : undefined} loop playsInline preload="none" className="video-fill" />
             <button
               type="button"
               className="sound-btn"
@@ -309,31 +309,6 @@ export function AttractionCards({ attractions }: { attractions: CardAttraction[]
       {attractions.map((a, i) => (
         <li key={a.id}>
           {!a.announced ? <MysteryCard n={i + 1} /> : a.videoUrl ? <VideoFlipCard a={a} /> : <AnnouncedCard a={a} />}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** Quem já passou pelo palco: cards menores, só com arte, nome e Instagram. */
-export function PastLineupCards({ artists }: { artists: { name: string; instagram: string; imageUrl?: string; focus?: string }[] }) {
-  return (
-    <ul className="card-rail card-rail-sm">
-      {artists.map((a) => (
-        <li key={a.name}>
-          <AnnouncedCard
-            a={{
-              id: a.name,
-              name: a.name,
-              genre: "Réveillon 2026",
-              time: "",
-              announced: true,
-              headliner: false,
-              instagram: a.instagram,
-              imageUrl: a.imageUrl ?? "",
-              imageFocus: a.focus,
-            }}
-          />
         </li>
       ))}
     </ul>

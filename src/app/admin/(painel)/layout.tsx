@@ -4,6 +4,9 @@ import { logoutAction } from "../actions";
 
 export const metadata = { title: "Painel · Pérolas", robots: { index: false } };
 
+// Toda página do painel lê o cookie da sessão: navegação bloqueante é o esperado (só a equipe usa).
+export const instant = false;
+
 const NAV = [
   { href: "/admin", label: "Vendas e lotes" },
   { href: "/admin/pedidos", label: "Pedidos" },

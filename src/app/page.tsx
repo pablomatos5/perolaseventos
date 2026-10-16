@@ -4,9 +4,10 @@ import { TideReveal, type TideStep } from "@/components/tide-reveal";
 import { Countdown } from "@/components/countdown";
 import { Lineup, PartyDetails } from "@/components/party-sections";
 import { OceanWaves, ShellOpening, Sparkles } from "@/components/shell-opening";
-import { Campaign, Faq, Sponsors, Story, Testimonials, Ticker } from "@/components/story-sections";
+import { Campaign, Faq, Story, Testimonials, Ticker } from "@/components/story-sections";
 import { PearlDrop } from "@/components/pearl-drop";
 import { StickyBuy } from "@/components/sticky-buy";
+import { Starfield } from "@/components/starfield";
 import { campaign } from "@/content/site";
 import { TicketPicker, type PickerType } from "@/components/ticket-picker";
 import { currentBatch } from "@/lib/batches";
@@ -79,6 +80,7 @@ async function EventPage() {
 
   return (
     <main>
+      <Starfield />
       {/* Hero e praia formam uma cena só: céu → concha → mar (OceanWaves) → maré de atrações na areia (TideReveal). */}
       <section className="hero-sky relative flex min-h-svh flex-col overflow-hidden">
         <Sparkles />
@@ -133,7 +135,6 @@ async function EventPage() {
 
       <Testimonials />
       <Story />
-      <Sponsors />
       <Faq />
       <StickyBuy />
       <PearlDrop />

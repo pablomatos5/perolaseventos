@@ -74,14 +74,20 @@ export const testimonials = [
   { quote: "Partiu último show do ano.", author: "DJ Ferrugem", role: "Réveillon 2026" },
 ];
 
-/** Patrocinadores anunciados para o Réveillon 2026. Confirmar quem renova para 2027. */
-export const sponsors2026 = [
-  "FB Import & Perfumaria",
-  "Bió Costa & Janaina Costa",
-  "Maju Modas & Maria Bonita",
-  "Lucas Amorim Advocacia",
-  "Dr. André Luiz · Odontologia",
-  "Sr Drink",
+/**
+ * Patrocinadores anunciados para o Réveillon 2026 (posts "Patrocinador Oficial Confirmado!" de dez/2025).
+ * Confirmar quem renova para 2027. `instagram`: perfil marcado no anúncio.
+ * `image`: painel do logo recortado do cartaz-anúncio da Pérolas (720x360, em /public/patrocinadores);
+ * `light: true` = logo sobre fundo branco (foto de perfil pequena), mostrado inteiro e centralizado.
+ * Sem `image`: cartão só com o nome (Bió Costa: o cartaz dele é propaganda de casa de apostas — ver HANDOFF).
+ */
+export const sponsors2026: { name: string; instagram?: string; image?: string; light?: boolean }[] = [
+  { name: "FB Import & Perfumaria", instagram: "fb.import__", image: "/patrocinadores/fb-import.jpg" },
+  { name: "Maju Modas & Maria Bonita", image: "/patrocinadores/maju-maria-bonita.jpg" },
+  { name: "Lucas Amorim Advocacia", instagram: "adv.lucaamoriim", image: "/patrocinadores/lucas-amorim.jpg" },
+  { name: "Sr Drink", instagram: "sr.drink_oficial", image: "/patrocinadores/sr-drink.jpg", light: true },
+  { name: "Dr. André Luiz · Odontologia", instagram: "dr.andre_luizc", image: "/patrocinadores/dr-andre-luiz.jpg" },
+  { name: "Bió Costa & Janaina Costa", instagram: "costa_bio" },
 ];
 
 /** Perguntas respondidas com o que o sistema garante e o que a Pérolas já publicou. */

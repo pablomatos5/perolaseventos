@@ -15,9 +15,9 @@ export type TideStep = {
 
 // [esquerda %, topo %, tamanho rem]: deixadas pela maré, fora do texto central
 const SAND_PEARLS = [
-  [9, 72, 1.5],
-  [17, 52, 1.05],
-  [26, 80, 1.15],
+  [14, 62, 1.5],
+  [17, 50, 1.05],
+  [31, 76, 1.15],
   [79, 60, 1.6],
   [89, 76, 1.1],
   [69, 82, 1.3],
@@ -27,6 +27,7 @@ const SAND_PEARLS = [
 
 const WAVE_MS = 1800; // duração de uma ida e volta da onda (casa com @keyframes swash no CSS)
 const PEAK_MS = 620; // momento em que a onda cobre a areia: é aí que a escrita troca
+const DRY_MS = 5200; // areia molhada secando (casa com .drying / @keyframes wet no CSS)
 
 /**
  * "Maré de atrações": a praia fica fixa na tela enquanto a seção rola. Cada trecho de rolagem
@@ -48,6 +49,7 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     let swapTimer = 0;
     let endTimer = 0;
+    let dryTimer = 0;
 
     const wash = () => {
       if (reduced) {
@@ -57,13 +59,16 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         return;
       }
       // reinicia a animação da onda (remove → reflow → adiciona)
-      stage.classList.remove("washing");
+      stage.classList.remove("washing", "drying");
       void stage.offsetWidth;
-      stage.classList.add("washing");
+      stage.classList.add("washing", "erasing", "drying");
       washing.current = true;
       clearTimeout(swapTimer);
       clearTimeout(endTimer);
+      clearTimeout(dryTimer);
+      dryTimer = window.setTimeout(() => stage.classList.remove("drying"), DRY_MS);
       swapTimer = window.setTimeout(() => {
+        stage.classList.remove("erasing");
         current.current = target.current;
         setShown(target.current);
         stage.classList.add("is-in"); // libera as pérolas na areia depois da primeira maré
@@ -106,6 +111,7 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
       cancelAnimationFrame(raf);
       clearTimeout(swapTimer);
       clearTimeout(endTimer);
+      clearTimeout(dryTimer);
     };
   }, [steps.length]);
 
@@ -114,6 +120,7 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
     <section ref={sectionRef} className="tide" style={{ height: `calc(100svh + ${steps.length * 70}svh)` }} aria-label="Informações do evento e atrações">
       <div ref={stageRef} className="beach tide-stage">
         <div className="beach-wet" />
+        <Footsteps />
 
         {steps.map((s, i) => (
           <div key={s.key} className={`tide-writing ${i === shown ? "is-active" : ""}`} aria-hidden={i !== shown}>
@@ -167,7 +174,10 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         </ol>
 
         <div className="beach-wave" aria-hidden>
-          <svg className="beach-foam" viewBox="0 0 1440 80" preserveAspectRatio="none">
+          <svg className="beach-foam" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            {/* água rasa: língua fina e transparente que avança além da espuma */}
+            <path d="M0 30 C 180 70, 360 0, 540 34 S 900 70, 1080 30 S 1320 0, 1440 34 V 70 C 1300 98, 1180 64, 1020 86 S 700 104, 520 80 S 180 96, 0 74 Z" style={{ fill: "var(--wave-edge)" }} />
+            <path d="M0 74 C 180 96, 340 64, 520 80 S 880 104, 1020 86 S 1300 98, 1440 70" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="2" strokeDasharray="2 7" strokeLinecap="round" />
             <path d="M0 30 C 180 70, 360 0, 540 34 S 900 70, 1080 30 S 1320 0, 1440 34 V0 H0 Z" fill="var(--wave-body)" />
             <path d="M0 30 C 180 70, 360 0, 540 34 S 900 70, 1080 30 S 1320 0, 1440 34" fill="none" stroke="#fff" strokeOpacity=".85" strokeWidth="5" />
             <path d="M0 44 C 200 76, 380 14, 560 46 S 920 76, 1100 42 S 1330 14, 1440 46" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="3" />
@@ -182,5 +192,29 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+// Pegada de um pé direito humano (dedos para cima, dedão à esquerda): calcanhar, arco fino no lado
+// de dentro, planta larga e cinco dedos separados, do dedão ao mindinho.
+const SOLE =
+  "M30 36C43 34 51 44 50 58C49 72 45 84 44 96C43 108 45 120 39 130C34 138 21 138 18 128C15 118 19 108 23 98C26 90 31 84 29 76C27 68 12 66 11 55C10 43 19 37 30 36Z";
+const TOES = [
+  [14, 25, 6.4, 8.4, -8],
+  [26.5, 21, 4.1, 5, 0],
+  [35.5, 23, 3.7, 4.5, 6],
+  [43, 28.5, 3.3, 4, 14],
+  [48.5, 36, 2.9, 3.5, 24],
+] as const;
+
+/** Uma pegada marcada na areia, no canto da praia. Decorativa. */
+function Footsteps() {
+  return (
+    <svg className="beach-steps" viewBox="0 0 60 140" aria-hidden>
+      <path d={SOLE} />
+      {TOES.map(([cx, cy, rx, ry, rot]) => (
+        <ellipse key={cx} cx={cx} cy={cy} rx={rx} ry={ry} transform={`rotate(${rot} ${cx} ${cy})`} />
+      ))}
+    </svg>
   );
 }

@@ -229,6 +229,8 @@ body {
   --sand-1: #ecd6b0;
   --sand-2: #d6b384;
   --wave-body: var(--sea);
+  /* ponta da onda: água rasa, clara e transparente (mesma cor do fim do degradê da onda) */
+  --wave-edge: color-mix(in srgb, color-mix(in srgb, var(--wave-body), #fff 35%) 40%, transparent);
   position: relative;
   overflow: hidden;
   height: min(92svh, 46rem);
@@ -251,7 +253,8 @@ body {
   position: absolute;
   inset: 0;
   z-index: 3;
-  background: linear-gradient(180deg, var(--wave-body) 0%, var(--wave-body) 55%, color-mix(in srgb, var(--wave-body), #fff 22%) 100%);
+  /* cor única: emenda sem degrau com o corpo da onda desenhado no SVG da espuma */
+  background: var(--wave-body);
   transform: translateY(-84%);
   will-change: transform;
 }
@@ -259,15 +262,21 @@ body {
   position: absolute;
   left: -5%;
   width: 110%;
-  height: 4.5rem;
+  height: 7rem;
   top: calc(100% - 1px);
+  overflow: visible;
   animation: foam-sway 5s ease-in-out infinite alternate;
 }
 .beach-wet {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgb(110 75 35 / 0.45), rgb(110 75 35 / 0.12) 80%, transparent);
-  opacity: 0;
+  background:
+    linear-gradient(105deg, transparent 20%, rgb(255 250 240 / 0.14) 38%, transparent 52%, rgb(255 250 240 / 0.08) 70%, transparent 82%),
+    linear-gradient(180deg, rgb(105 68 28 / 0.55), rgb(105 68 28 / 0.38) 70%, rgb(105 68 28 / 0.3));
+  /* máscara com a borda ondulada e macia da última onda; tem o dobro da altura da praia e desliza:
+     posição Y = 1 - linha molhada (3% = molhada até 97% da tela; 67% = só a faixa junto ao mar) */
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cfilter id='b'%3E%3CfeGaussianBlur stdDeviation='0 2.5'/%3E%3C/filter%3E%3Cpath filter='url(%23b)' d='M0 0H400V97C350 105 320 90 270 98S180 108 130 97S40 91 0 100Z'/%3E%3C/svg%3E") no-repeat 0 67% / 100% 200%;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cfilter id='b'%3E%3CfeGaussianBlur stdDeviation='0 2.5'/%3E%3C/filter%3E%3Cpath filter='url(%23b)' d='M0 0H400V97C350 105 320 90 270 98S180 108 130 97S40 91 0 100Z'/%3E%3C/svg%3E") no-repeat 0 67% / 100% 200%;
 }
 .beach-text {
   position: absolute;
@@ -358,7 +367,9 @@ body {
 .tide-stage .beach-wave { animation: lap 4s ease-in-out infinite alternate; }
 /* ida e volta em 1,8 s; pico (areia coberta) em ~0,63 s = PEAK_MS no componente */
 .tide-stage.washing .beach-wave { animation: swash 1.8s cubic-bezier(0.45, 0, 0.25, 1) both; }
-.tide-stage.washing .beach-wet { animation: wet 2.6s ease-out 0.6s both; }
+/* a areia que a onda cobriu fica molhada e seca devagar, da ponta mais distante para o mar
+   ("drying" tem relógio próprio no componente: não é cortada quando a onda termina) */
+.tide-stage.drying .beach-wet { animation: wet 4.6s cubic-bezier(0.3, 0, 0.3, 1) 0.55s both; }
 .tide-writing {
   position: absolute;
   inset: 17% 1.25rem 7%;
@@ -417,10 +428,16 @@ body {
   transition: background 0.4s, transform 0.4s;
 }
 .tide-dots li.is-on { background: rgb(112 76 38 / 0.8); transform: scale(1.3); }
+/* a onda avança até logo abaixo da escrita (não cobre a tela toda) e recua devagar */
 @keyframes swash {
   0% { transform: translateY(-84%); }
-  35% { transform: translateY(-4%); }
+  35% { transform: translateY(-10%); }
   100% { transform: translateY(-84%); }
+}
+/* escrita antiga lavada pela água: borra, desce um pouco e se desfaz antes da troca */
+.tide-stage.erasing .tide-writing.is-active { animation: sand-erase 0.6s ease-in forwards; }
+@keyframes sand-erase {
+  to { opacity: 0; filter: blur(6px); translate: 0 1.2rem; }
 }
 @keyframes lap {
   to { transform: translateY(-80%); }
@@ -429,17 +446,19 @@ body {
   to { transform: translateX(4%); }
 }
 @keyframes wet {
-  0% { opacity: 0.9; }
-  100% { opacity: 0.15; }
+  from { -webkit-mask-position: 0 3%; mask-position: 0 3%; }
+  to { -webkit-mask-position: 0 67%; mask-position: 0 67%; }
 }
+/* a escrita nova aparece de baixo para cima, atrás da água que recua, ainda úmida (borrada) no começo */
 @keyframes sand-reveal {
-  from { clip-path: inset(100% 0 0 0); opacity: 0.4; }
-  to { clip-path: inset(0 0 0 0); opacity: 1; }
+  from { clip-path: inset(100% 0 0 0); opacity: 0.3; filter: blur(3px); }
+  60% { filter: blur(0.5px); }
+  to { clip-path: inset(0 0 0 0); opacity: 1; filter: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .beach-wave, .beach-foam, .tide-stage .beach-wave, .tide-stage.washing .beach-wave { animation: none; }
-  .tide-writing.is-active { animation: none; }
+  .tide-writing.is-active, .tide-stage.erasing .tide-writing.is-active { animation: none; }
   .beach .beach-text, .beach.is-in .beach-text { animation: none; clip-path: none; }
   .beach-pearl, .beach.is-in .beach-pearl { animation: none; opacity: 1; }
   .beach.is-in .beach-pearl::after { animation: none; }
@@ -661,7 +680,7 @@ body {
 @media (max-width: 640px) {
   .lineup-soon span:last-child { display: none; }
 }
-/* ───────── Patrocinadores (marquee) ───────── */
+/* ───────── Faixa rolando (marquee) ───────── */
 .marquee {
   overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
@@ -784,8 +803,6 @@ body {
 /* trilho: grade no desktop, carrossel com snap no celular */
 .card-rail { display: grid; gap: 1.25rem; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; padding: 0; }
 .card-rail > li { min-width: 0; }
-.card-rail-sm .card-media { aspect-ratio: 3 / 4; }
-.card-rail-sm .card-title { font-size: 1.6rem; }
 @media (max-width: 1023px) { .card-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 639px) {
   .card-rail { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 0.5rem; margin-inline: -1.25rem; padding-inline: 1.25rem; }
@@ -855,6 +872,8 @@ body {
   top: 1rem;
   right: 1rem;
   z-index: 4;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding: 0.45rem 0.8rem;
   border-radius: 999px;
   border: 1px solid rgb(255 255 255 / 0.3);
@@ -872,8 +891,6 @@ body {
 
 /* "Já passaram pelo palco" é secundário: mais compacto (4 colunas já em tablet) */
 @media (min-width: 768px) {
-  .card-rail-sm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .card-rail-sm .card-title { font-size: 1.35rem; }
   .card-rail-sm .card-body { padding: 1.1rem 0.8rem 1.3rem; }
   .card-rail-sm .btn { padding: 0.6rem 0.9rem !important; font-size: 0.6rem; letter-spacing: 0.08em; }
 }
@@ -1027,6 +1044,150 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { .attraction-card.is-headliner { animation: none; } }
 
+/* ───────── Patrocinadores: faixa sempre em movimento ───────── */
+.sponsor-marquee {
+  overflow: hidden;
+  margin-inline: -1.25rem; /* encosta nas bordas da tela no celular */
+  padding-block: 0.75rem;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+@media (min-width: 768px) { .sponsor-marquee { margin-inline: -2rem; } }
+.sponsor-track {
+  display: flex;
+  width: max-content;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  animation: sponsor-scroll 60s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+/* margem (não gap): as duas metades ficam idênticas e o -50% encaixa sem salto */
+.sponsor-track > li { padding-right: clamp(1rem, 2.5vw, 1.75rem); }
+.sponsor-marquee:hover .sponsor-track,
+.sponsor-marquee:focus-within .sponsor-track { animation-play-state: paused; }
+@keyframes sponsor-scroll {
+  to { transform: translateX(-50%); }
+}
+.sponsor-tile { display: block; width: clamp(15.5rem, 70vw, 22rem); }
+.sponsor-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  border: 1px solid rgb(var(--pearl-glow) / 0.35);
+  background: var(--bg-alt);
+  box-shadow: 0 1.2rem 2.4rem -1.2rem rgb(0 0 0 / 0.7), 0 0 2rem rgb(var(--pearl-glow) / 0.12);
+  transition: border-color 0.4s, translate 0.4s, box-shadow 0.4s;
+}
+.sponsor-art img { width: 100%; height: 100%; object-fit: cover; }
+/* logo pequeno sobre branco: inteiro, centralizado, sem esticar */
+.sponsor-art.is-light { background: #fff; }
+.sponsor-art.is-light img { width: auto; height: 82%; object-fit: contain; }
+/* sem imagem: o nome vira a arte, com brilho de pérola */
+.sponsor-art.is-text {
+  padding: 1.5rem;
+  text-align: center;
+  background: radial-gradient(circle at 50% 120%, rgb(var(--pearl-glow) / 0.25), transparent 60%), var(--bg-alt);
+  color: var(--accent);
+}
+a.sponsor-tile:hover .sponsor-art { border-color: var(--accent); translate: 0 -4px; box-shadow: 0 1.4rem 2.6rem -1.2rem rgb(0 0 0 / 0.75), 0 0 2.4rem rgb(var(--pearl-glow) / 0.3); }
+a.sponsor-tile:focus-visible { outline: none; }
+a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .sponsor-marquee { overflow-x: auto; scroll-snap-type: x mandatory; }
+  .sponsor-track { animation: none; }
+  .sponsor-track > li { scroll-snap-align: center; }
+}
+
+/* ───────── Céu estrelado / pérolas no mar no fundo escuro ─────────
+   Camada fixa atrás de tudo (z-index -1): aparece só onde a seção não tem fundo próprio
+   (o hero e a praia cobrem). Três ladrilhos de tamanhos diferentes para não se ver repetição;
+   só opacity anima, então é barato até no celular. */
+.starfield { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.starfield > i { position: absolute; inset: 0; animation: twinkle 5s ease-in-out infinite alternate; }
+.starfield > i:nth-child(1) {
+  background-image:
+    radial-gradient(1px 1px at 55px 237px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 40px 6px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 165px 207px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 93px 204px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 92px 178px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 304px 91px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 141px 147px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 312px 39px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 174px 154px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 34px 130px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 130px 217px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 259px 116px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 80px 172px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 177px 112px, rgb(255 255 255 / 0.9), transparent);
+  background-size: 313px 313px;
+}
+.starfield > i:nth-child(2) {
+  background-image:
+    radial-gradient(1.6px 1.6px at 203px 232px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 195px 83px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 443px 405px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 239px 191px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 377px 403px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 161px 314px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 431px 63px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 394px 437px, rgb(255 236 214 / 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 451px 98px, rgb(255 236 214 / 0.95), transparent);
+  background-size: 457px 457px;
+  animation-duration: 7s;
+  animation-delay: -3s;
+}
+.starfield > i:nth-child(3) {
+  background-image:
+    radial-gradient(2.4px 2.4px at 63px 333px, rgb(233 220 255 / 0.95), transparent),
+    radial-gradient(2.4px 2.4px at 487px 264px, rgb(233 220 255 / 0.95), transparent),
+    radial-gradient(2.4px 2.4px at 537px 100px, rgb(233 220 255 / 0.95), transparent),
+    radial-gradient(2.4px 2.4px at 280px 424px, rgb(233 220 255 / 0.95), transparent),
+    radial-gradient(2.4px 2.4px at 395px 581px, rgb(233 220 255 / 0.95), transparent);
+  background-size: 641px 641px;
+  animation-duration: 9s;
+  animation-delay: -6s;
+}
+/* pérolas maiores, com brilho, espalhadas e "respirando" devagar */
+.starfield > b {
+  position: absolute;
+  width: var(--s, 5px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #f1e7ff 45%, #c9b4ef);
+  box-shadow: 0 0 10px 2px rgb(var(--pearl-glow) / 0.55);
+  animation: pearl-glint 6s ease-in-out infinite;
+}
+@keyframes twinkle {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+@keyframes pearl-glint {
+  0%, 100% { opacity: 0.25; scale: 0.8; }
+  50% { opacity: 1; scale: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .starfield > i, .starfield > b { animation: none; }
+}
+
+/* ───────── Pegada na areia (canto inferior esquerdo da praia) ───────── */
+.beach-steps {
+  position: absolute;
+  left: clamp(0.75rem, 4vw, 3rem);
+  bottom: 15%;
+  z-index: 1;
+  width: clamp(1.9rem, 4.5vw, 2.8rem);
+  rotate: -18deg;
+  pointer-events: none;
+  /* afundada: miolo escuro + borda clara embaixo, como areia pisada */
+  filter: drop-shadow(0 1.5px 0 rgb(255 244 222 / 0.6)) drop-shadow(0 -1px 0 rgb(80 50 18 / 0.3));
+}
+.beach-steps > * { fill: rgb(110 74 34 / 0.28); }
 
 
 
