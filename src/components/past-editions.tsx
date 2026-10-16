@@ -33,7 +33,9 @@ export function PastEditions() {
   const holdUntil = useRef(0); // pausa o automático até este instante (a pessoa está mexendo)
   const [active, setActive] = useState(0);
   const soundRef = useRef<number | null>(null);
-  soundRef.current = soundOn;
+  useEffect(() => {
+    soundRef.current = soundOn;
+  }, [soundOn]);
 
   const nudge = (dir: 1 | -1) => {
     holdUntil.current = Date.now() + 8000;

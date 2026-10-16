@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
-import { portariaEvent } from "@/lib/checkin";
+import { portariaEvent, REAL_ORDER } from "@/lib/checkin";
 import { db } from "@/lib/db";
 import { deviceFromRequest } from "@/lib/portaria-auth";
 import { genderLabel } from "@/lib/format";
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   if (digits.length >= 4) or.push({ order: { cpf: { contains: digits } } });
 
   const tickets = await db.ticket.findMany({
-    where: { status: { in: ["VALID", "CANCELED"] }, order: { eventId: event.id }, OR: or },
+    where: { status: { in: ["VALID", "CANCELED"] }, order: { eventId: event.id, ...REAL_ORDER }, OR: or },
     include: { ticketType: true, batch: true, order: { select: { code: true, buyerName: true, cpf: true } } },
     orderBy: { holderName: "asc" },
     take: 30,

@@ -15,7 +15,15 @@ export type CheckinResult = {
   usedBy?: string;
 };
 
-const ticketInclude = { ticketType: true, batch: true, order: { select: { code: true } } } satisfies Prisma.TicketInclude;
+const ticketInclude = { ticketType: true, batch: true, order: { select: { code: true, paymentRef: true } } } satisfies Prisma.TicketInclude;
+
+// Pagamento simulado (modo demonstração) grava paymentRef "mock_<código>": esses ingressos não entram na festa.
+const DEMO_REF = "mock_";
+/** Filtro de pedido "de verdade" (pago por gateway ou cortesia), para a portaria. */
+// (OR com null: no SQL, NOT LIKE de um valor nulo dá nulo e excluiria o pedido)
+export const REAL_ORDER = {
+  OR: [{ paymentRef: null }, { NOT: { paymentRef: { startsWith: DEMO_REF } } }],
+} satisfies Prisma.OrderWhereInput;
 type TicketFull = Prisma.TicketGetPayload<{ include: typeof ticketInclude }>;
 
 const info = (t: TicketFull) => ({
@@ -43,13 +51,14 @@ export async function checkIn(opts: {
 }): Promise<CheckinResult> {
   const at = opts.at && opts.at < new Date() ? opts.at : new Date();
   const { count } = await db.ticket.updateMany({
-    where: { id: opts.ticketId, status: "VALID", usedAt: null, ...(opts.version !== null ? { qrVersion: opts.version } : {}) },
+    where: { id: opts.ticketId, status: "VALID", usedAt: null, ...(opts.version !== null ? { qrVersion: opts.version } : {}), order: REAL_ORDER },
     data: { usedAt: at, usedBy: opts.device.slice(0, 40), checkinMethod: opts.method },
   });
 
   const t = await db.ticket.findUnique({ where: { id: opts.ticketId }, include: ticketInclude });
   if (!t) return { result: "invalid", message: "Ingresso não encontrado" };
   if (count === 1) return { result: "ok", message: "Liberado", ...info(t) };
+  if (t.order.paymentRef?.startsWith(DEMO_REF)) return { result: "invalid", message: "Ingresso de demonstração: não vale para o evento", ...info(t) };
   if (t.status !== "VALID") return { result: "invalid", message: "Ingresso não pago ou cancelado", ...info(t) };
   if (opts.version !== null && t.qrVersion !== opts.version) {
     return { result: "invalid", message: "QR antigo: este ingresso foi reemitido ou transferido", ...info(t) };

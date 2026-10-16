@@ -1,4 +1,4 @@
-import { campaign, faq, history, manifesto, sponsors2026, stats, ticker } from "@/content/site";
+import { campaign, faq, history, manifesto, stats, ticker } from "@/content/site";
 import { Scallop, SeaDecor } from "@/components/sea-decor";
 
 /** Manifesto + números + linha do tempo das edições. */
@@ -49,56 +49,6 @@ export function Story() {
         </ol>
       </div>
     </section>
-  );
-}
-
-type Sponsor = (typeof sponsors2026)[number];
-
-function SponsorTile({ s, hidden }: { s: Sponsor; hidden?: boolean }) {
-  const inner = (
-    <>
-      <span className={`sponsor-art ${s.light ? "is-light" : ""} ${s.image ? "" : "is-text"}`}>
-        {s.image ? (
-          // eslint-disable-next-line @next/next/no-img-element -- recorte já otimizado em /public
-          <img src={s.image} alt="" loading="lazy" decoding="async" />
-        ) : (
-          <span className="font-display text-3xl leading-tight italic">{s.name}</span>
-        )}
-      </span>
-      <span className="mt-3 block font-display text-xl italic">{s.name}</span>
-      {s.instagram && <span className="block text-xs tracking-wide text-fg-faint">@{s.instagram}</span>}
-    </>
-  );
-  // cópias da faixa (para o loop sem emenda) ficam fora do Tab e dos leitores de tela
-  const a11y = hidden ? { tabIndex: -1, "aria-hidden": true as const } : {};
-  return s.instagram ? (
-    <a href={`https://www.instagram.com/${s.instagram}/`} target="_blank" rel="noopener noreferrer" className="sponsor-tile" {...a11y}>
-      {inner}
-    </a>
-  ) : (
-    <div className="sponsor-tile" {...a11y}>
-      {inner}
-    </div>
-  );
-}
-
-/**
- * Patrocinadores numa faixa sempre em movimento (mesmo esquema dos cartazes da jessassinaturas):
- * a lista aparece 4x e a faixa anda -50% em loop linear, então o fim encaixa no começo sem salto.
- * Para quando o mouse passa por cima ou um link recebe foco; sem animação vira rolagem manual.
- */
-export function SponsorCarousel() {
-  const loop = [0, 1, 2, 3].flatMap((copy) => sponsors2026.map((s) => ({ s, copy })));
-  return (
-    <div className="sponsor-marquee">
-      <ul className="sponsor-track" aria-label="Patrocinadores">
-        {loop.map(({ s, copy }) => (
-          <li key={`${copy}-${s.name}`}>
-            <SponsorTile s={s} hidden={copy > 0} />
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -198,7 +148,7 @@ function splitTagline(t: string): [string, string] {
 /** Faixa rolando com ✦ entre os itens (a "roleta"). Lista duplicada para o loop não ter emenda. */
 export function Ticker({ items = ticker }: { items?: string[] }) {
   return (
-    <div className="ticker" aria-label={items.join(", ")}>
+    <div className="ticker" role="marquee" aria-label={items.join(", ")}>
       <div className="marquee" aria-hidden>
         <div className="marquee-track">
           {[...items, ...items].map((t, i) => (

@@ -1,4 +1,4 @@
-import { portariaEvent } from "@/lib/checkin";
+import { portariaEvent, REAL_ORDER } from "@/lib/checkin";
 import { db } from "@/lib/db";
 import { deviceFromRequest } from "@/lib/portaria-auth";
 import { ticketToken, tokenHash } from "@/lib/tokens";
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   if (!event) return Response.json({ event: null, at: new Date(), tickets: [] });
 
   const tickets = await db.ticket.findMany({
-    where: { status: "VALID", order: { eventId: event.id } },
+    where: { status: "VALID", order: { eventId: event.id, ...REAL_ORDER } },
     include: { ticketType: true, batch: true, order: { select: { code: true, buyerName: true } } },
   });
 

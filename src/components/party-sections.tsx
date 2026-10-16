@@ -1,7 +1,7 @@
 import { cloneElement } from "react";
 import { AttractionCards } from "@/components/attraction-cards";
 import { PerkTrail } from "@/components/perk-trail";
-import { SponsorCarousel } from "@/components/story-sections";
+import { SponsorCarousel } from "@/components/sponsor-carousel";
 import type { Attraction, Highlight } from "@/generated/prisma/client";
 import { Bubbles, SeaDecor } from "@/components/sea-decor";
 

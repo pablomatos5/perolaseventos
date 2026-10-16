@@ -165,7 +165,6 @@ function MysteryCard({ n }: { n: number }) {
       role="button"
       tabIndex={0}
       aria-pressed={flipped}
-      aria-label={`Atração ${n}: revelação em breve. Virar a carta`}
       className={`flip-card ${flipped ? "is-flipped" : ""}`}
       onClick={() => setFlipped((f) => !f)}
       onKeyDown={(e) => {
@@ -285,7 +284,6 @@ function VideoFlipCard({ a }: { a: CardAttraction }) {
       role="button"
       tabIndex={0}
       aria-pressed={flipped}
-      aria-label={`${a.name}: virar a carta para ver o vídeo do anúncio, com som`}
       className={`flip-card ${showBack ? "is-flipped" : ""}`}
       onClick={toggleFlip}
       onPointerEnter={(e) => {

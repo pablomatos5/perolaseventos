@@ -1085,7 +1085,10 @@ body {
 
 /* ───────── Patrocinadores: faixa sempre em movimento ───────── */
 .sponsor-marquee {
-  overflow: hidden;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  cursor: grab;
   margin-inline: -1.25rem; /* encosta nas bordas da tela no celular */
   padding-block: 0.75rem;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
@@ -1098,17 +1101,11 @@ body {
   list-style: none;
   padding: 0;
   margin: 0;
-  animation: sponsor-scroll 60s linear infinite;
-  will-change: transform;
-  backface-visibility: hidden;
 }
+.sponsor-marquee::-webkit-scrollbar { display: none; }
+.sponsor-marquee:active { cursor: grabbing; }
 /* margem (não gap): as duas metades ficam idênticas e o -50% encaixa sem salto */
 .sponsor-track > li { padding-right: clamp(1rem, 2.5vw, 1.75rem); }
-.sponsor-marquee:hover .sponsor-track,
-.sponsor-marquee:focus-within .sponsor-track { animation-play-state: paused; }
-@keyframes sponsor-scroll {
-  to { transform: translateX(-50%); }
-}
 .sponsor-tile { display: block; width: clamp(15.5rem, 70vw, 22rem); }
 .sponsor-art {
   position: relative;
@@ -1137,8 +1134,7 @@ a.sponsor-tile:hover .sponsor-art { border-color: var(--accent); translate: 0 -4
 a.sponsor-tile:focus-visible { outline: none; }
 a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .sponsor-marquee { overflow-x: auto; scroll-snap-type: x mandatory; }
-  .sponsor-track { animation: none; }
+  .sponsor-marquee { scroll-snap-type: x mandatory; }
   .sponsor-track > li { scroll-snap-align: center; }
 }
 
@@ -1444,7 +1440,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   transition: opacity 0.6s, scale 0.6s var(--ease), border-color 0.6s, box-shadow 0.6s;
 }
 .trail-icon path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.1s var(--ease) 0.15s; }
-.trail-text { opacity: 0.35; translate: 0 1.25rem; transition: opacity 0.7s ease, translate 0.8s var(--ease); }
+.trail-text { opacity: 0.62; translate: 0 1.25rem; transition: opacity 0.7s ease, translate 0.8s var(--ease); }
 .trail-item.is-on .trail-icon {
   opacity: 1;
   scale: 1;
@@ -1564,7 +1560,6 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   height: min(90svh, 54rem);
   width: auto;
   pointer-events: none;
-  animation: fade-in 1.4s ease-out 0.2s both;
 }
 .hero-mermaid.is-right { right: 0; }
 .hero-mermaid.is-left { left: 0; }
@@ -1716,7 +1711,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 }
 @media (prefers-reduced-motion: reduce) {
   .light-swirls .swirl { animation: none; stroke-dashoffset: 0; }
-  .hero-mermaid, .pearl-2027 { animation: none; }
+  .pearl-2027 { animation: none; }
 }
 
 /* links do Instagram: ícone + @ (cards, praia, topo e rodapé) */
@@ -1834,3 +1829,12 @@ main { overflow-x: clip; }
   .sea-ornament, .sea-bubbles > i, .seabed-weed path, .seabed-rays, .seabed-pearl-glow { animation: none; }
   .sea-bubbles { display: none; }
 }
+
+/* maré: um ponto de parada suave por etapa (rolagem rápida no celular não atravessa várias de uma vez) */
+html { scroll-snap-type: y proximity; }
+.tide-snap { position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { html { scroll-snap-type: none; } }
+
+/* contraste AA: rótulos pequenos em dourado escuro e número da trilha mais forte no céu claro */
+[data-edition="2k27"] .eyebrow { color: #7a4e1c; }
+[data-edition="2k27"] .perk-num { color: #7a4e1c; opacity: 1; }

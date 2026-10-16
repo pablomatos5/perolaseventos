@@ -26,10 +26,19 @@ export async function createReservation(input: ReservationInput) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + RESERVATION_MINUTES * 60_000);
 
+  // defesa extra: soma itens repetidos do mesmo setor (estoque e máximo por pedido valem para o total)
+  const merged = new Map<string, { ticketTypeId: string; masc: number; fem: number }>();
+  for (const it of input.items) {
+    const m = merged.get(it.ticketTypeId) ?? { ticketTypeId: it.ticketTypeId, masc: 0, fem: 0 };
+    m.masc += it.masc;
+    m.fem += it.fem;
+    merged.set(it.ticketTypeId, m);
+  }
+
   return db.$transaction(async (tx) => {
     const tickets: { ticketTypeId: string; batchId: string; priceCents: number; gender: "MASCULINO" | "FEMININO"; holderName: string }[] = [];
 
-    for (const item of input.items) {
+    for (const item of merged.values()) {
       const qty = item.masc + item.fem;
       if (qty <= 0) continue;
 

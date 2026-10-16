@@ -25,6 +25,7 @@ const SAND_PEARLS = [
   [92, 40, 1],
 ] as const;
 
+const STEP_SVH = 100; // rolagem por etapa (em altura de tela)
 const WAVE_MS = 1800; // duração de uma ida e volta da onda (casa com @keyframes swash no CSS)
 const PEAK_MS = 620; // momento em que a onda cobre a areia: é aí que a escrita troca
 const FAST = 0.55; // onda de "alcançar" (várias etapas à frente): 55% do tempo (casa com .tide-stage.fast no CSS)
@@ -91,12 +92,17 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
 
     const update = () => {
       const r = section.getBoundingClientRect();
-      const vh = window.innerHeight;
+      // altura da praia fixa (100svh), não a da janela: no iPhone a barra do Safari some/aparece e
+      // mudava a conta no meio da rolagem (etapa ia e voltava)
+      const vh = stage.clientHeight || window.innerHeight;
       // a praia "acorda" quando metade dela entra na tela
       if (r.top > vh * 0.5) return;
       const scrollable = Math.max(1, r.height - vh);
-      const p = Math.min(0.999, Math.max(0, -r.top / scrollable));
-      const idx = Math.floor(p * steps.length);
+      const raw = Math.min(0.999, Math.max(0, -r.top / scrollable)) * steps.length;
+      // folga de 15% de etapa nas fronteiras: parado perto da divisa, não fica trocando
+      const cur = target.current;
+      let idx = Math.floor(raw);
+      if (cur >= 0 && idx !== cur && raw > cur - 0.15 && raw < cur + 1.15) idx = cur;
       if (idx === target.current) return;
       target.current = idx;
       if (!washing.current) wash();
@@ -124,8 +130,12 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
   }, [steps.length]);
 
   return (
-    // altura = 1 tela de praia + ~90% de tela de rolagem por etapa
-    <section ref={sectionRef} className="tide" style={{ height: `calc(100svh + ${steps.length * 90}svh)` }} aria-label="Informações do evento e atrações">
+    // altura = 1 tela de praia + 1 tela de rolagem por etapa
+    <section ref={sectionRef} className="tide" style={{ height: `calc(100svh + ${steps.length * STEP_SVH}svh)` }} aria-label="Informações do evento e atrações">
+      {/* pontos de parada: no meio do trecho de cada etapa */}
+      {steps.map((s, i) => (
+        <span key={s.key} className="tide-snap" style={{ top: `${(i + 0.5) * STEP_SVH}svh` }} aria-hidden />
+      ))}
       <div ref={stageRef} className="beach tide-stage">
         <div className="beach-wet" />
         <Footsteps />

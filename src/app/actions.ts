@@ -33,9 +33,10 @@ const schema = z.object({
   email: z.email("E-mail inválido.").trim().toLowerCase(),
   phone: z.string().transform(onlyDigits).pipe(z.string().min(10, "Celular com DDD.").max(11, "Celular inválido.")),
   cpf: z.string().refine(validCpf, "CPF inválido.").transform(onlyDigits),
-  items: z.array(
-    z.object({ ticketTypeId: z.string(), masc: z.number().int().min(0), fem: z.number().int().min(0) }),
-  ),
+  items: z
+    .array(z.object({ ticketTypeId: z.string().max(40), masc: z.number().int().min(0).max(50), fem: z.number().int().min(0).max(50) }))
+    .max(10)
+    .refine((items) => new Set(items.map((i) => i.ticketTypeId)).size === items.length, "Pedido inválido: setor repetido."),
 });
 
 export type ReserveState = { error?: string } | undefined;
