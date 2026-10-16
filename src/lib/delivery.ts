@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { ticketsPdf } from "@/lib/ticket-pdf";
 import { orderToken } from "@/lib/tokens";
 
 export const orderLink = (orderId: string) => `${process.env.APP_URL}/pedido/${orderToken(orderId)}`;
@@ -10,7 +11,10 @@ export const orderLink = (orderId: string) => `${process.env.APP_URL}/pedido/${o
  * Sem RESEND_API_KEY o e-mail é só impresso no terminal (modo desenvolvimento).
  */
 export async function deliverTickets(orderId: string) {
-  const order = await db.order.findUniqueOrThrow({ where: { id: orderId }, include: { event: true, tickets: true } });
+  const order = await db.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { event: true, tickets: { include: { ticketType: true, batch: true }, orderBy: { createdAt: "asc" } } },
+  });
   const link = orderLink(order.id);
   const subject = `Seus ingressos · ${order.event.name} ${order.event.edition}`;
   const text = [
@@ -19,12 +23,35 @@ export async function deliverTickets(orderId: string) {
     `Seu pedido ${order.code} está confirmado: ${order.tickets.length} ingresso(s) para ${order.event.name} ${order.event.edition}.`,
     `${formatDateTime(order.event.startsAt)} · ${order.event.venue}, ${order.event.city}`,
     ``,
-    `Acesse seus QR codes: ${link}`,
+    `Seus ingressos estão no PDF anexo (abre sem internet). Para ver ou baixar de novo: ${link}`,
     ``,
     `Mostre o QR na entrada. Cada ingresso só pode ser usado uma vez, não compartilhe prints.`,
   ].join("\n");
 
-  await record(order.id, "EMAIL", () => sendEmail(order.email, subject, text));
+  // PDF dos ingressos anexado; se a geração falhar, o e-mail sai mesmo assim com o link
+  let pdf: Attachment | undefined;
+  try {
+    const valid = order.tickets.filter((t) => t.status === "VALID");
+    const bytes = await ticketsPdf({
+      event: order.event,
+      orderCode: order.code,
+      tickets: valid.map((t) => ({
+        id: t.id,
+        qrVersion: t.qrVersion,
+        holder: t.holderName,
+        type: t.ticketType.name,
+        batch: t.batch.name,
+        half: t.isHalf,
+        priceCents: t.priceCents,
+        usedAt: t.usedAt,
+      })),
+    });
+    pdf = { filename: `ingressos-perolas-${order.code}.pdf`, content: Buffer.from(bytes).toString("base64") };
+  } catch (e) {
+    console.error("[ingresso] PDF não gerado para o e-mail:", e);
+  }
+
+  await record(order.id, "EMAIL", () => sendEmail(order.email, subject, text, pdf));
 
   if (order.whatsappOptIn) {
     // Ligar quando a conta do WhatsApp Business (API oficial da Meta) e o template estiverem aprovados.
@@ -43,16 +70,19 @@ async function record(orderId: string, channel: "EMAIL" | "WHATSAPP", send: () =
   }
 }
 
-async function sendEmail(to: string, subject: string, text: string) {
+type Attachment = { filename: string; content: string }; // content em base64 (formato da API do Resend)
+
+async function sendEmail(to: string, subject: string, text: string, attachment?: Attachment) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.log(`\n[e-mail simulado] para ${to}\nAssunto: ${subject}\n${text}\n`);
+    const anexo = attachment ? `\nAnexo: ${attachment.filename} (${Math.round((attachment.content.length * 3) / 4 / 1024)} KB)` : "";
+    console.log(`\n[e-mail simulado] para ${to}\nAssunto: ${subject}\n${text}${anexo}\n`);
     return "simulado (sem RESEND_API_KEY)";
   }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: process.env.EMAIL_FROM, to, subject, text }),
+    body: JSON.stringify({ from: process.env.EMAIL_FROM, to, subject, text, ...(attachment ? { attachments: [attachment] } : {}) }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
   return "enviado";
