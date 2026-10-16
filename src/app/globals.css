@@ -943,33 +943,64 @@ body {
 @media (max-width: 1023px) { .card-rail-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* foto da atração "afundada" na areia: medalhão com aro dourado e sombra interna de areia molhada */
-.sand-photo {
+/* Concha aberta na areia; a foto da atração é a pérola dentro dela */
+.sand-shell {
   position: relative;
   display: block;
-  width: clamp(7.5rem, 22vw, 11rem);
-  aspect-ratio: 1;
-  margin-bottom: 1rem;
-  border-radius: 50%;
-  padding: 0.3rem;
-  background: conic-gradient(from 210deg, var(--accent-ink), var(--accent-2), #fff6e6, var(--accent), var(--accent-ink));
-  box-shadow: 0 0.6rem 1.2rem -0.4rem rgb(80 50 20 / 0.55), 0 0 2.5rem rgb(var(--pearl-glow) / 0.45);
+  /* grande, mas limitada pela altura da tela para o nome caber junto */
+  width: min(clamp(15rem, 82vw, 26rem), 48svh);
+  margin-bottom: 0.4rem;
+  text-shadow: none;
+  filter: drop-shadow(0 0.7rem 0.8rem rgb(80 50 20 / 0.35));
 }
-.sand-photo img {
+.sand-shell > * { position: absolute; }
+.sand-shell svg { inset: 0; width: 100%; height: 100%; overflow: visible; }
+.sand-shell-back { transform-origin: 50% 75%; }
+.sand-shell-front { z-index: 2; }
+.sand-pearl {
+  z-index: 1;
+  left: 25%;
+  top: 24%;
+  width: 50%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 3.5%;
+  /* borda de madrepérola: branco, lilás e dourado girando */
+  background: conic-gradient(from 200deg, #fff, #e9dcff, #ffe9d2, #fff, #d9c6f5, #fff3e0, #fff);
+  box-shadow: 0 0 1.6rem rgb(var(--pearl-glow) / 0.75), 0 0.4rem 0.8rem -0.2rem rgb(70 40 10 / 0.45);
+  animation: pearl-float 7s ease-in-out infinite;
+}
+.sand-pearl img {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
   object-position: 62% 40%;
 }
-.sand-photo::after {
+/* brilho de pérola por cima da foto */
+.sand-pearl::after {
   content: "";
   position: absolute;
-  inset: 0.3rem;
+  inset: 3.5%;
   border-radius: 50%;
-  box-shadow: inset 0 0.4rem 0.9rem rgb(70 40 10 / 0.45);
+  background:
+    radial-gradient(circle at 30% 24%, rgb(255 255 255 / 0.55), transparent 22%),
+    radial-gradient(circle at 70% 80%, rgb(200 170 255 / 0.25), transparent 45%);
+  box-shadow: inset -0.5rem -0.7rem 1.2rem rgb(40 20 60 / 0.35), inset 0.3rem 0.3rem 0.8rem rgb(255 255 255 / 0.45);
   pointer-events: none;
 }
-.tide-writing .sand-photo { text-shadow: none; }
+/* quando a onda revela a atração, a concha se abre e a pérola sobe */
+.tide-writing.is-active .sand-shell-back { animation: shell-open 1.3s var(--ease) 0.5s both; }
+.tide-writing.is-active .sand-pearl { animation: pearl-rise 1.1s var(--ease) 0.9s both, pearl-float 7s ease-in-out 2s infinite; }
+@keyframes shell-open {
+  from { transform: scaleY(0.12); }
+}
+@keyframes pearl-rise {
+  from { opacity: 0; translate: 0 35%; scale: 0.8; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sand-pearl, .tide-writing.is-active .sand-shell-back, .tide-writing.is-active .sand-pearl { animation: none; }
+}
 
 
 /* ───────── Atrações do ano: cards viráveis GRANDES ───────── */
@@ -995,4 +1026,7 @@ body {
   .card-rail-xl > li { flex-basis: 88%; }
 }
 @media (prefers-reduced-motion: reduce) { .attraction-card.is-headliner { animation: none; } }
+
+
+
 
