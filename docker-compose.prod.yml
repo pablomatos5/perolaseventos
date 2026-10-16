@@ -1,5 +1,9 @@
-# Produção na VPS compartilhada (Nexos + jessassinaturas). O app entra também na rede externa
-# "nexos_default" para o nginx do Nexos alcançá-lo pelo nome (perolas-app:3000), sem publicar porta.
+# Produção na VPS compartilhada com outros projetos (Nexos, jessassinaturas), ISOLADA deles:
+# - rede própria "perolas_edge" só com o app e o nginx de entrada (o nginx do Nexos é o único dono das
+#   portas 80/443): o Pérolas não enxerga os bancos/containers dos outros e vice-versa;
+# - banco numa rede interna exclusiva, sem porta publicada; volume, .env e limites de memória próprios.
+# Uma vez por VPS:  docker network create perolas_edge && docker network connect perolas_edge nexos-nginx-1
+# (se o nginx do Nexos for recriado, repetir o "connect"; o vhost usa resolver e não derruba o nginx).
 # Vhost: /opt/sites-extra/conf/perolaseventos.store.conf (mudança: nginx -t + reload, nunca restart).
 #
 # .env da VPS (não versionado): POSTGRES_PASSWORD forte e
@@ -7,8 +11,9 @@
 # mais TICKET_SECRET, ADMIN_PASSWORD, APP_URL, PAYMENT_PROVIDER... (ver .env.example e npm run check:config).
 networks:
   default:
-  proxy:
-    name: nexos_default
+    internal: true # banco e app conversam aqui; sem saída para fora
+  edge:
+    name: perolas_edge
     external: true
 
 services:
@@ -52,7 +57,7 @@ services:
     container_name: perolas-app
     restart: unless-stopped
     env_file: .env
-    networks: [default, proxy]
+    networks: [default, edge]
     depends_on: { db: { condition: service_healthy } }
     mem_limit: 768m
 
