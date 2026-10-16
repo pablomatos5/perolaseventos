@@ -234,9 +234,10 @@ body {
 
 /* ───────── Praia: a onda vai e deixa as informações na areia ───────── */
 .beach {
-  --sand-1: #ecd6b0;
-  --sand-2: #d6b384;
-  --wave-body: var(--sea);
+  /* areia pêssego/creme da paleta 2027; --wave-body = cor da base da onda (emenda com a espuma do SVG) */
+  --sand-1: #ffe8cc;
+  --sand-2: #f4c6a3;
+  --wave-body: #a58ce9;
   /* ponta da onda: água rasa, clara e transparente (mesma cor do fim do degradê da onda) */
   --wave-edge: color-mix(in srgb, color-mix(in srgb, var(--wave-body), #fff 35%) 40%, transparent);
   position: relative;
@@ -254,15 +255,15 @@ body {
   position: absolute;
   inset: 0 0 auto;
   height: 16%;
-  background: var(--wave-body); /* mesma cor da onda da frente do hero: céu, mar e areia sem emenda */
+  background: linear-gradient(180deg, var(--sea), var(--wave-body)); /* continua o mar do topo até a onda */
   z-index: 2;
 }
 .beach-wave {
   position: absolute;
   inset: 0;
   z-index: 3;
-  /* cor única: emenda sem degrau com o corpo da onda desenhado no SVG da espuma */
-  background: var(--wave-body);
+  /* mar das artes 2027: violeta no fundo, lavanda na beira; termina na cor da espuma do SVG (sem degrau) */
+  background: linear-gradient(180deg, #5a45c4 0%, var(--sea) 55%, var(--wave-body) 100%);
   transform: translateY(-84%);
   will-change: transform;
 }
@@ -281,7 +282,7 @@ body {
   height: 200%;
   background:
     linear-gradient(105deg, transparent 20%, rgb(255 250 240 / 0.14) 38%, transparent 52%, rgb(255 250 240 / 0.08) 70%, transparent 82%),
-    linear-gradient(180deg, rgb(105 68 28 / 0.55), rgb(105 68 28 / 0.38) 70%, rgb(105 68 28 / 0.3));
+    linear-gradient(180deg, rgb(196 120 92 / 0.34), rgb(196 120 92 / 0.24) 70%, rgb(196 120 92 / 0.18));
   /* camada com o dobro da altura da praia e a borda ondulada da última onda no meio (máscara fixa).
      Ela sobe para a areia secar: -1,5% = molhada até 97% da tela; -33,5% = só a faixa junto ao mar */
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cfilter id='b'%3E%3CfeGaussianBlur stdDeviation='0 2.5'/%3E%3C/filter%3E%3Cpath filter='url(%23b)' d='M0 0H400V97C350 105 320 90 270 98S180 108 130 97S40 91 0 100Z'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
@@ -1583,3 +1584,82 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   .light-swirls .swirl { animation: none; stroke-dashoffset: 0; }
   .hero-mermaid, .pearl-2027 { animation: none; }
 }
+
+/* ───────── "Save the date" (como o post oficial 2027): sereia à esquerda, data à direita ───────── */
+.save-date {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: min(92svh, 46rem);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 70% 42%, rgb(255 240 226 / 0.9), rgb(255 227 178 / 0.35) 28%, transparent 52%),
+    linear-gradient(180deg, #4b39b8 0%, #8a6fe3 22%, #c9a5ee 45%, #f2b1cf 62%, #ffc9a3 80%, #c7a8f2 100%);
+  color: #3d2f7a;
+}
+.save-date-mermaid {
+  position: absolute;
+  z-index: -1;
+  left: max(-4rem, calc((100vw - 84rem) / 2));
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 12%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 12%);
+  mask-composite: intersect;
+}
+.save-date-copy {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  width: min(100%, 34rem);
+  padding: 4rem 1.5rem 4.5rem;
+  margin-right: max(1.25rem, calc((100vw - 72rem) / 2));
+  text-align: center;
+}
+.save-date-rule { display: flex; align-items: center; gap: 0.75rem; color: #6a4ecf; }
+.save-date-rule i { width: clamp(3rem, 9vw, 5.5rem); height: 1px; background: currentColor; opacity: 0.6; }
+.save-date-title {
+  display: grid;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(4rem, 11vw, 7.5rem);
+  line-height: 0.92;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #9b6f35 0%, #d6ad66 50%, #8c6230 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.save-date-title small {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  font-size: 0.28em;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  margin: 0.15em 0;
+  color: #6a4ecf;
+  -webkit-text-fill-color: #6a4ecf;
+}
+.save-date-when { display: grid; justify-items: center; margin-top: 0.75rem; line-height: 1; }
+.save-date-when strong { font-family: var(--font-cormorant), Georgia, serif; font-weight: 500; font-size: clamp(3.4rem, 8vw, 5rem); color: #8c6230; }
+.save-date-when span { margin-top: 0.4rem; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: #5440a8; }
+.save-date-venue { font-family: var(--font-cormorant), Georgia, serif; font-size: clamp(1.6rem, 4vw, 2.3rem); text-transform: uppercase; letter-spacing: 0.06em; color: #5440a8; }
+@media (max-width: 767px) {
+  /* celular: texto em cima, sereia embaixo à esquerda (como no post, só que empilhado) */
+  .save-date { min-height: 0; padding-bottom: 62svh; }
+  .save-date-mermaid {
+    height: 66svh;
+    top: auto;
+    left: -8vw;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 38%);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 66%, transparent), linear-gradient(180deg, transparent, #000 38%);
+  }
+  .save-date-copy { margin: 0 auto; padding: 3.5rem 1.25rem 0; }
+}
+
+
+

@@ -9,6 +9,7 @@ import { Campaign, Faq, Story, Ticker } from "@/components/story-sections";
 import { PastEditions } from "@/components/past-editions";
 import { PearlDrop } from "@/components/pearl-drop";
 import { StickyBuy } from "@/components/sticky-buy";
+import { SaveTheDate } from "@/components/save-the-date";
 import { Starfield } from "@/components/starfield";
 import { campaign } from "@/content/site";
 import { TicketPicker, type PickerType } from "@/components/ticket-picker";
@@ -122,6 +123,12 @@ async function EventPage() {
       <Campaign />
       <PartyDetails highlights={event.highlights} />
       <Lineup attractions={event.attractions} />
+
+      <SaveTheDate
+        day={event.startsAt.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "America/Belem" })}
+        month={event.startsAt.toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Belem" })}
+        venue={event.venue}
+      />
 
       <section id="ingressos" className="mx-auto w-full max-w-6xl scroll-mt-8 px-5 py-20 md:px-8 md:py-28">
         <span className="eyebrow rule">Ingressos</span>
