@@ -22,7 +22,11 @@ export function PerolasLogo({ year, className = "" }: { year: string; className?
         <span className="perolas-logo-pearl" aria-hidden />
         <span aria-hidden>LAS</span>
       </h1>
-      <span className="perolas-logo-year">{year}</span>
+      <span className="perolas-logo-year">
+        <i aria-hidden />
+        <b>{year}</b>
+        <i aria-hidden />
+      </span>
     </div>
   );
 }
