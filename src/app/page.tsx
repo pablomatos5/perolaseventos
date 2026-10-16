@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { TideReveal, type TideStep } from "@/components/tide-reveal";
 import { Countdown } from "@/components/countdown";
 import { Lineup, PartyDetails } from "@/components/party-sections";
+import { InstagramIcon } from "@/components/attraction-cards";
 import { HeroMermaids, LightSwirls, PearlHorizon, PerolasLogo, Star4 } from "@/components/hero-2027";
 import { OceanWaves, Sparkles } from "@/components/shell-opening";
 import { Campaign, Faq, Story, Ticker } from "@/components/story-sections";
@@ -91,9 +92,14 @@ async function EventPage() {
 
         <header className="relative z-10 flex items-center justify-between px-5 py-5 md:px-12">
           <span className="hero-brand">Pérolas</span>
-          <a href="#ingressos" className="btn hero-btn px-5! py-2.5!">
-            Ingressos
-          </a>
+          <div className="flex items-center gap-3">
+            <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="hero-ig" aria-label="Instagram da Pérolas (@perolaseventos)">
+              <InstagramIcon className="size-5" />
+            </a>
+            <a href="#ingressos" className="btn hero-btn px-5! py-2.5!">
+              Ingressos
+            </a>
+          </div>
         </header>
 
         <div className="hero-copy relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-5 pb-2 text-center">
@@ -144,11 +150,12 @@ async function EventPage() {
       <StickyBuy />
       <PearlDrop />
 
-      <footer className="border-t border-line px-5 py-10 text-center text-xs text-fg-faint">
-        Pérolas Eventos · {event.city} ·{" "}
-        <a className="underline-offset-4 hover:underline" href="https://www.instagram.com/perolaseventos/">
-          @perolaseventos
+      <footer className="grid justify-items-center gap-5 border-t border-line px-5 py-12 text-center">
+        <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3!">
+          <InstagramIcon />
+          Siga @perolaseventos
         </a>
+        <p className="text-xs text-fg-faint">Pérolas Eventos · {event.city}</p>
       </footer>
     </main>
   );

@@ -143,11 +143,19 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
               <p className={`sand-big ${s.big.length > 12 ? "is-long" : s.big.length > 5 ? "is-name" : ""}`}>{s.big}</p>
             )}
             {s.mystery && <p className="sand-small">{s.big}</p>}
-            {s.small?.map((t) => (
-              <p key={t} className="sand-small">
-                {t}
-              </p>
-            ))}
+            {s.small?.map((t) =>
+              t.startsWith("@") ? (
+                <p key={t} className="sand-small">
+                  <a href={`https://www.instagram.com/${t.slice(1)}/`} target="_blank" rel="noopener noreferrer" className="sand-link" tabIndex={i === shown ? 0 : -1}>
+                    {t}
+                  </a>
+                </p>
+              ) : (
+                <p key={t} className="sand-small">
+                  {t}
+                </p>
+              ),
+            )}
             {s.cta && (
               <a href={s.cta.href} className="btn solid mt-6" tabIndex={i === shown ? 0 : -1}>
                 {s.cta.label}

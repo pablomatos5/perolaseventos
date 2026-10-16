@@ -1671,3 +1671,22 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   .light-swirls .swirl { animation: none; stroke-dashoffset: 0; }
   .hero-mermaid, .pearl-2027 { animation: none; }
 }
+
+/* links do Instagram: ícone + @ (cards, praia, topo e rodapé) */
+.ig-link { display: inline-flex; align-items: center; gap: 0.5rem; }
+.sand-link { text-decoration: underline; text-decoration-color: rgb(112 76 38 / 0.35); text-underline-offset: 0.3em; pointer-events: auto; }
+.sand-link:hover { text-decoration-color: currentColor; }
+.card-avatar {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  width: 40%;
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #f3d9a8;
+  box-shadow: 0 0 0 6px rgb(255 255 255 / 0.35), 0 1rem 2rem -0.6rem rgb(43 31 107 / 0.55), 0 0 2.2rem rgb(255 214 178 / 0.6);
+}
+.hero-ig { display: grid; place-items: center; width: 2.6rem; aspect-ratio: 1; border-radius: 50%; color: #fff; border: 1px solid rgb(255 255 255 / 0.55); background: rgb(255 255 255 / 0.08); }
+.hero-ig:hover { border-color: #fff; background: rgb(255 255 255 / 0.18); }

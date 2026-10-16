@@ -79,7 +79,7 @@ function SplitTitle({ text }: { text: string }) {
 }
 
 /** Arte da Pérolas quando não há foto: concha em linhas + pérola. Para "Em breve", a pérola guarda um "?". */
-function CardArt({ mystery, initials }: { mystery: boolean; initials: string }) {
+function CardArt({ mystery, initials, avatar }: { mystery: boolean; initials: string; avatar?: string }) {
   return (
     <div className="card-art" aria-hidden>
       <svg viewBox="0 0 200 150" className="absolute inset-x-0 bottom-0 w-full">
@@ -93,9 +93,14 @@ function CardArt({ mystery, initials }: { mystery: boolean; initials: string }) 
           />
         ))}
       </svg>
-      <div className="pearl card-pearl">
-        <span>{mystery ? "?" : initials}</span>
-      </div>
+      {avatar ? (
+        // eslint-disable-next-line @next/next/no-img-element -- foto de perfil pequena, servida de /public
+        <img src={avatar} alt="" className="card-avatar" />
+      ) : (
+        <div className="pearl card-pearl">
+          <span>{mystery ? "?" : initials}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -111,17 +116,28 @@ function Frame({ children, className = "" }: { children: React.ReactNode; classN
 
 const igUrl = (handle: string) => `https://www.instagram.com/${handle}/`;
 
+export function InstagramIcon({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function AnnouncedCard({ a, hint }: { a: CardAttraction; hint?: string }) {
   const initials = a.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2);
   return (
     <Frame className={a.headliner ? "is-headliner" : ""}>
       <div className="card-media">
         {a.headliner && <span className="feature-badge">Confirmado</span>}
-        {a.imageUrl ? (
+        {/* "-avatar.jpg" = só a foto de perfil (pequena): vai num medalhão sobre a arte, não ocupa o card */}
+        {a.imageUrl && !a.imageUrl.endsWith("-avatar.jpg") ? (
           // eslint-disable-next-line @next/next/no-img-element -- foto enviada pela Pérolas, servida de /public
           <img src={a.imageUrl} alt={a.name} loading="lazy" className="size-full object-cover" style={a.imageFocus ? { objectPosition: a.imageFocus } : undefined} />
         ) : (
-          <CardArt mystery={false} initials={initials} />
+          <CardArt mystery={false} initials={initials} avatar={a.imageUrl || undefined} />
         )}
       </div>
       <div className="card-body">
@@ -131,9 +147,9 @@ function AnnouncedCard({ a, hint }: { a: CardAttraction; hint?: string }) {
         </h3>
         {a.time && <p className="text-sm text-fg-muted">No palco: {a.time}</p>}
         {hint && <p className="text-sm text-fg-faint">{hint}</p>}
-        {a.instagram && !hint && (
-          <a href={igUrl(a.instagram)} target="_blank" rel="noopener noreferrer" className="btn mt-5 px-6! py-3!">
-            @{a.instagram}
+        {a.instagram && (
+          <a href={igUrl(a.instagram)} target="_blank" rel="noopener noreferrer" className="btn ig-link mt-4 px-5! py-2.5!" onClick={(e) => e.stopPropagation()}>
+            <InstagramIcon />@{a.instagram}
           </a>
         )}
       </div>

@@ -49,14 +49,15 @@ async function main() {
             name: "DJ Caçulinha",
             genre: "2ª atração confirmada",
             instagram: "djcaculinha_ofc",
-            imageUrl: "", // foto e vídeo do Instagram dele ainda a baixar (vazio = arte da Pérolas)
+            imageUrl: "/atracoes/dj-caculinha-capa.jpg", // quadro do "Set audiovisual 4K" do YouTube dele
+            videoUrl: "/atracoes/dj-caculinha.mp4",
             sortOrder: 2,
           },
           {
             name: "Guilherme Menezes",
             genre: "3ª atração confirmada",
             instagram: "guilhermemenezesgm",
-            imageUrl: "",
+            imageUrl: "/atracoes/guilherme-menezes-avatar.jpg", // só a foto de perfil (150 px): vai em medalhão
             sortOrder: 3,
           },
           { name: "", announced: false, sortOrder: 4 },
