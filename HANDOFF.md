@@ -26,6 +26,14 @@ npm run db:migrate / db:seed / test:mp / check:config
 ## Fatos levantados (Instagram, out/2026)
 2026 = 5ª edição, Ponte do Assunção, 7h open bar, 500+ participantes, 70% vendidos em 20/12. Line-up 2026: Davi Alencar (@davialenncar), Rebelo (@rebelodj_), DJ Ferrugem (@dj.ferrugem), Swing do Panda (@swingdopanda). **1ª atração 2027: Baltazar (@alexandrebaltazar_)**, anunciada em 10/09/2026 no destaque 2K27. Campanha 2027: "Uma nova era, infinitas possibilidades." / "Algo grandioso. Algo único. Algo Pérolas."
 
+## Identidade 2027 (feedback do cliente em 16/10/2026)
+O cliente aprovou o site e as ondas que revelam as informações, e pediu a temática das artes oficiais de 2027,
+principalmente a sereia **como está na arte**. Originais em `.midia-bruta/referencias-2027/`; recortes sem os
+textos gravados em `public/2027/` (sereia-dir = arte "31 dezembro", sereia-esq = "Save the date", mar = faixa
+de água da arte principal). Paleta: #0B1A3D #6A4ECF #B99AF7 #F7A8C7 #FFC9A3 #FFE3B2 #F7F5F0. Frase: "Um novo
+ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. Topo em `hero-2027.tsx`, seção
+"Save the date" em `save-the-date.tsx`, PDF e prévia do link no mesmo visual.
+
 ## Produção (VPS) — estado em 16/10/2026
 - Repo **privado**: github.com/pablomatos5/perolaseventos (branch main). Deploy: `git archive HEAD | ssh root@92.112.178.48 'tar -x -C /opt/perolaseventos'` (chave `~/.ssh/nexos_deploy`) + `docker compose -f docker-compose.prod.yml up -d --build app` (build na VPS, ~3 min; carga sobe, Nexos/jess seguiram 200).
 - **Isolamento (exigência do usuário: cada site da VPS é um trabalho separado):** rede própria `perolas_edge` (só `perolas-app` + `nexos-nginx-1`, ligado com `docker network connect`, sem restart); banco `perolas-db` em rede `internal`; volume, `.env` (600, só na VPS), certificados (`/opt/sites-extra/perolas/{certs,acme}`), backup e túnel próprios; `mem_limit`. Testado: perolas-app NÃO alcança nexos-db/redis/web nem jessassinaturas; nexos não resolve perolas-db. **Se o nginx do Nexos for recriado: `docker network connect perolas_edge nexos-nginx-1`.**
@@ -49,5 +57,6 @@ npm run db:migrate / db:seed / test:mp / check:config
 - `prisma dev` é PGlite: todos os nomes de banco são o mesmo banco; por isso o shadow DB usa a porta separada (51215) e o pool é 1 conexão em dev.
 - Imagens do Instagram: `og:image` vem com ícone de play desenhado; use o `currentSrc` das miniaturas da grade do perfil (resolução maior, sem ícone).
 - Vídeos do Instagram só com sessão logada: Chrome visível com `--remote-debugging-port` (o usuário loga), capturar respostas de rede com `video_versions` (script na sessão de 16/10). Apagar o perfil do Chrome depois.
+- Deploy por SSH: nunca termine a cadeia do `tar -x` com `&` (o processo em segundo plano não recebe o stdin e extrai nada). Separar: `tar -x ... || exit 1; ...; nohup ... &`.
 - Testes: `npm run test:qr` (QR: adulteração, chute, leitura óptica degradada) não usa banco. `npm run test:mp` usa o banco direto: rodar com o `npm run dev` parado (PGlite derruba conexões simultâneas).
 - Animações: nada de `backdrop-filter`, `filter` animado, `box-shadow` animado ou `mask-position` animado (travavam o celular). Pérolas que seguem a rolagem usam `animation-timeline` (CSS) com JS só de reserva.
