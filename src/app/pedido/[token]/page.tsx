@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import QRCode from "qrcode";
 import { Suspense } from "react";
 import { payAction, simulatePaymentAction } from "@/app/actions";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HolderForm, SaveTicketButton, ShareTicketButton } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
 import { formatBRL, formatDateTime } from "@/lib/format";
+import { qrDataUrl } from "@/lib/qr";
 import { reconcilePayment } from "@/lib/mercadopago";
 import { RESERVATION_MINUTES } from "@/lib/orders";
 import { paymentMode } from "@/lib/payment-mode";
@@ -140,13 +140,13 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           </p>
           {await Promise.all(
             order.tickets.map(async (t, i) => {
-              const qr = await QRCode.toDataURL(ticketToken(t.id, t.qrVersion), { margin: 1, width: 360, errorCorrectionLevel: "M" });
+              const qr = await qrDataUrl(ticketToken(t.id, t.qrVersion));
               const editable = !t.usedAt && t.status === "VALID" && order.event.startsAt > new Date();
               return (
                 <article key={t.id} className="glass-card grid items-center gap-6 p-6 sm:grid-cols-[auto_1fr]">
                   {/* fundo branco: leitor lê melhor com contraste máximo, inclusive com brilho baixo */}
                   {/* eslint-disable-next-line @next/next/no-img-element -- data URL gerada no servidor, não há o que otimizar */}
-                  <img src={qr} alt={`QR code do ingresso ${i + 1}`} className={`size-48 rounded-xl bg-white p-2 ${t.usedAt ? "opacity-30" : ""}`} />
+                  <img src={qr} alt={`QR code do ingresso ${i + 1}`} className={`size-56 rounded-xl bg-white ${t.usedAt ? "opacity-30" : ""}`} />
                   <div>
                     <span className="eyebrow">Ingresso {i + 1} de {order.tickets.length}</span>
                     <h2 className="mt-2 font-display text-3xl">{t.ticketType.name}</h2>

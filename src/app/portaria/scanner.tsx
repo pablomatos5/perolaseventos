@@ -18,6 +18,8 @@ import {
 type Result = {
   result: "ok" | "used" | "invalid" | "unauthorized" | "error";
   message: string;
+  usedAt?: string;
+  usedBy?: string;
   ticketId?: string;
   holder?: string;
   type?: string;
@@ -182,7 +184,13 @@ export function Scanner() {
       if (!l) return { result: "error", message: "Sem internet e sem lista baixada neste aparelho" };
       const h = await sha256b64url(code);
       const t = l.tickets.find((x) => x.h === h);
-      if (!t) return { result: "invalid", message: "QR fora da lista (inválido, reemitido ou vendido depois da última atualização)", offline: true };
+      if (!t) {
+        // Sem internet não dá para conferir a assinatura: QR com formato de ingresso que não está na lista
+        // pode ter sido comprado depois da última atualização. Amarelo = confira, não "falso".
+        return /^PE[12]\.[a-z0-9]{20,40}\./i.test(code)
+          ? { result: "error", message: "Não confirmado: fora da lista offline. Confira pela busca ou aguarde o sinal", offline: true }
+          : { result: "invalid", message: "QR inválido: não é um ingresso Pérolas", offline: true };
+      }
       return admitOffline(t, false);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- admitOffline é estável (só usa refs/setters)
@@ -213,6 +221,12 @@ export function Scanner() {
         r = await res.json();
         if (res.status === 401) return unauthorized();
         setOnline(true);
+        // mesma pessoa lida de novo neste aparelho logo depois (ex.: resposta lenta e nova leitura):
+        // amarelo com o tempo, para o porteiro conferir, em vez de vermelho "já utilizado"
+        const usedAt = r.result === "used" && r.usedBy === device && r.usedAt ? Date.parse(r.usedAt) : NaN;
+        if (Date.now() - usedAt < 120_000) {
+          r = { ...r, result: "error", message: `Já liberado neste aparelho há ${Math.round((Date.now() - usedAt) / 1000)} s: é a mesma pessoa?` };
+        }
         if (r.result === "ok" && r.ticketId) updateLocal(r.ticketId, new Date().toISOString(), device);
       } catch {
         // sem resposta em 5 s: valida pela lista baixada e guarda para sincronizar depois

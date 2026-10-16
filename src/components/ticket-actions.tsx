@@ -48,9 +48,9 @@ async function ticketImage(t: TicketCard) {
   g.beginPath();
   g.roundRect(150, 220, 600, 600, 28);
   g.fill();
-  const qr = await loadImage(t.qr);
+  const qr = await loadImage(t.qr); // já inclui a margem branca exigida pela norma
   g.imageSmoothingEnabled = false;
-  g.drawImage(qr, 180, 250, 540, 540);
+  g.drawImage(qr, 160, 230, 580, 580);
   g.fillStyle = "#fff";
   g.font = `500 52px ${font}`;
   g.fillText(t.holder, W / 2, 920, W - 80);

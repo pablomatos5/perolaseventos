@@ -10,6 +10,8 @@ export type CheckinResult = {
   batch?: string;
   half?: boolean;
   code?: string;
+  usedAt?: string;
+  usedBy?: string;
 };
 
 const ticketInclude = { ticketType: true, batch: true, order: { select: { code: true } } } satisfies Prisma.TicketInclude;
@@ -51,7 +53,7 @@ export async function checkIn(opts: {
   if (opts.version !== null && t.qrVersion !== opts.version) {
     return { result: "invalid", message: "QR antigo: este ingresso foi reemitido ou transferido", ...info(t) };
   }
-  return { result: "used", message: `Já utilizado às ${hhmm(t.usedAt!)} (${t.usedBy})`, ...info(t) };
+  return { result: "used", message: `Já utilizado às ${hhmm(t.usedAt!)} (${t.usedBy})`, ...info(t), usedAt: t.usedAt!.toISOString(), usedBy: t.usedBy ?? "" };
 }
 
 /** Evento da portaria: o publicado mais próximo, valendo até 36 h depois do início (a festa vira a noite). */

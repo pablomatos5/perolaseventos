@@ -29,9 +29,20 @@ export function ticketToken(ticketId: string, version = 0) {
   return `PE2.${ticketId}.${version}.${sign("PE2", ticketId, String(version))}`;
 }
 
-/** QR lido na portaria → id e versão do ingresso (a versão é conferida com o banco). */
+/**
+ * QR lido na portaria → id e versão do ingresso (a versão é conferida com o banco).
+ * Leitor pistola com Caps Lock ligado troca maiúsculas/minúsculas: tenta também a versão trocada
+ * (seguro: a assinatura continua sendo exigida, só muda a forma de digitar).
+ */
 export function verifyTicketToken(token: string): { id: string; version: number } | null {
-  const p = token.trim().split(".");
+  const t = token.trim();
+  return parseTicketToken(t) ?? parseTicketToken(swapCase(t));
+}
+
+const swapCase = (s: string) => s.replace(/[a-zA-Z]/g, (c) => (c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()));
+
+function parseTicketToken(token: string): { id: string; version: number } | null {
+  const p = token.split(".");
   if (p.length === 3 && p[0] === "PE1" && sigOk(p[2], "PE1", p[1])) return { id: p[1], version: 0 };
   if (p.length === 4 && p[0] === "PE2" && VERSION.test(p[2]) && sigOk(p[3], "PE2", p[1], p[2])) return { id: p[1], version: Number(p[2]) };
   return null;

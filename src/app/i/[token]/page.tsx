@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import QRCode from "qrcode";
 import { Suspense } from "react";
 import { SaveTicketButton } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
+import { qrDataUrl } from "@/lib/qr";
 import { ticketToken, verifyTicketLinkToken } from "@/lib/tokens";
 
 export const metadata = { title: "Seu ingresso · Pérolas", robots: { index: false } };
@@ -51,7 +51,7 @@ async function SingleTicket({ params }: { params: Promise<{ token: string }> }) 
         </>
       ) : (
         <TicketBody
-          qr={await QRCode.toDataURL(ticketToken(t.id, t.qrVersion), { margin: 1, width: 360, errorCorrectionLevel: "M" })}
+          qr={await qrDataUrl(ticketToken(t.id, t.qrVersion))}
           holder={t.holderName}
           used={t.usedAt}
           title={`${event.name} ${event.edition}`}
@@ -73,7 +73,7 @@ function TicketBody(p: { qr: string; holder: string; used: Date | null; title: s
       <p className="mt-2 text-sm text-fg-muted">{p.when}</p>
       <article className="glass-card mt-8 grid justify-items-center gap-5 p-6 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element -- data URL gerada no servidor */}
-        <img src={p.qr} alt="QR code do ingresso" className={`size-64 rounded-xl bg-white p-2 ${p.used ? "opacity-30" : ""}`} />
+        <img src={p.qr} alt="QR code do ingresso" className={`size-72 rounded-xl bg-white ${p.used ? "opacity-30" : ""}`} />
         <div>
           <h2 className="font-display text-3xl">{p.holder}</h2>
           <p className="mt-1 text-sm text-fg-muted">{p.type}</p>
