@@ -376,6 +376,9 @@ body {
 .tide-stage .beach-wave { animation: lap 4s ease-in-out infinite alternate; }
 /* ida e volta em 1,8 s; pico (areia coberta) em ~0,63 s = PEAK_MS no componente */
 .tide-stage.washing .beach-wave { animation: swash 1.8s cubic-bezier(0.45, 0, 0.25, 1) both; }
+/* onda de "alcançar" (rolagem rápida, várias etapas à frente): mesmo movimento em 55% do tempo */
+.tide-stage.washing.fast .beach-wave { animation-duration: 0.99s; }
+.tide-stage.fast .tide-writing.is-active { animation-duration: 0.65s; }
 /* a areia que a onda cobriu fica molhada e seca devagar, da ponta mais distante para o mar
    ("drying" tem relógio próprio no componente: não é cortada quando a onda termina) */
 /* começa no pico da onda (0,62 s = PEAK_MS); "forwards" e não "both": durante a espera a areia

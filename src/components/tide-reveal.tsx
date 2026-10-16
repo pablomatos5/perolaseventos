@@ -27,6 +27,7 @@ const SAND_PEARLS = [
 
 const WAVE_MS = 1800; // duração de uma ida e volta da onda (casa com @keyframes swash no CSS)
 const PEAK_MS = 620; // momento em que a onda cobre a areia: é aí que a escrita troca
+const FAST = 0.55; // onda de "alcançar" (várias etapas à frente): 55% do tempo (casa com .tide-stage.fast no CSS)
 const DRY_MS = 5200; // areia molhada secando (casa com .drying / @keyframes wet no CSS)
 
 /**
@@ -58,10 +59,17 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         stage.classList.add("is-in");
         return;
       }
+      // Uma etapa por onda, sem pular nenhuma: rolando rápido (gesto normal no celular), as ondas
+      // passam por todas as etapas do meio (atrações!) em vez de saltar direto para a última.
+      const next = current.current < 0 ? 0 : current.current + Math.sign(target.current - current.current);
+      // ainda faltam etapas depois desta: onda mais rápida para alcançar a rolagem
+      const fast = Math.abs(target.current - next) > 0;
+      const k = fast ? FAST : 1;
       // reinicia a animação da onda (remove → reflow → adiciona)
-      stage.classList.remove("washing", "drying");
+      stage.classList.remove("washing", "drying", "fast");
       void stage.offsetWidth;
       stage.classList.add("washing", "erasing", "drying");
+      stage.classList.toggle("fast", fast);
       washing.current = true;
       clearTimeout(swapTimer);
       clearTimeout(endTimer);
@@ -69,16 +77,16 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
       dryTimer = window.setTimeout(() => stage.classList.remove("drying"), DRY_MS);
       swapTimer = window.setTimeout(() => {
         stage.classList.remove("erasing");
-        current.current = target.current;
-        setShown(target.current);
+        current.current = next;
+        setShown(next);
         stage.classList.add("is-in"); // libera as pérolas na areia depois da primeira maré
-      }, PEAK_MS);
+      }, PEAK_MS * k);
       endTimer = window.setTimeout(() => {
         washing.current = false;
         stage.classList.remove("washing");
         // rolou de novo enquanto a onda voltava: manda outra
         if (target.current !== current.current) wash();
-      }, WAVE_MS);
+      }, WAVE_MS * k);
     };
 
     const update = () => {
@@ -116,8 +124,8 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
   }, [steps.length]);
 
   return (
-    // altura = 1 tela de praia + ~70% de tela de rolagem por etapa
-    <section ref={sectionRef} className="tide" style={{ height: `calc(100svh + ${steps.length * 70}svh)` }} aria-label="Informações do evento e atrações">
+    // altura = 1 tela de praia + ~90% de tela de rolagem por etapa
+    <section ref={sectionRef} className="tide" style={{ height: `calc(100svh + ${steps.length * 90}svh)` }} aria-label="Informações do evento e atrações">
       <div ref={stageRef} className="beach tide-stage">
         <div className="beach-wet" />
         <Footsteps />
