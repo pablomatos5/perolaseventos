@@ -68,8 +68,8 @@
   --line-soft: rgb(106 78 207 / 0.16);
 
   --pearl-hi: #ffffff;
-  --pearl-mid: #f7efe6;
-  --pearl-lo: #dcbcd0;
+  --pearl-mid: #f6efff;
+  --pearl-lo: #bfa8e8;
   --pearl-glow: 255 214 178;
   --shell-a: #c9b2ff;
   --shell-b: #7c5cd6;
@@ -266,9 +266,13 @@ body {
   z-index: 3;
   /* mar das artes 2027: violeta no fundo, lavanda na beira; termina na cor da espuma do SVG (sem degrau) */
   background:
-    radial-gradient(circle, rgb(255 246 228 / 0.9) 0 1px, transparent 1.6px) 0 0 / 23px 19px,
-    radial-gradient(circle, rgb(255 255 255 / 0.6) 0 0.8px, transparent 1.3px) 9px 11px / 31px 27px,
+    radial-gradient(1.6px 1.6px at 40px 30px, rgb(255 246 228), transparent),
+    radial-gradient(1.2px 1.2px at 150px 90px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(2px 2px at 260px 50px, rgb(255 236 200), transparent),
+    radial-gradient(1.2px 1.2px at 330px 120px, rgb(255 255 255 / 0.8), transparent),
+    radial-gradient(1.4px 1.4px at 95px 140px, rgb(255 246 228 / 0.9), transparent),
     linear-gradient(180deg, #8a74e2 0%, var(--sea) 55%, var(--wave-body) 100%);
+  background-size: 360px 170px, 360px 170px, 360px 170px, 360px 170px, 360px 170px, 100% 100%;
   transform: translateY(-84%);
   will-change: transform;
 }
@@ -1330,7 +1334,15 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   position: relative;
   display: block;
   width: 3.2rem;
-  box-shadow: 0 0 28px 6px rgb(var(--pearl-glow) / 0.35), inset -8px -10px 18px rgb(40 20 60 / 0.35);
+  background:
+    radial-gradient(circle at 34% 28%, #fff 0 14%, transparent 34%),
+    radial-gradient(circle at 70% 76%, rgb(255 201 163 / 0.85), transparent 46%),
+    radial-gradient(circle at 24% 72%, rgb(247 168 199 / 0.5), transparent 42%),
+    radial-gradient(circle at 50% 50%, #fbf7ff, #e3d6fb 58%, #b39be3);
+  box-shadow:
+    0 0.7rem 1.4rem -0.4rem rgb(84 64 168 / 0.45),
+    0 0 1.6rem 0.3rem rgb(255 255 255 / 0.7),
+    inset -6px -8px 14px rgb(84 64 168 / 0.32);
   animation-delay: calc(var(--i, 0) * -2.3s);
 }
 @media (min-width: 768px) {
@@ -1360,9 +1372,9 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   top: 0;
   bottom: 0;
   left: var(--trail-x);
-  width: 1px;
+  width: 2px;
   translate: -50% 0;
-  background: linear-gradient(180deg, transparent, var(--line-soft) 6%, var(--line-soft) 94%, transparent);
+  background: linear-gradient(180deg, transparent, rgb(162 111 50 / 0.28) 6%, rgb(162 111 50 / 0.28) 94%, transparent);
 }
 .trail-fill {
   position: absolute;
@@ -1382,7 +1394,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   margin-top: -0.575rem;
   border-radius: 50%;
   background: radial-gradient(circle at 32% 28%, #fff 0 18%, var(--pearl-mid) 55%, var(--pearl-lo));
-  box-shadow: 0 0 14px 4px rgb(var(--pearl-glow) / 0.65), 0 0 40px 10px rgb(var(--pearl-glow) / 0.25);
+  box-shadow: 0 0 0 1px rgb(162 111 50 / 0.35), 0 4px 12px rgb(84 64 168 / 0.4), 0 0 18px 6px rgb(255 255 255 / 0.85);
   transform: translate3d(-50%, 0, 0);
   will-change: transform;
 }
@@ -1396,19 +1408,21 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   width: var(--icon);
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 1px solid var(--line-soft);
-  background: var(--bg); /* tampa o fio atrás do ícone */
-  opacity: 0.45;
+  border: 1px solid rgb(162 111 50 / 0.3);
+  background: linear-gradient(160deg, #fff, #efe6ff); /* tampa o fio atrás do ícone */
+  color: #5440a8;
+  box-shadow: 0 0.6rem 1.4rem -0.6rem rgb(84 64 168 / 0.45);
+  opacity: 0.75;
   scale: 0.86;
   transition: opacity 0.6s, scale 0.6s var(--ease), border-color 0.6s, box-shadow 0.6s;
 }
 .trail-icon path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.1s var(--ease) 0.15s; }
-.trail-text { opacity: 0.12; translate: 0 1.25rem; transition: opacity 0.7s ease, translate 0.8s var(--ease); }
+.trail-text { opacity: 0.35; translate: 0 1.25rem; transition: opacity 0.7s ease, translate 0.8s var(--ease); }
 .trail-item.is-on .trail-icon {
   opacity: 1;
   scale: 1;
-  border-color: rgb(var(--pearl-glow) / 0.7);
-  box-shadow: 0 0 0 4px rgb(var(--pearl-glow) / 0.08), 0 0 1.6rem rgb(var(--pearl-glow) / 0.35);
+  border-color: rgb(162 111 50 / 0.75);
+  box-shadow: 0 0 0 5px rgb(255 255 255 / 0.55), 0 0.8rem 1.8rem -0.6rem rgb(84 64 168 / 0.5), 0 0 1.6rem rgb(255 214 178 / 0.6);
 }
 .trail-item.is-on .trail-icon path { stroke-dashoffset: 0; }
 .trail-item.is-on .trail-text { opacity: 1; translate: 0 0; }
@@ -1543,42 +1557,56 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .hero-save svg { color: #b4843f; }
 
 /* logo: serifa clássica dourada com a estrela de 4 pontas dentro do O */
+/* logo: caixa-alta fina e bem espaçada (moderna), com uma pérola de verdade no lugar do O */
 .perolas-logo { display: grid; justify-items: center; }
 .perolas-logo-kicker {
-  font-weight: 500;
-  font-size: clamp(0.72rem, 1.5vw, 1rem);
-  letter-spacing: 0.5em;
-  margin-right: -0.5em;
+  font-weight: 600;
+  font-size: clamp(0.66rem, 1.3vw, 0.85rem);
+  letter-spacing: 0.62em;
+  margin-right: -0.62em;
   text-transform: uppercase;
-  color: #7b5a2c;
+  color: #a26f32;
 }
 .perolas-logo-name {
-  font-family: var(--font-cormorant), Georgia, serif;
-  font-weight: 500;
-  font-size: clamp(3.3rem, min(13.5vw, 13svh), 8.8rem);
-  line-height: 0.95;
-  letter-spacing: 0.035em;
-  background: linear-gradient(180deg, #9b6f35 0%, #d6ad66 48%, #8c6230 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  padding: 0.04em 0.06em 0.02em;
-}
-.perolas-logo-o { position: relative; display: inline-block; }
-.perolas-logo-star { position: absolute; left: 50%; top: 53%; width: 0.3em; translate: -50% -50%; color: #b4843f; filter: drop-shadow(0 0 0.06em rgb(255 240 210 / 0.9)); }
-.perolas-logo-year {
   display: flex;
   align-items: center;
-  gap: clamp(0.8rem, 2vw, 1.25rem);
-  margin-top: 0.35rem;
-  font-size: clamp(0.95rem, 2vw, 1.4rem);
-  font-weight: 500;
-  letter-spacing: 0.45em;
-  margin-right: -0.45em;
-  color: #7b5a2c;
+  margin-top: 0.12em;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  font-weight: 200;
+  font-size: clamp(2.9rem, min(12vw, 12svh), 7.6rem);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  margin-right: -0.14em;
+  color: #2b1f6b;
+  text-shadow: 0 0 0.5em rgb(255 255 255 / 0.55);
 }
-.perolas-logo-year i { width: clamp(2.5rem, 8vw, 5.5rem); height: 1px; background: linear-gradient(90deg, transparent, currentColor); }
-.perolas-logo-year i:last-child { background: linear-gradient(90deg, currentColor, transparent); margin-left: -0.45em; }
+.perolas-logo-pearl {
+  display: inline-block;
+  width: 0.7em;
+  aspect-ratio: 1;
+  margin: 0 0.16em 0 0.02em;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, #fff 0 14%, transparent 34%),
+    radial-gradient(circle at 70% 76%, rgb(255 201 163 / 0.9), transparent 46%),
+    radial-gradient(circle at 24% 72%, rgb(247 168 199 / 0.55), transparent 42%),
+    radial-gradient(circle at 50% 50%, #fbf7ff, #e3d6fb 58%, #b9a3e6);
+  box-shadow:
+    0 0.06em 0.16em rgb(43 31 107 / 0.28),
+    0 0 0.5em 0.06em rgb(255 236 214 / 0.85),
+    inset -0.06em -0.08em 0.14em rgb(84 64 168 / 0.35);
+}
+.perolas-logo-year {
+  margin-top: 0.9rem;
+  padding: 0.38em 1.3em 0.38em 1.75em;
+  border: 1px solid rgb(162 111 50 / 0.45);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.32);
+  font-size: clamp(0.78rem, 1.5vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.45em;
+  color: #8a5c26;
+}
 .hero-tagline { margin-top: 1.1rem; font-size: clamp(0.62rem, 1.3vw, 0.82rem); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: #5440a8; }
 .hero-countdown { --fg-faint: rgb(69 53 143 / 0.75); }
 .hero-countdown .font-display { color: #45358f; }

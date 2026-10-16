@@ -24,7 +24,7 @@ type Result = {
   holder?: string;
   type?: string;
   batch?: string;
-  half?: boolean;
+  gender?: string;
   offline?: boolean;
 };
 type SearchHit = {
@@ -35,7 +35,7 @@ type SearchHit = {
   cpfEnd?: string;
   type: string;
   batch: string;
-  half: boolean;
+  gender: string;
   status?: string;
   usedAt: string | null;
   usedBy: string | null;
@@ -198,7 +198,7 @@ export function Scanner() {
   );
 
   function admitOffline(t: ListTicket, manual: boolean): Result {
-    const base = { ticketId: t.id, holder: t.holder, type: t.type, batch: t.batch, half: t.half, offline: true };
+    const base = { ticketId: t.id, holder: t.holder, type: t.type, batch: t.batch, gender: t.gender, offline: true };
     if (t.usedAt) return { result: "used", message: `Já utilizado às ${hhmm(t.usedAt)} (${t.usedBy ?? "?"})`, ...base };
     const at = new Date().toISOString();
     updateLocal(t.id, at, device);
@@ -252,7 +252,7 @@ export function Scanner() {
       const local = (listRef.current?.tickets ?? []).filter(
         (t) => t.holder.toLowerCase().includes(n) || t.buyer.toLowerCase().includes(n) || t.code.toLowerCase() === n,
       );
-      setHits(local.slice(0, 30).map((t) => ({ ticketId: t.id, holder: t.holder, buyer: t.buyer, code: t.code, type: t.type, batch: t.batch, half: t.half, usedAt: t.usedAt, usedBy: t.usedBy })));
+      setHits(local.slice(0, 30).map((t) => ({ ticketId: t.id, holder: t.holder, buyer: t.buyer, code: t.code, type: t.type, batch: t.batch, gender: t.gender, usedAt: t.usedAt, usedBy: t.usedBy })));
     }
   }
 
@@ -355,7 +355,7 @@ export function Scanner() {
                 {last.holder}
                 {last.type && ` · ${last.type}`}
                 {last.batch && ` · ${last.batch}`}
-                {last.half && <strong className="mt-2 block text-2xl">MEIA: conferir documento</strong>}
+                {last.gender && <strong className="mt-2 block text-2xl uppercase">{last.gender}</strong>}
               </div>
             )}
           </div>
@@ -414,7 +414,7 @@ export function Scanner() {
                     <div className="truncate font-medium">{h.holder}</div>
                     <div className="truncate text-xs text-fg-faint">
                       {h.type} · {h.batch}
-                      {h.half && " · MEIA"} · pedido {h.code}
+                      {h.gender && ` · ${h.gender}`} · pedido {h.code}
                       {h.cpfEnd && ` · CPF ${h.cpfEnd}`}
                       {h.buyer !== h.holder && ` · comprou: ${h.buyer}`}
                     </div>

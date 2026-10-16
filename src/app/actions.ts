@@ -33,9 +33,8 @@ const schema = z.object({
   email: z.email("E-mail inválido.").trim().toLowerCase(),
   phone: z.string().transform(onlyDigits).pipe(z.string().min(10, "Celular com DDD.").max(11, "Celular inválido.")),
   cpf: z.string().refine(validCpf, "CPF inválido.").transform(onlyDigits),
-  whatsappOptIn: z.boolean(),
   items: z.array(
-    z.object({ ticketTypeId: z.string(), full: z.number().int().min(0), half: z.number().int().min(0) }),
+    z.object({ ticketTypeId: z.string(), masc: z.number().int().min(0), fem: z.number().int().min(0) }),
   ),
 });
 
@@ -48,7 +47,6 @@ export async function reserveAction(_prev: ReserveState, form: FormData): Promis
     email: form.get("email"),
     phone: form.get("phone") ?? "",
     cpf: form.get("cpf") ?? "",
-    whatsappOptIn: form.get("whatsappOptIn") === "on",
     items: JSON.parse(String(form.get("items") ?? "[]")),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };

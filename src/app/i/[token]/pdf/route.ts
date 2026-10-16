@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { ticketsPdf } from "@/lib/ticket-pdf";
 import { verifyTicketLinkToken } from "@/lib/tokens";
+import { genderLabel } from "@/lib/format";
 
 /** PDF de um ingresso só (link individual). Link de versão antiga não gera PDF. */
 export async function GET(_req: Request, ctx: { params: Promise<{ token: string }> }) {
@@ -23,7 +24,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
     totalInOrder: t.order.tickets.length,
     startIndex: t.order.tickets.findIndex((x) => x.id === t.id),
     tickets: [
-      { id: t.id, qrVersion: t.qrVersion, holder: t.holderName, type: t.ticketType.name, batch: t.batch.name, half: t.isHalf, priceCents: t.priceCents, usedAt: t.usedAt },
+      { id: t.id, qrVersion: t.qrVersion, holder: t.holderName, type: t.ticketType.name, batch: t.batch.name, gender: genderLabel(t.gender), priceCents: t.priceCents, usedAt: t.usedAt },
     ],
   });
   return new Response(Buffer.from(bytes), {

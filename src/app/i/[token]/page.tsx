@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { db } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, genderLabel } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
 import { ticketToken, verifyTicketLinkToken } from "@/lib/tokens";
 
@@ -56,7 +56,7 @@ async function SingleTicket({ params }: { params: Promise<{ token: string }> }) 
           used={t.usedAt}
           title={`${event.name} ${event.edition}`}
           when={`${formatDateTime(event.startsAt)} · ${event.venue}`}
-          type={`${t.ticketType.name} · ${t.batch.name} · ${t.isHalf ? "Meia (leve documento)" : "Inteira"}`}
+          type={`${t.ticketType.name} · ${t.batch.name} · ${genderLabel(t.gender)}`}
           code={t.order.code}
         />
       )}

@@ -6,7 +6,7 @@ import { payAction, simulatePaymentAction } from "@/app/actions";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HolderForm, ShareTicketButton } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
-import { formatBRL, formatDateTime } from "@/lib/format";
+import { formatBRL, formatDateTime, genderLabel } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
 import { reconcilePayment } from "@/lib/mercadopago";
 import { RESERVATION_MINUTES } from "@/lib/orders";
@@ -76,6 +76,9 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
             <span className="text-fg-muted">{order.tickets.length} ingresso(s)</span>
             <span className="font-display text-4xl">{formatBRL(order.totalCents)}</span>
           </div>
+          {order.feeCents > 0 && (
+            <p className="mt-1 text-right text-xs text-fg-faint">inclui taxa de serviço de {formatBRL(order.feeCents)}</p>
+          )}
           <p className="mt-4 text-sm text-fg-muted">
             Reserva válida até <strong className="text-fg">{order.expiresAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Belem" })}</strong>.
             Depois disso os ingressos voltam para a venda.
@@ -92,7 +95,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           )}
           {mode === "off" && (
             <p className="mt-4 rounded-lg bg-surface px-4 py-3 text-sm text-fg-muted">
-              Pagamento online indisponível no momento. Fale com a Pérolas pelo WhatsApp.
+              Pagamento online indisponível no momento. Fale com a Pérolas pelo Instagram @perolaseventos.
             </p>
           )}
           {declined && (
@@ -156,7 +159,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                     <span className="eyebrow">Ingresso {i + 1} de {order.tickets.length}</span>
                     <h2 className="mt-2 font-display text-3xl">{t.ticketType.name}</h2>
                     <p className="mt-1 text-sm text-fg-muted">
-                      {t.batch.name} · {t.isHalf ? "Meia-entrada (leve documento)" : "Inteira"} · {formatBRL(t.priceCents)}
+                      {t.batch.name} · {genderLabel(t.gender)} · {formatBRL(t.priceCents)}
                     </p>
                     <p className="mt-3 text-sm">{t.holderName}</p>
                     {t.usedAt && <p className="mt-3 text-sm text-accent">Utilizado em {formatDateTime(t.usedAt)}</p>}

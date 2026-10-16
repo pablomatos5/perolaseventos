@@ -59,7 +59,6 @@ model TicketType {
   name             String
   description      String   @default("")
   sortOrder        Int      @default(0)
-  allowHalfPrice   Boolean  @default(true)
   maxPerOrder      Int      @default(10)
   paused           Boolean  @default(false)
   batches          Batch[]
@@ -75,7 +74,7 @@ model Batch {
   name           String // "1º lote"
   sortOrder      Int
   priceCents     Int
-  halfPriceCents Int? // vazio = metade do preço
+  femalePriceCents Int? // ingresso feminino; vazio = mesmo preço do masculino (priceCents)
   quantity       Int
   startsAt       DateTime?
   endsAt         DateTime?
@@ -105,7 +104,8 @@ model Order {
   cpf           String
   whatsappOptIn Boolean     @default(false)
   status        OrderStatus @default(PENDING)
-  totalCents    Int
+  totalCents    Int // ingressos + taxa de serviço (o que o cliente paga)
+  feeCents      Int         @default(0) // taxa de serviço (dos desenvolvedores), já incluída no total
   expiresAt     DateTime
   paidAt        DateTime?
   paymentRef    String? // id da cobrança no gateway
@@ -115,6 +115,11 @@ model Order {
   deliveries    Delivery[]
 
   @@index([status, expiresAt])
+}
+
+enum TicketGender {
+  MASCULINO
+  FEMININO
 }
 
 enum TicketStatus {
@@ -132,7 +137,7 @@ model Ticket {
   batchId      String
   batch        Batch        @relation(fields: [batchId], references: [id])
   priceCents   Int // preço travado no momento da reserva
-  isHalf       Boolean      @default(false)
+  gender       TicketGender? // masculino/feminino; vazio = cortesia
   holderName   String
   status       TicketStatus @default(RESERVED)
   usedAt       DateTime?

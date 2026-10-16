@@ -1,12 +1,13 @@
 import { db } from "@/lib/db";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, genderLabel } from "@/lib/format";
 import { ticketsPdf } from "@/lib/ticket-pdf";
 import { orderToken } from "@/lib/tokens";
 
 export const orderLink = (orderId: string) => `${process.env.APP_URL}/pedido/${orderToken(orderId)}`;
 
 /**
- * Envia o link do pedido (com os QR codes) por e-mail e, se o cliente aceitou, por WhatsApp.
+ * Envia o link do pedido (com os QR codes) e o PDF dos ingressos por e-mail. O mesmo PDF fica para baixar
+ * na página do pedido logo depois do pagamento.
  * Cada tentativa fica registrada em Delivery para o painel mostrar falhas e permitir reenviar.
  * Sem RESEND_API_KEY o e-mail é só impresso no terminal (modo desenvolvimento).
  */
@@ -41,7 +42,7 @@ export async function deliverTickets(orderId: string) {
         holder: t.holderName,
         type: t.ticketType.name,
         batch: t.batch.name,
-        half: t.isHalf,
+        gender: genderLabel(t.gender),
         priceCents: t.priceCents,
         usedAt: t.usedAt,
       })),
@@ -52,16 +53,9 @@ export async function deliverTickets(orderId: string) {
   }
 
   await record(order.id, "EMAIL", () => sendEmail(order.email, subject, text, pdf));
-
-  if (order.whatsappOptIn) {
-    // Ligar quando a conta do WhatsApp Business (API oficial da Meta) e o template estiverem aprovados.
-    await record(order.id, "WHATSAPP", async () => {
-      throw new Error("WhatsApp ainda não configurado");
-    });
-  }
 }
 
-async function record(orderId: string, channel: "EMAIL" | "WHATSAPP", send: () => Promise<string>) {
+async function record(orderId: string, channel: "EMAIL", send: () => Promise<string>) {
   try {
     const detail = await send();
     await db.delivery.create({ data: { orderId, channel, ok: true, detail } });

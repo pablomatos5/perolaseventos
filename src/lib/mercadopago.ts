@@ -1,5 +1,6 @@
 import MercadoPagoConfig, { Payment, Preference } from "mercadopago";
 import { db } from "@/lib/db";
+import { genderLabel } from "@/lib/format";
 import { deliverTickets, orderLink } from "@/lib/delivery";
 import { markOrderPaid, refundOrder } from "@/lib/orders";
 
@@ -22,17 +23,21 @@ export async function createCheckout(orderId: string) {
     include: { event: true, tickets: { include: { ticketType: true, batch: true } } },
   });
 
-  // Uma linha por combinação setor + lote + inteira/meia, como aparece no comprovante do cliente.
+  // Uma linha por combinação setor + lote + masculino/feminino, como aparece no comprovante do cliente.
   const lines = new Map<string, { title: string; unit: number; qty: number }>();
   for (const t of order.tickets) {
-    const key = `${t.ticketTypeId}|${t.batchId}|${t.isHalf}`;
+    const key = `${t.ticketTypeId}|${t.batchId}|${t.gender}`;
     const line = lines.get(key) ?? {
-      title: `${order.event.name} ${order.event.edition} · ${t.ticketType.name} (${t.batch.name}${t.isHalf ? ", meia" : ""})`,
+      title: `${order.event.name} ${order.event.edition} · ${t.ticketType.name} ${genderLabel(t.gender).toLowerCase()} (${t.batch.name})`,
       unit: t.priceCents,
       qty: 0,
     };
     line.qty++;
     lines.set(key, line);
+  }
+  // taxa de serviço numa linha própria: o total cobrado bate com order.totalCents
+  if (order.feeCents > 0) {
+    lines.set("taxa", { title: "Taxa de serviço", unit: order.feeCents / order.tickets.length, qty: order.tickets.length });
   }
 
   const appUrl = process.env.APP_URL!;

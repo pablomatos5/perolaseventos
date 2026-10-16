@@ -93,7 +93,6 @@ async function main() {
           {
             name: "Cortesia / Lista",
             sortOrder: 99,
-            allowHalfPrice: false,
             batches: { create: [{ name: "Cortesia", sortOrder: 1, priceCents: 0, quantity: 50, hidden: true }] },
           },
         ],

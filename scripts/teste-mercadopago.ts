@@ -51,8 +51,8 @@ async function main() {
   const { POST } = await import("../src/app/api/webhooks/mercadopago/route");
 
   const pista = await db.ticketType.findFirstOrThrow({ where: { name: "Pista Open Bar" } });
-  const buyer = { buyerName: "Teste Mercado Pago", email: "mp@exemplo.com", phone: "91999990000", cpf: "52998224725", whatsappOptIn: false };
-  const reserve = () => createReservation({ eventId: pista.eventId, ...buyer, items: [{ ticketTypeId: pista.id, full: 1, half: 1 }] });
+  const buyer = { buyerName: "Teste Mercado Pago", email: "mp@exemplo.com", phone: "91999990000", cpf: "52998224725" };
+  const reserve = () => createReservation({ eventId: pista.eventId, ...buyer, items: [{ ticketTypeId: pista.id, masc: 1, fem: 1 }] });
 
   // 1. Checkout Pro: corpo da preferência
   const o1 = await reserve();

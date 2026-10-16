@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { ticketsPdf } from "@/lib/ticket-pdf";
 import { verifyOrderToken } from "@/lib/tokens";
+import { genderLabel } from "@/lib/format";
 
 /** Todos os ingressos válidos do pedido num PDF (uma página por ingresso). */
 export async function GET(_req: Request, ctx: { params: Promise<{ token: string }> }) {
@@ -25,7 +26,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
       holder: t.holderName,
       type: t.ticketType.name,
       batch: t.batch.name,
-      half: t.isHalf,
+      gender: genderLabel(t.gender),
       priceCents: t.priceCents,
       usedAt: t.usedAt,
     })),

@@ -78,7 +78,6 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
       <ul className="grid gap-3">
         {orders.map((o) => {
           const lastEmail = o.deliveries.find((d) => d.channel === "EMAIL");
-          const lastWpp = o.deliveries.find((d) => d.channel === "WHATSAPP");
           return (
             <li key={o.id} className="glass-card grid gap-3 p-5 md:grid-cols-[1fr_auto] md:items-center">
               <div className="grid gap-1 text-sm">
@@ -96,7 +95,6 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                 <div className="text-xs text-fg-faint">
                   {formatDateTime(o.createdAt)}
                   {lastEmail && ` · e-mail: ${lastEmail.ok ? "enviado" : `falhou (${lastEmail.detail})`}`}
-                  {lastWpp && ` · WhatsApp: ${lastWpp.ok ? "enviado" : "não enviado"}`}
                 </div>
               </div>
               {o.status === "PAID" && (

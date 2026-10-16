@@ -82,8 +82,9 @@ export async function kpis(eventId: string) {
     db.ticket.count({ where: { status: "VALID", priceCents: 0, order: { eventId } } }),
     db.ticket.count({ where: { status: "VALID", usedAt: { not: null }, order: { eventId } } }),
     db.order.count({ where: { eventId, status: "PENDING", expiresAt: { gt: now } } }),
-    db.order.aggregate({ where: { eventId, status: "PAID" }, _sum: { totalCents: true } }),
+    db.order.aggregate({ where: { eventId, status: "PAID" }, _sum: { totalCents: true, feeCents: true } }),
     db.order.count({ where: { eventId, status: "PAID", paidLate: true } }),
   ]);
-  return { paid, courtesies, checkins, pending, revenueCents: revenue._sum.totalCents ?? 0, late };
+  const feeCents = revenue._sum.feeCents ?? 0;
+  return { paid, courtesies, checkins, pending, revenueCents: (revenue._sum.totalCents ?? 0) - feeCents, feeCents, late };
 }

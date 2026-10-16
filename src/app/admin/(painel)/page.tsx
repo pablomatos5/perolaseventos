@@ -23,6 +23,7 @@ export default async function AdminHome() {
 
   const cards = [
     { label: "Receita confirmada", value: formatBRL(k.revenueCents) },
+    { label: "Taxa de serviço (desenvolvedores)", value: formatBRL(k.feeCents) },
     { label: "Ingressos vendidos", value: k.paid },
     { label: "Cortesias", value: k.courtesies },
     { label: "Check-ins", value: k.checkins },

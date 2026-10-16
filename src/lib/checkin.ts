@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
+import { genderLabel } from "@/lib/format";
 
 export type CheckinResult = {
   result: "ok" | "used" | "invalid";
@@ -8,7 +9,7 @@ export type CheckinResult = {
   holder?: string;
   type?: string;
   batch?: string;
-  half?: boolean;
+  gender?: string;
   code?: string;
   usedAt?: string;
   usedBy?: string;
@@ -22,7 +23,7 @@ const info = (t: TicketFull) => ({
   holder: t.holderName,
   type: t.ticketType.name,
   batch: t.batch.name,
-  half: t.isHalf,
+  gender: genderLabel(t.gender),
   code: t.order.code,
 });
 

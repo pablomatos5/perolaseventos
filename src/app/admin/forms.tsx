@@ -64,7 +64,7 @@ export function CourtesyForm({ batches }: { batches: { id: string; label: string
         <input name="email" type="email" required className={input} />
       </label>
       <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint">
-        WhatsApp (opcional)
+        Celular (opcional)
         <input name="phone" type="tel" inputMode="numeric" className={input} />
       </label>
       <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint">

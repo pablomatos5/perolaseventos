@@ -107,7 +107,7 @@ export const sponsors2026: { name: string; instagram?: string; image?: string; l
 export const faq = [
   {
     q: "Como recebo meu ingresso?",
-    a: "Assim que o pagamento é aprovado, você recebe um link com seus QR codes por e-mail (e pelo WhatsApp, se marcar a opção). O mesmo link fica disponível sempre que precisar.",
+    a: "Assim que o pagamento é aprovado, seus ingressos ficam prontos para baixar em PDF na própria página do pedido e chegam também por e-mail, com o PDF anexo e um link que fica disponível sempre que precisar.",
   },
   {
     q: "Quais formas de pagamento?",
@@ -118,8 +118,8 @@ export const faq = [
     a: "Os ingressos são limitados e vendidos por lotes. Quando um lote esgota, o próximo abre com novo valor. Ao atingir 100% das vendas, os ingressos encerram definitivamente, sem reabertura ou exceções.",
   },
   {
-    q: "Quem tem direito à meia-entrada?",
-    a: "Estudantes, pessoas com deficiência, jovens de baixa renda e idosos, conforme a Lei 12.933/2013. O documento é conferido na entrada.",
+    q: "Tem taxa de serviço?",
+    a: "Sim: R$ 2,50 por ingresso, já somada no total antes de você pagar. Ela cobre o sistema de venda, os ingressos com QR code e a portaria digital.",
   },
   {
     q: "Posso mandar print do QR para outra pessoa?",

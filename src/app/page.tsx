@@ -14,7 +14,7 @@ import { campaign } from "@/content/site";
 import { TicketPicker, type PickerType } from "@/components/ticket-picker";
 import { currentBatch } from "@/lib/batches";
 import { db } from "@/lib/db";
-import { halfPrice } from "@/lib/format";
+import { femalePrice } from "@/lib/format";
 
 export default function Home() {
   return (
@@ -50,12 +50,11 @@ async function EventPage() {
       id: t.id,
       name: t.name,
       description: t.description,
-      allowHalf: t.allowHalfPrice,
       maxPerOrder: t.maxPerOrder,
       status: s.state,
       batchName: open?.batch.name ?? null,
       priceCents: open?.batch.priceCents ?? 0,
-      halfCents: open ? halfPrice(open.batch) : 0,
+      femaleCents: open ? femalePrice(open.batch) : 0,
       remaining: open?.remaining ?? 0,
       lowStock: open ? open.remaining / open.batch.quantity <= 0.2 : false,
       next: open?.nextBatch ? { name: open.nextBatch.name, priceCents: open.nextBatch.priceCents } : null,
@@ -98,7 +97,7 @@ async function EventPage() {
         </header>
 
         <div className="hero-copy relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-5 pb-2 text-center">
-          <PerolasLogo year={event.edition.replace(/^2K/i, "20")} className="rv" />
+          <PerolasLogo year={event.edition.toUpperCase()} className="rv" />
           <p className="hero-tagline rv" style={{ animationDelay: "0.5s" }}>
             {campaign.tagline}
           </p>

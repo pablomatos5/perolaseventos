@@ -16,7 +16,7 @@ const cormorant = Cormorant_Garamond({
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["200", "300", "400", "500", "600"],
 });
 
 const description = "Réveillon Pérolas 2K27, 6ª edição: 7 horas de open bar e a virada mais exclusiva de Cametá-PA. Ingressos por lotes, com QR code no celular.";

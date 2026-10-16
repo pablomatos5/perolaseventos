@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { portariaEvent } from "@/lib/checkin";
 import { db } from "@/lib/db";
 import { deviceFromRequest } from "@/lib/portaria-auth";
+import { genderLabel } from "@/lib/format";
 
 /** Busca para quem chegou sem o QR (celular sem bateria, tela quebrada): nome, código do pedido ou CPF. */
 export async function GET(req: Request) {
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
       cpfEnd: t.order.cpf ? `***.${t.order.cpf.slice(6, 9)}-${t.order.cpf.slice(9)}` : "",
       type: t.ticketType.name,
       batch: t.batch.name,
-      half: t.isHalf,
+      gender: genderLabel(t.gender),
       status: t.status,
       usedAt: t.usedAt,
       usedBy: t.usedBy,

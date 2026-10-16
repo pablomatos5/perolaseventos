@@ -16,7 +16,7 @@ export type PdfTicket = {
   holder: string;
   type: string;
   batch: string;
-  half: boolean;
+  gender: string;
   priceCents: number;
   usedAt: Date | null;
 };
@@ -147,7 +147,7 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCod
   cell(colR, top - 26, "HORÁRIO", `A partir das ${hour(ev.startsAt)}`, "Abertura dos portões");
   cell(colL, top - 86, "LOCAL", ev.venue, ev.city);
   cell(colR, top - 86, "SETOR", t.type, t.batch);
-  cell(colL, top - 146, "INGRESSO", t.half ? "Meia-entrada" : "Inteira", t.half ? "Leve o documento" : undefined);
+  cell(colL, top - 146, "INGRESSO", t.gender);
   cell(colR, top - 146, "VALOR", t.priceCents > 0 ? formatBRL(t.priceCents) : "Cortesia");
 
   // ── titular ──
@@ -189,7 +189,6 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, ev: PdfEvent, orderCod
     "Apresente este QR na entrada, na tela do celular ou impresso.",
     "Vale uma entrada: depois de lido, o mesmo QR não passa de novo. Não compartilhe nem poste.",
     "Se o nome do titular for trocado no site, este PDF deixa de valer: baixe o novo.",
-    ...(t.half ? ["Meia-entrada: apresente o documento que comprova o direito (Lei 12.933/2013)."] : []),
   ];
   let ry = qrY - 70;
   for (const r of rules) {

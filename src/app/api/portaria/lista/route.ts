@@ -2,6 +2,7 @@ import { portariaEvent } from "@/lib/checkin";
 import { db } from "@/lib/db";
 import { deviceFromRequest } from "@/lib/portaria-auth";
 import { ticketToken, tokenHash } from "@/lib/tokens";
+import { genderLabel } from "@/lib/format";
 
 /**
  * Lista para o modo offline: todos os ingressos válidos do evento, cada um com o hash do QR atual.
@@ -33,7 +34,7 @@ export async function GET(req: Request) {
         code: t.order.code,
         type: t.ticketType.name,
         batch: t.batch.name,
-        half: t.isHalf,
+        gender: genderLabel(t.gender),
         usedAt: t.usedAt,
         usedBy: t.usedBy,
       })),

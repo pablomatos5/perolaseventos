@@ -10,7 +10,7 @@ export type ListTicket = {
   code: string;
   type: string;
   batch: string;
-  half: boolean;
+  gender: string;
   usedAt: string | null;
   usedBy: string | null;
 };

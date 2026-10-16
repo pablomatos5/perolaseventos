@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { closeEarlierBatches, currentBatch, occupiedCount } from "@/lib/batches";
-import { halfPrice } from "@/lib/format";
+import { femalePrice, SERVICE_FEE_CENTS } from "@/lib/format";
 import { orderCode } from "@/lib/tokens";
 
 // 15 min: dá tempo de abrir o app do banco para o Pix ou digitar o cartão no Mercado Pago.
@@ -14,8 +14,7 @@ export type ReservationInput = {
   email: string;
   phone: string;
   cpf: string;
-  whatsappOptIn: boolean;
-  items: { ticketTypeId: string; full: number; half: number }[];
+  items: { ticketTypeId: string; masc: number; fem: number }[];
 };
 
 /**
@@ -28,17 +27,16 @@ export async function createReservation(input: ReservationInput) {
   const expiresAt = new Date(now.getTime() + RESERVATION_MINUTES * 60_000);
 
   return db.$transaction(async (tx) => {
-    const tickets: { ticketTypeId: string; batchId: string; priceCents: number; isHalf: boolean; holderName: string }[] = [];
+    const tickets: { ticketTypeId: string; batchId: string; priceCents: number; gender: "MASCULINO" | "FEMININO"; holderName: string }[] = [];
 
     for (const item of input.items) {
-      const qty = item.full + item.half;
+      const qty = item.masc + item.fem;
       if (qty <= 0) continue;
 
       await tx.$queryRaw`SELECT id FROM "TicketType" WHERE id = ${item.ticketTypeId} FOR UPDATE`;
       const type = await tx.ticketType.findFirst({ where: { id: item.ticketTypeId, eventId: input.eventId } });
       if (!type) throw new SaleError("Tipo de ingresso inválido.");
       if (qty > type.maxPerOrder) throw new SaleError(`Máximo de ${type.maxPerOrder} ingressos de ${type.name} por pedido.`);
-      if (item.half > 0 && !type.allowHalfPrice) throw new SaleError(`${type.name} não tem meia-entrada.`);
 
       const current = await currentBatch(tx, type, now, true);
       if (current.state !== "open") throw new SaleError(`${type.name}: vendas indisponíveis no momento.`);
@@ -48,18 +46,19 @@ export async function createReservation(input: ReservationInput) {
       await closeEarlierBatches(tx, current.batch, now);
 
       for (let i = 0; i < qty; i++) {
-        const isHalf = i < item.half;
+        const fem = i < item.fem;
         tickets.push({
           ticketTypeId: type.id,
           batchId: current.batch.id,
-          priceCents: isHalf ? halfPrice(current.batch) : current.batch.priceCents,
-          isHalf,
+          priceCents: fem ? femalePrice(current.batch) : current.batch.priceCents,
+          gender: fem ? "FEMININO" : "MASCULINO",
           holderName: input.buyerName,
         });
       }
     }
 
     if (tickets.length === 0) throw new SaleError("Escolha pelo menos um ingresso.");
+    const feeCents = tickets.length * SERVICE_FEE_CENTS;
 
     return tx.order.create({
       data: {
@@ -69,8 +68,8 @@ export async function createReservation(input: ReservationInput) {
         email: input.email,
         phone: input.phone,
         cpf: input.cpf,
-        whatsappOptIn: input.whatsappOptIn,
-        totalCents: tickets.reduce((s, t) => s + t.priceCents, 0),
+        totalCents: tickets.reduce((s, t) => s + t.priceCents, 0) + feeCents,
+        feeCents,
         expiresAt,
         tickets: { create: tickets },
       },
@@ -142,7 +141,6 @@ export async function createCourtesy(input: {
         email: input.email,
         phone: input.phone,
         cpf: "",
-        whatsappOptIn: input.phone.length >= 10,
         status: "PAID",
         totalCents: 0,
         expiresAt: now,

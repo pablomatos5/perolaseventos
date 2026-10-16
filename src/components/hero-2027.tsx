@@ -12,24 +12,17 @@ export function Star4({ className = "" }: { className?: string }) {
   );
 }
 
-/** Logo "RÉVEILLON PÉROLAS 2027": serifa clássica dourada, estrela de 4 pontas dentro do O. */
+/** Logo "RÉVEILLON PÉROLAS 2K27": caixa-alta fina e espaçada, com uma pérola no lugar do O. */
 export function PerolasLogo({ year, className = "" }: { year: string; className?: string }) {
   return (
     <div className={`perolas-logo ${className}`}>
       <span className="perolas-logo-kicker">Réveillon</span>
       <h1 className="perolas-logo-name" aria-label={`Réveillon Pérolas ${year}`}>
-        PÉR
-        <span className="perolas-logo-o">
-          O
-          <Star4 className="perolas-logo-star" />
-        </span>
-        LAS
+        <span aria-hidden>PÉR</span>
+        <span className="perolas-logo-pearl" aria-hidden />
+        <span aria-hidden>LAS</span>
       </h1>
-      <span className="perolas-logo-year">
-        <i aria-hidden />
-        {year}
-        <i aria-hidden />
-      </span>
+      <span className="perolas-logo-year">{year}</span>
     </div>
   );
 }

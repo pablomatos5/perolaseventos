@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { reserveAction } from "@/app/actions";
 import { TurnstileWidget } from "@/components/turnstile-widget";
-import { formatBRL } from "@/lib/format";
+import { formatBRL, SERVICE_FEE_CENTS } from "@/lib/format";
 
 // Chave pública do anti-robô (embutida no build). Vazia = checkout sem o quadradinho.
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
@@ -12,18 +12,17 @@ export type PickerType = {
   id: string;
   name: string;
   description: string;
-  allowHalf: boolean;
   maxPerOrder: number;
   status: "open" | "soon" | "soldout" | "paused";
   batchName: string | null;
   priceCents: number;
-  halfCents: number;
+  femaleCents: number;
   remaining: number;
   lowStock: boolean;
   next: { name: string; priceCents: number } | null;
 };
 
-type Qty = Record<string, { full: number; half: number }>;
+type Qty = Record<string, { masc: number; fem: number }>;
 
 function Stepper({ value, onChange, max, label }: { value: number; onChange: (v: number) => void; max: number; label: string }) {
   return (
@@ -43,12 +42,13 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
   const [qty, setQty] = useState<Qty>({});
   const [state, action, pending] = useActionState(reserveAction, undefined);
 
-  const get = (id: string) => qty[id] ?? { full: 0, half: 0 };
-  const set = (id: string, patch: Partial<{ full: number; half: number }>) => setQty((q) => ({ ...q, [id]: { ...get(id), ...patch } }));
+  const get = (id: string) => qty[id] ?? { masc: 0, fem: 0 };
+  const set = (id: string, patch: Partial<{ masc: number; fem: number }>) => setQty((q) => ({ ...q, [id]: { ...get(id), ...patch } }));
 
-  const total = types.reduce((s, t) => s + get(t.id).full * t.priceCents + get(t.id).half * t.halfCents, 0);
-  const count = types.reduce((s, t) => s + get(t.id).full + get(t.id).half, 0);
-  const items = types.map((t) => ({ ticketTypeId: t.id, ...get(t.id) })).filter((i) => i.full + i.half > 0);
+  const subtotal = types.reduce((s, t) => s + get(t.id).masc * t.priceCents + get(t.id).fem * t.femaleCents, 0);
+  const count = types.reduce((s, t) => s + get(t.id).masc + get(t.id).fem, 0);
+  const fee = count * SERVICE_FEE_CENTS;
+  const items = types.map((t) => ({ ticketTypeId: t.id, ...get(t.id) })).filter((i) => i.masc + i.fem > 0);
 
   return (
     <form action={action} className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
@@ -69,8 +69,9 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
                 {t.status === "open" && (
                   <div className="w-full sm:w-auto sm:text-right">
                     <span className="eyebrow">{t.batchName}</span>
-                    <div className="font-display text-4xl text-accent">{formatBRL(t.priceCents)}</div>
-                    {t.allowHalf && <div className="text-xs text-fg-faint">meia {formatBRL(t.halfCents)}</div>}
+                    <div className="font-display text-4xl text-accent">
+                      {t.femaleCents === t.priceCents ? formatBRL(t.priceCents) : `a partir de ${formatBRL(Math.min(t.priceCents, t.femaleCents))}`}
+                    </div>
                   </div>
                 )}
               </div>
@@ -84,15 +85,13 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
                   )}
                   <div className="mt-6 flex flex-wrap gap-8 border-t border-line pt-6">
                     <div>
-                      <div className="mb-2 text-xs uppercase tracking-widest text-fg-faint">Inteira</div>
-                      <Stepper label="inteira" value={q.full} max={cap - q.half} onChange={(v) => set(t.id, { full: v })} />
+                      <div className="mb-2 text-xs uppercase tracking-widest text-fg-faint">Masculino · {formatBRL(t.priceCents)}</div>
+                      <Stepper label="masculino" value={q.masc} max={cap - q.fem} onChange={(v) => set(t.id, { masc: v })} />
                     </div>
-                    {t.allowHalf && (
-                      <div>
-                        <div className="mb-2 text-xs uppercase tracking-widest text-fg-faint">Meia-entrada</div>
-                        <Stepper label="meia" value={q.half} max={cap - q.full} onChange={(v) => set(t.id, { half: v })} />
-                      </div>
-                    )}
+                    <div>
+                      <div className="mb-2 text-xs uppercase tracking-widest text-fg-faint">Feminino · {formatBRL(t.femaleCents)}</div>
+                      <Stepper label="feminino" value={q.fem} max={cap - q.masc} onChange={(v) => set(t.id, { fem: v })} />
+                    </div>
                   </div>
                   {t.next && (
                     <p className="mt-5 text-xs text-fg-faint">
@@ -110,9 +109,6 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
             </article>
           );
         })}
-        <p className="text-xs leading-relaxed text-fg-faint">
-          Meia-entrada (Lei 12.933/2013): estudantes, pessoas com deficiência, jovens de baixa renda e idosos. O documento é conferido na entrada.
-        </p>
       </div>
 
       <aside className="glass-card h-fit p-6 md:p-8 lg:sticky lg:top-8">
@@ -122,16 +118,22 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
           <Field name="email" label="E-mail" type="email" autoComplete="email" />
           <Field name="phone" label="Celular com DDD" type="tel" autoComplete="tel" inputMode="numeric" />
           <Field name="cpf" label="CPF" inputMode="numeric" maxLength={14} />
-          <label className="flex cursor-pointer items-start gap-3 py-1 text-sm text-fg-muted">
-            <input type="checkbox" name="whatsappOptIn" defaultChecked className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]" />
-            Quero receber o ingresso também pelo WhatsApp
-          </label>
         </div>
 
-        <div className="mt-8 flex items-end justify-between border-t border-line pt-6">
-          <span className="text-sm text-fg-muted">{count} ingresso(s)</span>
-          <span className="font-display text-4xl">{formatBRL(total)}</span>
-        </div>
+        <dl className="mt-8 grid gap-1.5 border-t border-line pt-6 text-sm text-fg-muted">
+          <div className="flex justify-between">
+            <dt>{count} ingresso(s)</dt>
+            <dd className="tabular-nums">{formatBRL(subtotal)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt>Taxa de serviço ({formatBRL(SERVICE_FEE_CENTS)} por ingresso)</dt>
+            <dd className="tabular-nums">{formatBRL(fee)}</dd>
+          </div>
+          <div className="mt-2 flex items-end justify-between text-fg">
+            <dt>Total</dt>
+            <dd className="font-display text-4xl">{formatBRL(subtotal + fee)}</dd>
+          </div>
+        </dl>
         {TURNSTILE_SITE_KEY && (
           <div className="mt-6">
             <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} resetKey={state} />
@@ -145,7 +147,9 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
         <button className="btn solid mt-6 w-full" disabled={count === 0 || pending}>
           {pending ? "Reservando…" : "Ir para o pagamento"}
         </button>
-        <p className="mt-3 text-center text-xs text-fg-faint">Seus ingressos ficam reservados por 15 minutos.</p>
+        <p className="mt-3 text-center text-xs text-fg-faint">
+          Seus ingressos ficam reservados por 15 minutos. Depois do pagamento, baixe o PDF na hora e receba também por e-mail.
+        </p>
       </aside>
     </form>
   );
