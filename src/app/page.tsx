@@ -4,7 +4,8 @@ import { TideReveal, type TideStep } from "@/components/tide-reveal";
 import { Countdown } from "@/components/countdown";
 import { Lineup, PartyDetails } from "@/components/party-sections";
 import { OceanWaves, ShellOpening, Sparkles } from "@/components/shell-opening";
-import { Campaign, Faq, Story, Testimonials, Ticker } from "@/components/story-sections";
+import { Campaign, Faq, Story, Ticker } from "@/components/story-sections";
+import { PastEditions } from "@/components/past-editions";
 import { PearlDrop } from "@/components/pearl-drop";
 import { StickyBuy } from "@/components/sticky-buy";
 import { Starfield } from "@/components/starfield";
@@ -133,7 +134,7 @@ async function EventPage() {
         </div>
       </section>
 
-      <Testimonials />
+      <PastEditions />
       <Story />
       <Faq />
       <StickyBuy />

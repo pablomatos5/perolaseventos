@@ -1,4 +1,4 @@
-import { campaign, faq, history, manifesto, sponsors2026, stats, testimonials, ticker } from "@/content/site";
+import { campaign, faq, history, manifesto, sponsors2026, stats, ticker } from "@/content/site";
 
 /** Manifesto + números + linha do tempo das edições. */
 export function Story() {
@@ -140,32 +140,6 @@ export function Campaign() {
             </span>
           ))}
         </p>
-      </div>
-    </section>
-  );
-}
-
-/** Destaque "Relatos": frases de quem viveu a edição passada. */
-export function Testimonials() {
-  return (
-    <section className="mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
-      <span className="eyebrow rule">Relatos</span>
-      <h2 className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
-        Quem viveu, <em>conta</em>
-      </h2>
-      <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {testimonials.map((t) => (
-          <figure key={t.quote} className="glass-card flex flex-col justify-between p-7">
-            <blockquote className="font-display text-2xl leading-snug font-light">
-              <span className="text-accent">“</span>
-              {t.quote}
-              <span className="text-accent">”</span>
-            </blockquote>
-            <figcaption className="mt-6 text-xs uppercase tracking-[0.2em] text-fg-faint">
-              <span className="text-fg-muted">{t.author}</span> · {t.role}
-            </figcaption>
-          </figure>
-        ))}
       </div>
     </section>
   );

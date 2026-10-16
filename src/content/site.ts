@@ -75,6 +75,19 @@ export const testimonials = [
 ];
 
 /**
+ * Vídeos do Réveillon 2026 (reels do @perolaseventos de 03/01/2026), cortados em 12 s e comprimidos
+ * (480x640, ~1 MB) em /public/edicoes. Cada um leva um relato por cima. Brutos em .midia-bruta/videos.
+ */
+export const pastVideos: { src: string; poster: string; alt: string; quote?: string; author?: string; role?: string }[] = [
+  { src: "/edicoes/2026-1.mp4", poster: "/edicoes/2026-1.jpg", alt: "Pista lotada sob as luzes no Réveillon Pérolas 2026", ...testimonials[0] },
+  { src: "/edicoes/2026-2.mp4", poster: "/edicoes/2026-2.jpg", alt: "DJ no palco do Réveillon Pérolas 2026", ...testimonials[2] },
+  { src: "/edicoes/2026-3.mp4", poster: "/edicoes/2026-3.jpg", alt: "Público de branco curtindo a virada 2026", ...testimonials[3] },
+  { src: "/edicoes/2026-4.mp4", poster: "/edicoes/2026-4.jpg", alt: "Show na virada do Réveillon Pérolas 2026", ...testimonials[1] },
+  { src: "/edicoes/2026-5.mp4", poster: "/edicoes/2026-5.jpg", alt: "Galera dançando no Réveillon Pérolas 2026", ...testimonials[4] },
+  { src: "/edicoes/2026-6.mp4", poster: "/edicoes/2026-6.jpg", alt: "DJ animando a pista no Réveillon Pérolas 2026" },
+];
+
+/**
  * Patrocinadores anunciados para o Réveillon 2026 (posts "Patrocinador Oficial Confirmado!" de dez/2025).
  * Confirmar quem renova para 2027. `instagram`: perfil marcado no anúncio.
  * `image`: painel do logo recortado do cartaz-anúncio da Pérolas (720x360, em /public/patrocinadores);

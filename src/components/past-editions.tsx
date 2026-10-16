@@ -1,0 +1,99 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { pastVideos } from "@/content/site";
+
+/**
+ * "Quem viveu, conta": vídeos da edição passada em formato de story, cada um com um relato por cima.
+ * Leve no celular: preload="none", só toca (mudo) o vídeo que está quase todo visível e pausa o resto;
+ * tocar no vídeo liga o som dele e muta os outros. Sem animação: nada toca sozinho.
+ */
+export function PastEditions() {
+  const [soundOn, setSoundOn] = useState<number | null>(null);
+  const refs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  useEffect(() => {
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target as HTMLVideoElement;
+          if (e.isIntersecting && e.intersectionRatio >= 0.75 && !reduced) v.play().catch(() => {});
+          else if (!e.isIntersecting || e.intersectionRatio < 0.5) v.pause();
+        }
+      },
+      { threshold: [0, 0.5, 0.75, 1] },
+    );
+    refs.current.forEach((v) => v && io.observe(v));
+    return () => io.disconnect();
+  }, []);
+
+  function toggleSound(i: number) {
+    const next = soundOn === i ? null : i;
+    refs.current.forEach((v, k) => {
+      if (!v) return;
+      v.muted = k !== next;
+      if (k === next) v.play().catch(() => {});
+    });
+    setSoundOn(next);
+  }
+
+  return (
+    <section className="py-20 md:py-28" aria-labelledby="edicoes-titulo">
+      <div className="mx-auto w-full max-w-6xl px-5 md:px-8">
+        <span className="eyebrow rule">Réveillon 2026 · 5ª edição</span>
+        <h2 id="edicoes-titulo" className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
+          Quem viveu, <em>conta</em>
+        </h2>
+        <p className="mt-4 max-w-xl text-fg-muted">Um pouco da última virada, direto do nosso Instagram. Toque no vídeo para ouvir.</p>
+      </div>
+
+      <ul className="story-rail mt-10">
+        {pastVideos.map((v, i) => (
+          <li key={v.src}>
+            <figure className="story-card">
+              <video
+                ref={(el) => {
+                  refs.current[i] = el;
+                }}
+                src={v.src}
+                poster={v.poster}
+                muted
+                loop
+                playsInline
+                preload="none"
+                className="story-video"
+                aria-label={v.alt}
+              />
+              <button
+                type="button"
+                className="story-hit"
+                onClick={() => toggleSound(i)}
+                aria-pressed={soundOn === i}
+                aria-label={soundOn === i ? "Desligar o som" : "Ligar o som"}
+              >
+                <span className="story-sound" aria-hidden>
+                  {soundOn === i ? "🔊" : "🔇"}
+                </span>
+              </button>
+              {v.quote && (
+                <figcaption className="story-caption">
+                  <blockquote className="font-display text-xl leading-snug italic md:text-2xl">“{v.quote}”</blockquote>
+                  <span className="mt-2 block text-[0.65rem] uppercase tracking-[0.22em] text-white/70">
+                    {v.author} · {v.role}
+                  </span>
+                </figcaption>
+              )}
+            </figure>
+          </li>
+        ))}
+      </ul>
+      <p className="mx-auto mt-6 w-full max-w-6xl px-5 text-xs text-fg-faint md:px-8">
+        Vídeos:{" "}
+        <a className="underline-offset-4 hover:underline" href="https://www.instagram.com/perolaseventos/reels/" target="_blank" rel="noopener noreferrer">
+          @perolaseventos
+        </a>
+      </p>
+    </section>
+  );
+}
