@@ -1586,7 +1586,8 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   letter-spacing: 0.62em;
   margin-right: -0.62em;
   text-transform: uppercase;
-  color: #a26f32;
+  color: #9a6a2e;
+  text-shadow: 0 0 0.6em rgb(255 244 228), 0 0 1.2em rgb(255 236 214 / 0.9);
 }
 .perolas-logo-name {
   display: flex;
