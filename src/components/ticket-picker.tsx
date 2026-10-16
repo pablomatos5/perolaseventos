@@ -60,7 +60,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
           const q = get(t.id);
           const cap = Math.min(t.maxPerOrder, t.remaining);
           return (
-            <article key={t.id} className="glass-card p-6 md:p-8">
+            <article key={t.id} className="glass-card scallop-top p-6 md:p-8">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <h3 className="font-display text-3xl font-light">{t.name}</h3>
@@ -111,7 +111,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
         })}
       </div>
 
-      <aside className="glass-card h-fit p-6 md:p-8 lg:sticky lg:top-8">
+      <aside className="glass-card scallop-top h-fit p-6 md:p-8 lg:sticky lg:top-8">
         <span className="eyebrow rule">Seus dados</span>
         <div className="mt-6 grid gap-4">
           <Field name="buyerName" label="Nome completo" autoComplete="name" />

@@ -3,6 +3,7 @@ import { AttractionCards } from "@/components/attraction-cards";
 import { PerkTrail } from "@/components/perk-trail";
 import { SponsorCarousel } from "@/components/story-sections";
 import type { Attraction, Highlight } from "@/generated/prisma/client";
+import { Bubbles, SeaDecor } from "@/components/sea-decor";
 
 // Ícones em linha fina (stroke = currentColor), desenhados para o tamanho 28px.
 const ICONS: Record<string, React.ReactElement<React.SVGProps<SVGPathElement>>> = {
@@ -26,7 +27,15 @@ function Icon({ name }: { name: string }) {
 export function PartyDetails({ highlights }: { highlights: Highlight[] }) {
   if (!highlights.length) return null;
   return (
-    <section className="mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
+    <section className="relative mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
+      <SeaDecor
+        items={[
+          { kind: "coral", at: "-left-12 top-40", size: "size-24" },
+          { kind: "starfish", at: "-right-10 top-1/3", size: "size-14", rotate: 22 },
+          { kind: "scallop", at: "-left-8 bottom-20", size: "size-14", rotate: -10 },
+          { kind: "pearls", at: "-right-6 bottom-32", size: "size-12" },
+        ]}
+      />
       <span className="eyebrow rule">A festa</span>
       <h2 className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
         Uma noite para <em>colecionar</em>
@@ -43,6 +52,7 @@ export function Lineup({ attractions }: { attractions: Attraction[] }) {
   return (
     <section className="relative overflow-hidden py-20 md:py-28">
       <div className="ambient-glow -right-40 top-10 size-[28rem] bg-ocean opacity-20" />
+      <Bubbles />
       <div className="relative mx-auto w-full max-w-6xl px-5 md:px-8">
         <span className="eyebrow rule">Atrações</span>
         <h2 className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">

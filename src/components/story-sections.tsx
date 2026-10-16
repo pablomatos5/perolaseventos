@@ -1,10 +1,17 @@
 import { campaign, faq, history, manifesto, sponsors2026, stats, ticker } from "@/content/site";
+import { Scallop, SeaDecor } from "@/components/sea-decor";
 
 /** Manifesto + números + linha do tempo das edições. */
 export function Story() {
   return (
-    <section className="mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
-      <div className="grid gap-14 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
+    <section className="relative mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
+      <SeaDecor
+        items={[
+          { kind: "starfish", at: "-left-16 top-10", size: "size-16", rotate: -20 },
+          { kind: "coral", at: "-right-14 bottom-24", size: "size-20" },
+        ]}
+      />
+      <div className="relative grid gap-14 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
         <div>
           <span className="eyebrow rule">Nossa história</span>
           <p className="mt-6 font-display text-[clamp(2rem,4.6vw,3.6rem)] font-light leading-[1.05]">
@@ -98,7 +105,13 @@ export function SponsorCarousel() {
 /** Perguntas frequentes com <details>: abre e fecha sem JavaScript. */
 export function Faq() {
   return (
-    <section className="mx-auto w-full max-w-3xl px-5 py-20 md:py-28">
+    <section className="relative mx-auto w-full max-w-3xl px-5 py-20 md:py-28">
+      <SeaDecor
+        items={[
+          { kind: "scallop", at: "-right-24 top-20", size: "size-16", rotate: 16 },
+          { kind: "pearls", at: "-left-20 top-1/2", size: "size-12" },
+        ]}
+      />
       <span className="eyebrow rule">Dúvidas</span>
       <h2 className="display mt-4 text-[clamp(2.2rem,5vw,3.6rem)]!">
         Antes da <em>virada</em>
@@ -108,7 +121,7 @@ export function Faq() {
           <details key={f.q} className="faq group py-5">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 text-lg">
               {f.q}
-              <span className="text-2xl text-accent transition-transform duration-300 group-open:rotate-45">+</span>
+              <Scallop className="faq-shell" />
             </summary>
             <p className="mt-3 text-sm text-fg-muted">{f.a}</p>
           </details>
@@ -128,6 +141,14 @@ export function Campaign() {
   return (
     <section className="relative overflow-hidden py-24 text-center md:py-32">
       <div className="ambient-glow left-1/2 top-1/2 size-[34rem] -translate-x-1/2 -translate-y-1/2 bg-ocean opacity-25" />
+      <SeaDecor
+        items={[
+          { kind: "scallop", at: "left-[6%] top-16", size: "size-20", rotate: -18, mobile: true },
+          { kind: "starfish", at: "right-[7%] top-24", size: "size-16", rotate: 14 },
+          { kind: "pearls", at: "left-[12%] bottom-16", size: "size-12" },
+          { kind: "coral", at: "right-[10%] bottom-10", size: "size-20" },
+        ]}
+      />
       <div className="relative mx-auto max-w-5xl px-5">
         <span className="eyebrow">6ª edição · campanha 2027</span>
         <h2 className="display mt-5 text-[clamp(2.3rem,6vw,4.6rem)]!">

@@ -141,6 +141,27 @@ body {
   height: 1px;
   background: var(--accent);
 }
+/* 2027: o tracinho do rótulo vira uma conchinha dourada seguida do fio */
+[data-edition="2k27"] .eyebrow.rule::before {
+  width: 3.4rem;
+  height: 1.15rem;
+  background:
+    linear-gradient(var(--accent), var(--accent)) right center / 1.7rem 1px no-repeat;
+  -webkit-mask: none;
+}
+[data-edition="2k27"] .eyebrow.rule { position: relative; padding-left: 0; }
+[data-edition="2k27"] .eyebrow.rule::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1.15rem;
+  height: 1.15rem;
+  translate: 0 -50%;
+  background: var(--accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M32 52C18 51 8 41 8.5 28.5 9 17 19 9 32 9s23 8 23.5 19.5C56 41 46 51 32 52Z'/%3E%3Cpath d='M25 51.5l-2 5.5h18l-2-5.5M32 51V11M32 51L13 22M32 51L51 22M32 51L21 13M32 51L43 13'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M32 52C18 51 8 41 8.5 28.5 9 17 19 9 32 9s23 8 23.5 19.5C56 41 46 51 32 52Z'/%3E%3Cpath d='M25 51.5l-2 5.5h18l-2-5.5M32 51V11M32 51L13 22M32 51L51 22M32 51L21 13M32 51L43 13'/%3E%3C/svg%3E") center / contain no-repeat;
+}
 
 .btn {
   display: inline-flex;
@@ -1676,13 +1697,15 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .ig-link { display: inline-flex; align-items: center; gap: 0.5rem; }
 .sand-link { text-decoration: underline; text-decoration-color: rgb(112 76 38 / 0.35); text-underline-offset: 0.3em; pointer-events: auto; }
 .sand-link:hover { text-decoration-color: currentColor; }
-.card-avatar {
+.card-media .card-avatar {
   position: absolute;
+  inset: auto auto 12% 50%;
   left: 50%;
   bottom: 12%;
   width: 40%;
   aspect-ratio: 1;
   translate: -50% 0;
+  height: auto;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #f3d9a8;
@@ -1690,3 +1713,93 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 }
 .hero-ig { display: grid; place-items: center; width: 2.6rem; aspect-ratio: 1; border-radius: 50%; color: #fff; border: 1px solid rgb(255 255 255 / 0.55); background: rgb(255 255 255 / 0.08); }
 .hero-ig:hover { border-color: #fff; background: rgb(255 255 255 / 0.18); }
+
+/* ───────── Fundo do mar: conchas, estrelas-do-mar, corais, bolhas e sereias (sea-decor.tsx) ───────── */
+main { overflow-x: clip; }
+.sea-ornament {
+  position: absolute;
+  z-index: 0;
+  color: #b98444;
+  opacity: 0.55;
+  pointer-events: none;
+  rotate: var(--rot, 0deg);
+  filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.8));
+  animation: sea-float 9s ease-in-out infinite;
+}
+@keyframes sea-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+.sea-pearlet {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff 0 16%, #efe5ff 55%, #b9a3e6);
+  box-shadow: 0 2px 6px rgb(84 64 168 / 0.3), 0 0 10px rgb(255 255 255 / 0.8);
+}
+.sea-bubbles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.sea-bubbles > i {
+  position: absolute;
+  bottom: -2rem;
+  width: var(--b, 8px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.85);
+  background: radial-gradient(circle at 32% 30%, rgb(255 255 255 / 0.9) 0 18%, rgb(255 255 255 / 0.12) 40%, rgb(185 163 230 / 0.18));
+  box-shadow: 0 0 6px rgb(185 163 230 / 0.35);
+  animation: bubble-rise linear infinite;
+}
+@keyframes bubble-rise {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  10% { opacity: 0.9; }
+  50% { transform: translate3d(8px, -45vh, 0); }
+  90% { opacity: 0.7; }
+  100% { transform: translate3d(-6px, -90vh, 0); opacity: 0; }
+}
+/* sereia das artes aparecendo pela lateral de uma seção */
+.side-mermaid {
+  position: absolute;
+  z-index: 0;
+  bottom: 0;
+  height: min(78vh, 42rem);
+  width: auto;
+  pointer-events: none;
+}
+.side-mermaid.is-left { left: 0; }
+.side-mermaid.is-right { right: 0; }
+.with-mermaid { position: relative; }
+.with-mermaid > :not(.side-mermaid) { position: relative; z-index: 1; }
+@media (max-width: 1279px) { .with-mermaid > .side-mermaid { opacity: 0.35; height: 50vh; } }
+@media (max-width: 767px) { .with-mermaid > .side-mermaid { display: none; } }
+
+/* borda de concha (vieira): fileira de arcos dourados no alto do card */
+.scallop-top { position: relative; }
+.scallop-top::before {
+  content: "";
+  position: absolute;
+  left: 1.2rem;
+  right: 1.2rem;
+  top: -0.7rem;
+  height: 0.7rem;
+  background: radial-gradient(circle at 50% 100%, transparent 0.5rem, rgb(185 132 68 / 0.55) calc(0.5rem + 0.5px) calc(0.5rem + 1.5px), transparent calc(0.5rem + 2px)) 0 0 / 1.25rem 0.7rem repeat-x;
+  pointer-events: none;
+}
+/* FAQ: o "+" virou conchinha que gira e acende ao abrir */
+.faq-shell { width: 1.6rem; height: 1.6rem; flex-shrink: 0; color: var(--accent); transition: rotate 0.4s var(--ease), scale 0.4s var(--ease), color 0.4s; }
+.faq[open] .faq-shell { rotate: 180deg; scale: 1.15; color: #6a4ecf; }
+
+/* rodapé no fundo do mar */
+.seabed-footer { position: relative; overflow: hidden; padding-bottom: clamp(11rem, 22vw, 17rem); }
+.seabed-footer > .footer-content { position: relative; z-index: 2; }
+.seabed { position: absolute; inset: 0; pointer-events: none; }
+.seabed-art { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(12rem, 24vw, 19rem); }
+.seabed .side-mermaid { z-index: 1; height: clamp(14rem, 30vw, 26rem); bottom: -0.5rem; }
+.seabed-weed path { transform-box: fill-box; transform-origin: 50% 100%; animation: weed-sway 6s ease-in-out infinite alternate; }
+.seabed-weed path:nth-child(2) { animation-delay: -2s; }
+.seabed-weed path:nth-child(3) { animation-delay: -4s; }
+@keyframes weed-sway { from { rotate: -4deg; } to { rotate: 4deg; } }
+.seabed-pearl { filter: drop-shadow(0 0 8px rgb(255 255 255 / 0.9)); }
+@media (max-width: 767px) { .seabed .side-mermaid { opacity: 0.85; left: -10vw; } }
+@media (prefers-reduced-motion: reduce) {
+  .sea-ornament, .sea-bubbles > i, .seabed-weed path { animation: none; }
+  .sea-bubbles { display: none; }
+}

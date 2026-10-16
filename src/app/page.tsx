@@ -16,6 +16,7 @@ import { TicketPicker, type PickerType } from "@/components/ticket-picker";
 import { currentBatch } from "@/lib/batches";
 import { db } from "@/lib/db";
 import { femalePrice } from "@/lib/format";
+import { Seabed, SideMermaid } from "@/components/sea-decor";
 
 export default function Home() {
   return (
@@ -133,14 +134,17 @@ async function EventPage() {
       <PartyDetails highlights={event.highlights} />
       <Lineup attractions={event.attractions} />
 
-      <section id="ingressos" className="mx-auto w-full max-w-6xl scroll-mt-8 px-5 py-20 md:px-8 md:py-28">
-        <span className="eyebrow rule">Ingressos</span>
-        <h2 className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
-          Escolha o seu <em>lugar</em> na virada
-        </h2>
-        <p className="mt-4 max-w-xl text-fg-muted">{event.description}</p>
-        <div className="mt-12">
-          <TicketPicker eventId={event.id} types={types} />
+      <section id="ingressos" className="with-mermaid scroll-mt-8">
+        <SideMermaid side="right" />
+        <div className="mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
+          <span className="eyebrow rule">Ingressos</span>
+          <h2 className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
+            Escolha o seu <em>lugar</em> na virada
+          </h2>
+          <p className="mt-4 max-w-xl text-fg-muted">{event.description}</p>
+          <div className="mt-12">
+            <TicketPicker eventId={event.id} types={types} />
+          </div>
         </div>
       </section>
 
@@ -150,12 +154,15 @@ async function EventPage() {
       <StickyBuy />
       <PearlDrop />
 
-      <footer className="grid justify-items-center gap-5 border-t border-line px-5 py-12 text-center">
-        <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3!">
-          <InstagramIcon />
-          Siga @perolaseventos
-        </a>
-        <p className="text-xs text-fg-faint">Pérolas Eventos · {event.city}</p>
+      <footer className="seabed-footer px-5 pt-14 text-center">
+        <Seabed />
+        <div className="footer-content grid justify-items-center gap-5">
+          <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3!">
+            <InstagramIcon />
+            Siga @perolaseventos
+          </a>
+          <p className="text-xs text-fg-faint">Pérolas Eventos · {event.city}</p>
+        </div>
       </footer>
     </main>
   );

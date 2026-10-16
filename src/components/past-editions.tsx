@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PLAYING_EVENT } from "@/components/attraction-cards";
 import { pastVideos } from "@/content/site";
+import { Bubbles } from "@/components/sea-decor";
 
 /**
  * "Quem viveu, conta": vídeos da edição passada em formato de story, cada um com um relato por cima.
@@ -70,7 +71,8 @@ export function PastEditions() {
   }
 
   return (
-    <section className="py-20 md:py-28" aria-labelledby="edicoes-titulo">
+    <section className="relative py-20 md:py-28" aria-labelledby="edicoes-titulo">
+      <Bubbles />
       <div className="mx-auto w-full max-w-6xl px-5 md:px-8">
         <span className="eyebrow rule">Réveillon 2026 · 5ª edição</span>
         <h2 id="edicoes-titulo" className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
