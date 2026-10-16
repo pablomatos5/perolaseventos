@@ -57,7 +57,8 @@ async function main() {
             name: "Guilherme Menezes",
             genre: "3ª atração confirmada",
             instagram: "guilhermemenezesgm",
-            imageUrl: "/atracoes/guilherme-menezes-avatar.jpg", // só a foto de perfil (150 px): vai em medalhão
+            imageUrl: "/atracoes/guilherme-menezes-capa.jpg", // reel dele no Balacool Bar (@guilhermemenezesgm)
+            videoUrl: "/atracoes/guilherme-menezes.mp4",
             sortOrder: 3,
           },
           { name: "", announced: false, sortOrder: 4 },
