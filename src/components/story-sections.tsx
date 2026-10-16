@@ -168,10 +168,10 @@ export function Campaign() {
   );
 }
 
-/** "Uma nova era, infinitas possibilidades." → ["Uma nova era,", "infinitas possibilidades."] (2ª parte em destaque). */
+/** "Um novo ciclo. Infinitas possibilidades." → ["Um novo ciclo.", "Infinitas possibilidades."] (2ª parte em destaque). */
 function splitTagline(t: string): [string, string] {
-  const i = t.indexOf(",");
-  return i === -1 ? ["", t] : [t.slice(0, i + 1), t.slice(i + 1).trim()];
+  const m = /[.,]\s/.exec(t);
+  return m ? [t.slice(0, m.index + 1), t.slice(m.index + 2).trim()] : ["", t];
 }
 
 /** Faixa rolando com ✦ entre os itens (a "roleta"). Lista duplicada para o loop não ter emenda. */

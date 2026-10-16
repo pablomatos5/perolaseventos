@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { TideReveal, type TideStep } from "@/components/tide-reveal";
 import { Countdown } from "@/components/countdown";
 import { Lineup, PartyDetails } from "@/components/party-sections";
-import { OceanWaves, ShellOpening, Sparkles } from "@/components/shell-opening";
+import { HeroMermaid, LightSwirls, PearlHorizon, PerolasLogo } from "@/components/hero-2027";
+import { OceanWaves, Sparkles } from "@/components/shell-opening";
 import { Campaign, Faq, Story, Ticker } from "@/components/story-sections";
 import { PastEditions } from "@/components/past-editions";
 import { PearlDrop } from "@/components/pearl-drop";
@@ -83,36 +84,35 @@ async function EventPage() {
     <main>
       <Starfield />
       {/* Hero e praia formam uma cena só: céu → concha → mar (OceanWaves) → maré de atrações na areia (TideReveal). */}
-      <section className="hero-sky relative flex min-h-svh flex-col overflow-hidden">
+      <section className="hero-2027 relative flex min-h-svh flex-col overflow-hidden">
+        <div className="hero-sky-2027" aria-hidden />
         <Sparkles />
-        <div className="ambient-glow left-1/2 top-[22%] size-[34rem] -translate-x-1/2 bg-accent opacity-[0.16]" />
+        <LightSwirls />
+        <HeroMermaid />
 
         <header className="relative z-10 flex items-center justify-between px-5 py-5 md:px-12">
-          <span className="font-display text-2xl italic">Pérolas</span>
-          <a href="#ingressos" className="btn px-5! py-2.5!">Ingressos</a>
+          <span className="hero-brand">Pérolas</span>
+          <a href="#ingressos" className="btn hero-btn px-5! py-2.5!">
+            Ingressos
+          </a>
         </header>
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-5 pb-2 text-center">
-          <ShellOpening className="w-[min(86vw,30rem,40svh)]" />
-          <span className="eyebrow rv mt-2" style={{ animationDelay: "1.5s" }}>
-            Réveillon · {event.edition} · 6ª edição
-          </span>
-          <h1 className="hero-title rv" style={{ animationDelay: "1.6s" }}>
-            Pérolas
-          </h1>
-          <p className="rv max-w-md text-fg-muted" style={{ animationDelay: "1.75s" }}>
-            <em className="font-display text-xl text-accent">{campaign.tagline}</em>
+        <div className="hero-copy relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-5 pb-2 text-center">
+          <PerolasLogo year={event.edition.replace(/^2K/i, "20")} className="rv" />
+          <p className="hero-tagline rv" style={{ animationDelay: "0.5s" }}>
+            {campaign.tagline}
           </p>
-          <p className="rv mt-3 text-xs uppercase tracking-[0.25em] text-fg-faint" style={{ animationDelay: "1.85s" }}>
+          <p className="hero-when rv" style={{ animationDelay: "0.6s" }}>
             {formatDateTime(event.startsAt)} · {event.venue}
           </p>
-          <div className="rv mt-6" style={{ animationDelay: "2s" }}>
+          <div className="hero-countdown rv mt-5" style={{ animationDelay: "0.75s" }}>
             <Countdown target={new Date(Date.UTC(event.startsAt.getUTCFullYear(), 0, 1, 3)).toISOString()} />
           </div>
-          <a href="#ingressos" data-hero-cta className="btn solid rv mt-6" style={{ animationDelay: "2.15s" }}>
+          <a href="#ingressos" data-hero-cta className="btn solid rv mt-5" style={{ animationDelay: "0.9s" }}>
             Garantir meu ingresso
           </a>
         </div>
+        <PearlHorizon />
         <OceanWaves />
       </section>
 

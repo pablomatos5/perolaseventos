@@ -4,9 +4,9 @@
 /** Tema de cores ativo (globals.css → [data-edition]). "2k26" = azul oceano; "2k27" = lilás "nova era". */
 export const CURRENT_EDITION = "2k27";
 
-/** Campanha da 6ª edição (story "2K27"). */
+/** Campanha da 6ª edição: artes oficiais 2027 ("Um novo ciclo. Infinitas possibilidades."). */
 export const campaign = {
-  tagline: "Uma nova era, infinitas possibilidades.",
+  tagline: "Um novo ciclo. Infinitas possibilidades.",
   pillars: ["Momentos inesquecíveis", "Detalhes que encantam", "Surpresas que transformam"],
   closing: ["Algo grandioso.", "Algo único.", "Algo Pérolas."],
 };
