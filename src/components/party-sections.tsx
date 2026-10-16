@@ -1,9 +1,11 @@
+import { cloneElement } from "react";
 import { AttractionCards } from "@/components/attraction-cards";
+import { PerkTrail } from "@/components/perk-trail";
 import { SponsorCarousel } from "@/components/story-sections";
 import type { Attraction, Highlight } from "@/generated/prisma/client";
 
 // Ícones em linha fina (stroke = currentColor), desenhados para o tamanho 28px.
-const ICONS: Record<string, React.ReactNode> = {
+const ICONS: Record<string, React.ReactElement<React.SVGProps<SVGPathElement>>> = {
   bar: <path d="M6 4h16l-7 9v8m-4 0h8M9 8h10" />,
   river: <path d="M3 10c3-3 5-3 8 0s5 3 8 0 4-2 6-1M3 16c3-3 5-3 8 0s5 3 8 0 4-2 6-1M3 22c3-3 5-3 8 0s5 3 8 0 4-2 6-1" />,
   fireworks: <path d="M14 14V3m0 11 7.8-7.8M14 14h11m-11 0 7.8 7.8M14 14v11m0-11-7.8 7.8M14 14H3m11 0L6.2 6.2" />,
@@ -16,7 +18,7 @@ const ICONS: Record<string, React.ReactNode> = {
 function Icon({ name }: { name: string }) {
   return (
     <svg viewBox="0 0 28 28" className="size-7 text-accent" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      {ICONS[name] ?? ICONS.music}
+      {cloneElement(ICONS[name] ?? ICONS.music, { pathLength: 1 })}
     </svg>
   );
 }
@@ -29,20 +31,9 @@ export function PartyDetails({ highlights }: { highlights: Highlight[] }) {
       <h2 className="display mt-4 text-[clamp(2.2rem,5vw,4rem)]!">
         Uma noite para <em>colecionar</em>
       </h2>
-      <ol className="perk-grid mt-14 md:mt-20">
-        {highlights.map((h, i) => (
-          <li key={h.id} className="perk">
-            <span className="perk-icon">
-              <Icon name={h.icon} />
-            </span>
-            <div>
-              <span className="perk-num">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="font-display text-2xl leading-tight md:text-[1.7rem]">{h.title}</h3>
-              <p className="mt-1.5 text-sm text-fg-muted">{h.description}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <div className="mt-14 md:mt-20">
+        <PerkTrail items={highlights.map((h) => ({ id: h.id, title: h.title, description: h.description, icon: <Icon name={h.icon} /> }))} />
+      </div>
     </section>
   );
 }
