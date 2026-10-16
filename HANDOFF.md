@@ -4,6 +4,15 @@ Você vai continuar um site de venda de ingressos para o **Réveillon Pérolas 2
 Converse comigo em **português**. Projeto em `D:\Downloads\perolaseventos`. Leia `README.md` e este arquivo antes de mexer.
 Siga as regras do meu `~/.claude/CLAUDE.md` (máquina desliga sob carga: rode o hw-check antes/depois de carga pesada; no fim, desligue servidores e cace órfãos).
 
+## Abrindo num OUTRO computador (ex.: o notebook do usuário)
+O git NÃO leva os segredos nem os brutos: `.env`, `.env.producao-acessos`, `.midia-bruta/` e a chave SSH da VPS
+(`~/.ssh/nexos_deploy`) ficam só no PC de casa. No notebook:
+1. `git clone https://github.com/pablomatos5/perolaseventos.git` (repo privado; precisa estar logado no GitHub) e `npm install`.
+2. Copiar `.env.example` para `.env` e gerar valores NOVOS de teste (TICKET_SECRET etc.) — nunca copiar os de produção para o chat.
+   `PAYMENT_PROVIDER=demo` ou `mock`. Banco: `npm run db:start`, `npm run db:migrate`, `npm run db:seed`.
+3. Sem a chave SSH não dá para publicar na VPS a partir do notebook: deixar o deploy para o PC de casa (ou o usuário copia a chave).
+4. As regras do `~/.claude/CLAUDE.md` do PC (queda de energia, hw-check) valem só para o PC de casa.
+
 ## Stack e como rodar
 Next.js 16.4 (App Router, `cacheComponents` ligado → toda leitura de banco/cookies dentro de `<Suspense>` + `await connection()`), React 19, Tailwind v4, Prisma 7 + PostgreSQL, zod, `qrcode`, `html5-qrcode`, `mercadopago` SDK, `ffmpeg-static` (só dev, para vídeos).
 ```
@@ -31,8 +40,22 @@ O cliente aprovou o site e as ondas que revelam as informações, e pediu a tem�
 principalmente a sereia **como está na arte**. Originais em `.midia-bruta/referencias-2027/`; recortes sem os
 textos gravados em `public/2027/` (sereia-dir = arte "31 dezembro", sereia-esq = "Save the date", mar = faixa
 de água da arte principal). Paleta: #0B1A3D #6A4ECF #B99AF7 #F7A8C7 #FFC9A3 #FFE3B2 #F7F5F0. Frase: "Um novo
-ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. Topo em `hero-2027.tsx`, seção
-"Save the date" em `save-the-date.tsx`, PDF e prévia do link no mesmo visual.
+ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. PDF e prévia do link no mesmo visual.
+
+**Feito em 16/10 (tarde), commits 894b4f2 → 9629aac:**
+- **Topo único** (pedido do usuário): a antiga seção "Save the date" foi fundida no topo (`save-the-date.tsx` apagado).
+  `src/components/hero-2027.tsx` tem logo, `HeroMermaids` (sereia-esq no canto esquerdo, sereia-dir no direito,
+  esfumadas na borda), `PearlHorizon` e a linha "Save the date ★ 31 de dezembro ★ local" (`.hero-save`).
+- **Site inteiro no céu claro** da paleta (sai o azul-marinho estrelado): tokens `[data-edition="2k27"]` em
+  `globals.css` agora claros (fundo #f1ebfb, texto violeta #2e2466, dourado-caramelo #a26f32 nos destaques),
+  `.starfield` = degradê lavanda → rosa → pêssego, cartões de vidro branco, botão dourado com degradê fixo.
+- **Maré corrigida**: ao rolar rápido as ondas não pulam mais atrações; passa por cada uma em sequência com
+  ondas mais rápidas (`tide-reveal.tsx`: passo de 1 em 1, `FAST = 0.55`).
+- **Novas atrações confirmadas** (pedido do usuário, com os links do Instagram deles):
+  **DJ Caçulinha** (@djcaculinha_ofc, nome no perfil "Wellington Caçulinha", 30 mil seguidores) e
+  **Guilherme Menezes** (@guilhermemenezesgm, 22 mil). Já estão no `prisma/seed.ts` e no banco LOCAL como
+  2ª e 3ª atração (`genre` = "2ª/3ª atração confirmada", sem foto: aparece a pérola com as iniciais).
+  **Faltam a foto e o vídeo** (ver Pendência 0).
 
 ## Produção (VPS) — estado em 16/10/2026
 - Repo **privado**: github.com/pablomatos5/perolaseventos (branch main). Deploy: `git archive HEAD | ssh root@92.112.178.48 'tar -x -C /opt/perolaseventos'` (chave `~/.ssh/nexos_deploy`) + `docker compose -f docker-compose.prod.yml up -d --build app` (build na VPS, ~3 min; carga sobe, Nexos/jess seguiram 200).
@@ -43,9 +66,25 @@ ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. To
 - **Demo sem domínio:** container `perolas-tunel` (Cloudflare quick tunnel, rede perolas_edge). URL atual `https://notebooks-idle-trades-squad.trycloudflare.com` — **muda se o container/VPS reiniciar** (`docker logs perolas-tunel | grep trycloudflare`). Remover quando o domínio estiver no ar: `docker rm -f perolas-tunel`.
 
 ## Pendências / próximos passos (em ordem)
+0. **AGORA — foto e vídeo das 2 novas atrações**, igual ao card do Baltazar (foto na frente; ao virar, vídeo do show).
+   - Fonte: Instagram deles. O usuário deu permissão para **só ver e baixar** (nunca curtir, seguir, comentar,
+     mandar mensagem ou postar). Sem login o Instagram só entrega a foto de perfil 100×100 e nenhum reel.
+   - O login automático parou no reCAPTCHA "Não sou um robô": **quem resolve é o usuário**, não o Claude.
+     A senha NUNCA vai para arquivo, código ou git; o usuário vai trocá-la (passou pelo chat).
+   - Como baixar (já funcionou com os vídeos da Pérolas): Chrome com `--remote-debugging-port`, perfil logado,
+     abrir `instagram.com/<perfil>/reels/`, rolar, e ler as respostas de rede que têm `video_versions`
+     (pegar a maior versão; capa em `image_versions2`). Escolher um reel com o show (palco, público, luzes).
+   - Processar com `node_modules/ffmpeg-static/ffmpeg.exe` no padrão do Baltazar: vídeo mp4 854 de largura,
+     crf ~28, `-movflags +faststart`, sem áudio pesado; foto jpg em `public/atracoes/<nome>-capa.jpg`; capa do
+     vídeo em `public/atracoes/<nome>-poster.jpg` (o card procura `<videoUrl>-poster.jpg`).
+   - Preencher `imageUrl`/`videoUrl` no `prisma/seed.ts`, no banco local e no de produção.
+   - **Produção ainda NÃO tem as 2 atrações** (o site no ar está no commit c02100f; no banco da VPS só o Baltazar
+     está anunciado). Depois das fotos: deploy (ver acima) e no banco da VPS:
+     `docker exec perolas-db psql -U perolas -d perolas -c "update \"Attraction\" set name=..., genre=..., instagram=..., \"imageUrl\"=..., \"videoUrl\"=..., announced=true where \"sortOrder\"=2"` (idem 3).
+     Perguntar ao usuário antes de publicar no servidor.
 1. **Domínio perolaseventos.store**: está registrado mas NÃO resolve (NXDOMAIN em 16/10). Usuário confere no hPanel (verificação de e-mail do titular / nameservers) e cria A `@` e `www` → 92.112.178.48. O token do MCP da Hostinger em `~/.claude.json` está revogado (401) — trocar pelo token novo para eu poder mexer no DNS.
 2. Com o domínio resolvendo: certbot webroot em `/opt/sites-extra/perolas` (`docker run --rm -v /opt/sites-extra/perolas/certs:/etc/letsencrypt -v /opt/sites-extra/perolas/acme:/var/www/certbot certbot/certbot certonly --webroot -w /var/www/certbot -d perolaseventos.store -d www.perolaseventos.store`), instalar o vhost https, `nginx -t` + reload, cron de renovação próprio, remover o túnel.
-3. **Confirmar com a Pérolas**: preços/lotes reais (seed tem valores FICTÍCIOS), local de 2027 (está "Ponte do Assunção", que foi 2026), patrocinadores 2027 (Bió Costa = cartaz de casa de apostas, não publicado), uso das fotos/vídeos, textos de termos e privacidade (+ CNPJ).
+3. **Confirmar com a Pérolas**: preços/lotes reais (seed tem valores FICTÍCIOS), patrocinadores 2027 (Bió Costa = cartaz de casa de apostas, não publicado), uso das fotos/vídeos, textos de termos e privacidade (+ CNPJ).
 4. **Antes das vendas reais**: `PAYMENT_PROVIDER=mercadopago` + chaves, apagar pedidos de teste, `check:config` em produção, Resend (SPF/DKIM), backup fora da VPS, trocar o túnel pelo domínio.
 5. Termos de compra e política de privacidade (+ aceite no checkout, anonimização após o evento).
 6. Mais atrações conforme forem anunciadas (banco: `name, genre, instagram, imageUrl, videoUrl, headliner, announced`; vídeo com `node_modules/ffmpeg-static/ffmpeg.exe`). WhatsApp oficial quando a Meta aprovar.
