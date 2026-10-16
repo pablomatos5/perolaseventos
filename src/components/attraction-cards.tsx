@@ -188,7 +188,8 @@ function MysteryCard({ n }: { n: number }) {
   );
 }
 
-const PLAYING_EVENT = "perolas:video-play"; // só um vídeo de atração toca por vez
+// Avisado sempre que um vídeo do site começa a tocar COM SOM: os outros pausam (nunca dois áudios juntos).
+export const PLAYING_EVENT = "perolas:video-play";
 
 /**
  * Atração com vídeo: frente com a foto, verso com o vídeo do anúncio COM SOM.
@@ -224,13 +225,35 @@ function VideoFlipCard({ a }: { a: CardAttraction }) {
     v.currentTime = 0;
   };
 
-  // outro card começou a tocar: este pausa
+  // outro vídeo começou a tocar com som: este pausa
   useEffect(() => {
     const onOther = (e: Event) => {
       if ((e as CustomEvent).detail !== video.current) video.current?.pause();
     };
     window.addEventListener(PLAYING_EVENT, onOther);
     return () => window.removeEventListener(PLAYING_EVENT, onOther);
+  }, []);
+
+  // saiu da tela (ou trocou de aba / bloqueou o celular): para o vídeo e o som, e desvira a carta
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    const halt = () => {
+      v.pause();
+      v.muted = true;
+      setFlipped(false);
+      setHover(false);
+    };
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting || e.intersectionRatio < 0.3) halt();
+    }, { threshold: [0, 0.3] });
+    io.observe(v.closest(".flip-card") ?? v);
+    const onHide = () => document.hidden && halt();
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onHide);
+    };
   }, []);
 
   const toggleFlip = () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { PLAYING_EVENT } from "@/components/attraction-cards";
 import { pastVideos } from "@/content/site";
 
 /**
@@ -19,13 +20,37 @@ export function PastEditions() {
         for (const e of entries) {
           const v = e.target as HTMLVideoElement;
           if (e.isIntersecting && e.intersectionRatio >= 0.75 && !reduced) v.play().catch(() => {});
-          else if (!e.isIntersecting || e.intersectionRatio < 0.5) v.pause();
+          else if (!e.isIntersecting || e.intersectionRatio < 0.5) {
+            // saiu da tela: para e tira o som (ao voltar, recomeça mudo)
+            v.pause();
+            if (!v.muted) {
+              v.muted = true;
+              setSoundOn(null);
+            }
+          }
         }
       },
       { threshold: [0, 0.5, 0.75, 1] },
     );
     refs.current.forEach((v) => v && io.observe(v));
-    return () => io.disconnect();
+    // outro vídeo do site começou com som: estes ficam mudos
+    const onOther = (e: Event) => {
+      if (refs.current.includes((e as CustomEvent).detail)) return;
+      refs.current.forEach((v) => v && (v.muted = true));
+      setSoundOn(null);
+    };
+    // trocou de aba / bloqueou o celular: pausa tudo
+    const onHide = () => {
+      if (!document.hidden) return;
+      refs.current.forEach((v) => v?.pause());
+    };
+    window.addEventListener(PLAYING_EVENT, onOther);
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      io.disconnect();
+      window.removeEventListener(PLAYING_EVENT, onOther);
+      document.removeEventListener("visibilitychange", onHide);
+    };
   }, []);
 
   function toggleSound(i: number) {
@@ -33,7 +58,10 @@ export function PastEditions() {
     refs.current.forEach((v, k) => {
       if (!v) return;
       v.muted = k !== next;
-      if (k === next) v.play().catch(() => {});
+      if (k === next) {
+        window.dispatchEvent(new CustomEvent(PLAYING_EVENT, { detail: v })); // cala os outros vídeos do site
+        v.play().catch(() => {});
+      }
     });
     setSoundOn(next);
   }
