@@ -1805,18 +1805,23 @@ main { overflow-x: clip; }
 .faq[open] .faq-shell { rotate: 180deg; scale: 1.15; color: #6a4ecf; }
 
 /* rodapé no fundo do mar */
-.seabed-footer { position: relative; overflow: hidden; padding-bottom: clamp(11rem, 22vw, 17rem); }
-.seabed-footer > .footer-content { position: relative; z-index: 2; }
+.seabed-footer { position: relative; overflow: hidden; padding-bottom: clamp(13rem, 25vw, 20rem); }
+.seabed-footer > .footer-content { position: relative; z-index: 3; }
 .seabed { position: absolute; inset: 0; pointer-events: none; }
-.seabed-art { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(12rem, 24vw, 19rem); }
-.seabed .side-mermaid { z-index: 1; height: clamp(14rem, 30vw, 26rem); bottom: -0.5rem; }
+/* o céu vira água aos poucos: lavanda translúcida embaixo */
+.seabed-water { position: absolute; inset: 0; background: linear-gradient(180deg, transparent, rgb(201 180 242 / 0.35) 55%, rgb(185 163 230 / 0.45)); }
+.seabed-art { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(14rem, 26vw, 21rem); }
+.seabed-mermaid { position: absolute; z-index: 1; left: 0; bottom: clamp(2.5rem, 4vw, 4rem); height: clamp(16rem, 32vw, 30rem); width: auto; }
 .seabed-weed path { transform-box: fill-box; transform-origin: 50% 100%; animation: weed-sway 6s ease-in-out infinite alternate; }
-.seabed-weed path:nth-child(2) { animation-delay: -2s; }
-.seabed-weed path:nth-child(3) { animation-delay: -4s; }
-@keyframes weed-sway { from { rotate: -4deg; } to { rotate: 4deg; } }
-.seabed-pearl { filter: drop-shadow(0 0 8px rgb(255 255 255 / 0.9)); }
-@media (max-width: 767px) { .seabed .side-mermaid { opacity: 0.85; left: -10vw; } }
+.seabed-weed path:nth-child(2n) { animation-delay: -2s; animation-duration: 7s; }
+.seabed-weed path:nth-child(3n) { animation-delay: -4s; }
+@keyframes weed-sway { from { rotate: -5deg; } to { rotate: 5deg; } }
+.seabed-rays { animation: rays 7s ease-in-out infinite alternate; }
+@keyframes rays { from { opacity: 0.55; } to { opacity: 1; } }
+.seabed-pearl-glow { animation: pearl-breathe 4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes pearl-breathe { from { opacity: 0.6; scale: 0.9; } to { opacity: 1; scale: 1.08; } }
+@media (max-width: 767px) { .seabed-mermaid { left: -14vw; height: 15rem; opacity: 0.9; } }
 @media (prefers-reduced-motion: reduce) {
-  .sea-ornament, .sea-bubbles > i, .seabed-weed path { animation: none; }
+  .sea-ornament, .sea-bubbles > i, .seabed-weed path, .seabed-rays, .seabed-pearl-glow { animation: none; }
   .sea-bubbles { display: none; }
 }
