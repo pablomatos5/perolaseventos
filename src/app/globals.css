@@ -263,14 +263,20 @@ body {
   position: relative;
   overflow: hidden;
   height: min(92svh, 46rem);
+  contain: layout paint;
+}
+/* areia numa camada própria e parada: só ela leva a máscara que some no céu de fundo na base.
+   (máscara na praia inteira obrigava o celular a recalcular a tela toda a cada quadro das ondas) */
+.beach-sand {
+  position: absolute;
+  inset: 0;
   background:
     radial-gradient(circle at 20% 30%, rgb(255 255 255 / 0.25) 0 1px, transparent 1.5px) 0 0 / 14px 14px,
     radial-gradient(circle at 70% 60%, rgb(120 80 30 / 0.18) 0 1px, transparent 1.5px) 0 0 / 11px 11px,
     linear-gradient(180deg, var(--sand-1), var(--sand-2));
-  contain: layout paint;
-  /* a base da praia some no céu de fundo (qualquer que seja a cor dele ali): sem faixa */
   -webkit-mask-image: linear-gradient(180deg, #000 84%, transparent);
   mask-image: linear-gradient(180deg, #000 84%, transparent);
+  pointer-events: none;
 }
 /* faixa de mar fixa no topo, de onde a onda sai */
 .beach::before {

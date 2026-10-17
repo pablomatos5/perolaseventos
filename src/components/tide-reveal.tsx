@@ -137,6 +137,7 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         <span key={s.key} className="tide-snap" style={{ top: `${(i + 0.5) * STEP_SVH}svh` }} aria-hidden />
       ))}
       <div ref={stageRef} className="beach tide-stage">
+        <div className="beach-sand" />
         <div className="beach-wet" />
         <Footsteps />
 
