@@ -50,7 +50,7 @@ export function PartyDetails({ highlights }: { highlights: Highlight[] }) {
 export function Lineup({ attractions }: { attractions: Attraction[] }) {
   if (!attractions.length) return null;
   return (
-    <section className="relative overflow-hidden py-20 md:py-28">
+    <section className="cv-auto relative overflow-hidden py-20 md:py-28">
       <div className="ambient-glow -right-40 top-10 size-[28rem] bg-ocean opacity-20" />
       <Bubbles />
       <div className="relative mx-auto w-full max-w-6xl px-5 md:px-8">

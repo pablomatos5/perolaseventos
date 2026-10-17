@@ -154,7 +154,7 @@ async function EventPage() {
       <StickyBuy />
       <PearlDrop />
 
-      <footer className="seabed-footer px-5 pt-14 text-center">
+      <footer className="cv-auto seabed-footer px-5 pt-14 text-center">
         <Seabed />
         <div className="footer-content grid justify-items-center gap-5">
           <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3!">

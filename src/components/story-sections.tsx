@@ -4,7 +4,7 @@ import { Scallop, SeaDecor } from "@/components/sea-decor";
 /** Manifesto + números + linha do tempo das edições. */
 export function Story() {
   return (
-    <section className="relative mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
+    <section className="cv-auto relative mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
       <SeaDecor
         items={[
           { kind: "starfish", at: "-left-16 top-10", size: "size-16", rotate: -20 },
@@ -55,7 +55,7 @@ export function Story() {
 /** Perguntas frequentes com <details>: abre e fecha sem JavaScript. */
 export function Faq() {
   return (
-    <section className="relative mx-auto w-full max-w-3xl px-5 py-20 md:py-28">
+    <section className="cv-auto relative mx-auto w-full max-w-3xl px-5 py-20 md:py-28">
       <SeaDecor
         items={[
           { kind: "scallop", at: "-right-24 top-20", size: "size-16", rotate: 16 },
@@ -89,7 +89,7 @@ export function Faq() {
 export function Campaign() {
   const [lead, rest] = splitTagline(campaign.tagline);
   return (
-    <section className="relative overflow-hidden py-24 text-center md:py-32">
+    <section className="cv-auto relative overflow-hidden py-24 text-center md:py-32">
       <div className="ambient-glow left-1/2 top-1/2 size-[34rem] -translate-x-1/2 -translate-y-1/2 bg-ocean opacity-25" />
       <SeaDecor
         items={[
