@@ -25,117 +25,140 @@ const SAND_PEARLS = [
   [92, 40, 1],
 ] as const;
 
-const STEP_SVH = 100; // rolagem por etapa (em altura de tela)
 const WAVE_MS = 1800; // duração de uma ida e volta da onda (casa com @keyframes swash no CSS)
 const PEAK_MS = 620; // momento em que a onda cobre a areia: é aí que a escrita troca
-const FAST = 0.55; // onda de "alcançar" (várias etapas à frente): 55% do tempo (casa com .tide-stage.fast no CSS)
 const DRY_MS = 5200; // areia molhada secando (casa com .drying / @keyframes wet no CSS)
+const AUTO_MS = 5600; // troca automática: tempo de leitura de cada etapa
+const HOLD_MS = 12000; // depois que a pessoa mexe, o automático espera este tanto
+const SWIPE_PX = 40; // arrasto mínimo (dedo ou mouse) para trocar de etapa
 
 /**
- * "Maré de atrações": a praia fica fixa na tela enquanto a seção rola. Cada trecho de rolagem
- * manda uma onda; no pico ela cobre a areia, a escrita troca, e ao recuar revela a próxima
- * informação (data → atrações → convite). Só transform/opacity/clip-path; nenhum canvas.
+ * "Carrossel da areia": a praia ocupa uma tela e cada troca manda uma onda; no pico ela cobre a areia,
+ * a escrita troca, e ao recuar revela a próxima informação (data → atrações → convite).
+ * Não depende da rolagem da página (cada aparelho rola de um jeito, e isso fazia pular ou travar
+ * etapas): troca sozinho a cada poucos segundos e responde a arrasto, setas, pontinhos e teclado,
+ * sempre uma etapa por gesto. Só transform/opacity/clip-path; nenhum canvas.
  */
 export function TideReveal({ steps }: { steps: TideStep[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(-1); // escrita visível (-1 = areia lisa, antes da primeira onda)
-  const target = useRef(-1); // etapa pedida pela rolagem
-  const current = useRef(-1); // etapa escrita na areia agora
-  const washing = useRef(false);
+  const goRef = useRef<(i: number, manual?: boolean) => void>(() => {});
+  const n = steps.length;
 
   useEffect(() => {
     const section = sectionRef.current;
     const stage = stageRef.current;
     if (!section || !stage) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let current = -1; // etapa escrita na areia agora
+    let target = -1; // etapa pedida
+    let washing = false;
+    let visible = false;
+    let hold = 0;
     let swapTimer = 0;
     let endTimer = 0;
     let dryTimer = 0;
 
     const wash = () => {
       if (reduced) {
-        current.current = target.current;
-        setShown(target.current);
+        current = target;
+        setShown(target);
         stage.classList.add("is-in");
         return;
       }
-      // Uma etapa por onda, sem pular nenhuma: rolando rápido (gesto normal no celular), as ondas
-      // passam por todas as etapas do meio (atrações!) em vez de saltar direto para a última.
-      const next = current.current < 0 ? 0 : current.current + Math.sign(target.current - current.current);
-      // ainda faltam etapas depois desta: onda mais rápida para alcançar a rolagem
-      const fast = Math.abs(target.current - next) > 0;
-      const k = fast ? FAST : 1;
+      const next = target;
       // reinicia a animação da onda (remove → reflow → adiciona)
-      stage.classList.remove("washing", "drying", "fast");
+      stage.classList.remove("washing", "drying");
       void stage.offsetWidth;
       stage.classList.add("washing", "erasing", "drying");
-      stage.classList.toggle("fast", fast);
-      washing.current = true;
+      washing = true;
       clearTimeout(swapTimer);
       clearTimeout(endTimer);
       clearTimeout(dryTimer);
       dryTimer = window.setTimeout(() => stage.classList.remove("drying"), DRY_MS);
       swapTimer = window.setTimeout(() => {
         stage.classList.remove("erasing");
-        current.current = next;
+        current = next;
         setShown(next);
         stage.classList.add("is-in"); // libera as pérolas na areia depois da primeira maré
-      }, PEAK_MS * k);
+      }, PEAK_MS);
       endTimer = window.setTimeout(() => {
-        washing.current = false;
+        washing = false;
         stage.classList.remove("washing");
-        // rolou de novo enquanto a onda voltava: manda outra
-        if (target.current !== current.current) wash();
-      }, WAVE_MS * k);
+        // pediram outra etapa enquanto a onda voltava: manda mais uma (direto para a pedida)
+        if (target !== current) wash();
+      }, WAVE_MS);
     };
 
-    const update = () => {
-      const r = section.getBoundingClientRect();
-      // altura da praia fixa (100svh), não a da janela: no iPhone a barra do Safari some/aparece e
-      // mudava a conta no meio da rolagem (etapa ia e voltava)
-      const vh = stage.clientHeight || window.innerHeight;
-      // a praia "acorda" quando metade dela entra na tela
-      if (r.top > vh * 0.5) return;
-      const scrollable = Math.max(1, r.height - vh);
-      const raw = Math.min(0.999, Math.max(0, -r.top / scrollable)) * steps.length;
-      // folga de 15% de etapa nas fronteiras: parado perto da divisa, não fica trocando
-      const cur = target.current;
-      let idx = Math.floor(raw);
-      if (cur >= 0 && idx !== cur && raw > cur - 0.15 && raw < cur + 1.15) idx = cur;
-      if (idx === target.current) return;
-      target.current = idx;
-      if (!washing.current) wash();
+    const go = (i: number, manual = false) => {
+      if (manual) hold = Date.now() + HOLD_MS;
+      target = ((i % n) + n) % n;
+      if (target !== current && !washing) wash();
     };
+    goRef.current = go;
+    const step = (dir: 1 | -1) => go((washing ? target : current) + dir, true);
 
-    let raf = 0;
-    const onScroll = () => {
-      if (!raf)
-        raf = requestAnimationFrame(() => {
-          raf = 0;
-          update();
-        });
+    // primeira onda quando a praia aparece; o automático só anda com ela na tela
+    const io = new IntersectionObserver(
+      ([e]) => {
+        visible = e.isIntersecting;
+        if (visible && current < 0 && !washing) go(0);
+      },
+      { threshold: 0.45 },
+    );
+    io.observe(stage);
+    const auto = window.setInterval(() => {
+      if (!visible || washing || document.hidden || Date.now() < hold || current < 0) return;
+      go(current + 1);
+    }, AUTO_MS);
+
+    // arrastar para o lado: dedo (touch) ou mouse; rolagem vertical da página continua livre
+    let sx = 0;
+    let sy = 0;
+    let tracking = false;
+    const start = (x: number, y: number) => {
+      sx = x;
+      sy = y;
+      tracking = true;
     };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    const end = (x: number, y: number) => {
+      if (!tracking) return;
+      tracking = false;
+      const dx = x - sx;
+      const dy = y - sy;
+      if (Math.abs(dx) >= SWIPE_PX && Math.abs(dx) > Math.abs(dy) * 1.2) step(dx < 0 ? 1 : -1);
+    };
+    const ts = (e: TouchEvent) => start(e.touches[0].clientX, e.touches[0].clientY);
+    const te = (e: TouchEvent) => end(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    const pd = (e: PointerEvent) => e.pointerType === "mouse" && start(e.clientX, e.clientY);
+    const pu = (e: PointerEvent) => e.pointerType === "mouse" && end(e.clientX, e.clientY);
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") step(1);
+      else if (e.key === "ArrowLeft") step(-1);
+    };
+    stage.addEventListener("touchstart", ts, { passive: true });
+    stage.addEventListener("touchend", te, { passive: true });
+    stage.addEventListener("pointerdown", pd);
+    stage.addEventListener("pointerup", pu);
+    section.addEventListener("keydown", key);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf);
+      io.disconnect();
+      clearInterval(auto);
       clearTimeout(swapTimer);
       clearTimeout(endTimer);
       clearTimeout(dryTimer);
+      stage.removeEventListener("touchstart", ts);
+      stage.removeEventListener("touchend", te);
+      stage.removeEventListener("pointerdown", pd);
+      stage.removeEventListener("pointerup", pu);
+      section.removeEventListener("keydown", key);
     };
-  }, [steps.length]);
+  }, [n]);
 
+  const at = Math.max(shown, 0);
   return (
-    // altura = 1 tela de praia + 1 tela de rolagem por etapa
-    <section ref={sectionRef} className="tide" style={{ height: `calc(100svh + ${steps.length * STEP_SVH}svh)` }} aria-label="Informações do evento e atrações">
-      {/* pontos de parada: no meio do trecho de cada etapa */}
-      {steps.map((s, i) => (
-        <span key={s.key} className="tide-snap" style={{ top: `${(i + 0.5) * STEP_SVH}svh` }} aria-hidden />
-      ))}
+    <section ref={sectionRef} className="tide" aria-roledescription="carrossel" aria-label="Informações do evento e atrações">
       <div ref={stageRef} className="beach tide-stage">
         <div className="beach-sand" />
         <div className="beach-wet" />
@@ -194,11 +217,21 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
           />
         ))}
 
-        <ol className="tide-dots" aria-hidden>
-          {steps.map((s, i) => (
-            <li key={s.key} className={i === shown ? "is-on" : ""} />
-          ))}
-        </ol>
+        <div className="tide-controls">
+          <button type="button" className="tide-arrow" onClick={() => goRef.current(at - 1, true)} aria-label="Informação anterior">
+            ‹
+          </button>
+          <ol className="tide-dots">
+            {steps.map((s, i) => (
+              <li key={s.key}>
+                <button type="button" className={i === shown ? "is-on" : ""} onClick={() => goRef.current(i, true)} aria-label={`Ir para: ${s.big}`} aria-current={i === shown || undefined} />
+              </li>
+            ))}
+          </ol>
+          <button type="button" className="tide-arrow" onClick={() => goRef.current(at + 1, true)} aria-label="Próxima informação">
+            ›
+          </button>
+        </div>
 
         <div className="beach-wave" aria-hidden>
           <svg className="beach-foam" viewBox="0 0 1440 120" preserveAspectRatio="none">
