@@ -1868,3 +1868,19 @@ html { scroll-snap-type: y proximity; }
   .light-swirls { filter: none; opacity: 0.75; }
   .sea-ornament { filter: none; }
 }
+
+/* ───────── Fluidez no celular ─────────
+   Animações de SVG (traço, algas, raios, brilho) não vão para a placa de vídeo: o celular repinta a cada
+   quadro. Ficam só no computador. As camadas de estrelas em tela cheia param de piscar no celular. */
+@media (max-width: 767px) {
+  .light-swirls .swirl { animation: none; stroke-dashoffset: 0; }
+  .seabed-weed path, .seabed-rays, .seabed-pearl-glow { animation: none; }
+  .starfield > i { animation: none; will-change: auto; }
+}
+/* modo leve (aparelho fraco, ver layout.tsx): só o essencial se mexe (maré, ondas do topo, carrosséis) */
+.lite .sea-bubbles, .lite .sea-ornament + .sea-ornament { display: none; }
+.lite .sea-ornament, .lite .starfield > b, .lite .starfield > s, .lite .spark, .lite .pearl,
+.lite .light-swirls .swirl, .lite .seabed-weed path, .lite .seabed-rays, .lite .seabed-pearl-glow,
+.lite .starfield > i, .lite .necklace-pearl { animation: none; }
+.lite .light-swirls .swirl { stroke-dashoffset: 0; }
+.lite .tilt { transform: none; }

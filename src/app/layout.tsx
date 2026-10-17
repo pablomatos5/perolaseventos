@@ -32,7 +32,16 @@ export const viewport: Viewport = { themeColor: "#0c0719", colorScheme: "dark" }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" data-edition={CURRENT_EDITION} className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}>
+    <html lang="pt-BR" suppressHydrationWarning data-edition={CURRENT_EDITION} className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}>
+      <head>
+        {/* Modo leve: celular com pouca memória ou poucos núcleos (ou economia de dados) desliga os enfeites
+            animados. Roda antes da primeira pintura para não "pular" visualmente. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var n=navigator,m=n.deviceMemory||8,c=n.hardwareConcurrency||8,s=n.connection&&n.connection.saveData;if(m<=4||c<=4||s)document.documentElement.classList.add("lite")}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
       </body>

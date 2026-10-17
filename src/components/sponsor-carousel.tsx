@@ -103,6 +103,11 @@ export function SponsorCarousel() {
     };
 
     const tick = (t: number) => {
+      if (!visible) {
+        raf = 0;
+        last = 0;
+        return;
+      }
       raf = requestAnimationFrame(tick);
       const dt = last ? Math.min(64, t - last) : 0;
       last = t;
@@ -112,7 +117,13 @@ export function SponsorCarousel() {
       if (w && pos >= 2 * w) pos -= w;
       el.scrollLeft = pos; // posição em ponto flutuante: anda liso mesmo com passos menores que 1 px
     };
-    raf = requestAnimationFrame(tick);
+    // fora da tela o laço para de vez (nada rodando por quadro à toa, principalmente no celular)
+    let visible = false;
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible && !raf) raf = requestAnimationFrame(tick);
+    });
+    io.observe(el);
 
     const enter = () => (hover = true);
     const leave = () => (hover = false);
@@ -128,6 +139,7 @@ export function SponsorCarousel() {
     el.addEventListener("focusin", enter);
     el.addEventListener("focusout", leave);
     return () => {
+      io.disconnect();
       cancelAnimationFrame(raf);
       el.removeEventListener("scroll", onScroll);
       el.removeEventListener("touchstart", touch);

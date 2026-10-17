@@ -73,7 +73,8 @@ export function PastEditions() {
   }, []);
 
   useEffect(() => {
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // modo leve (aparelho fraco) ou movimento reduzido: nada toca sozinho
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.classList.contains("lite");
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
