@@ -313,7 +313,7 @@ export function Scanner() {
 
   if (!token) {
     return (
-      <main className="grid min-h-svh place-items-center p-6 text-center">
+      <main className="portaria-night grid min-h-svh place-items-center p-6 text-center">
         <div className="glass-card grid max-w-sm gap-4 p-8">
           <span className="eyebrow rule justify-center">Portaria</span>
           <h1 className="font-display text-3xl">Aparelho não autorizado</h1>
@@ -329,7 +329,7 @@ export function Scanner() {
   const listInfo = list ? `${list.tickets.length} ingressos · lista ${hhmm(list.at)}` : "lista ainda não baixada";
 
   return (
-    <main className="flex min-h-svh flex-col" onClick={() => tab === "ler" && !camera && wedgeRef.current?.focus()}>
+    <main className="portaria-night flex min-h-svh flex-col" onClick={() => tab === "ler" && !camera && wedgeRef.current?.focus()}>
       <header className="grid gap-1 border-b border-line px-5 py-3 text-sm">
         <div className="flex items-center justify-between gap-3">
           <span className="font-medium">{device}</span>

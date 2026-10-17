@@ -1838,3 +1838,23 @@ html { scroll-snap-type: y proximity; }
 /* contraste AA: rótulos pequenos em dourado escuro e número da trilha mais forte no céu claro */
 [data-edition="2k27"] .eyebrow { color: #7a4e1c; }
 [data-edition="2k27"] .perk-num { color: #7a4e1c; opacity: 1; }
+
+/* portaria: tela escura de alto contraste (o porteiro usa à noite, na rua, com brilho baixo) */
+.portaria-night {
+  --bg: #110c2e;
+  --bg-alt: #1d1650;
+  --surface: rgb(255 255 255 / 0.06);
+  --fg: #f7f5f0;
+  --fg-muted: rgb(247 245 240 / 0.82);
+  --fg-faint: rgb(247 245 240 / 0.62);
+  --line: rgb(255 255 255 / 0.2);
+  --line-soft: rgb(255 255 255 / 0.12);
+  --accent: #f0c477;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, #2a1f6e, transparent 70%), var(--bg);
+  color: var(--fg);
+}
+.portaria-night .glass-card { background: rgb(255 255 255 / 0.06); border-color: rgb(255 255 255 / 0.14); box-shadow: none; }
+.portaria-night .btn:not(.solid) { color: var(--fg); border-color: rgb(255 255 255 / 0.45); background: rgb(255 255 255 / 0.04); }
+.portaria-night .eyebrow { color: #f0c477; }
+.portaria-night input { color: var(--fg); }
+.portaria-night input::placeholder { color: rgb(247 245 240 / 0.5); }

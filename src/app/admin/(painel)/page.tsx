@@ -47,7 +47,7 @@ export default async function AdminHome() {
       <dl className="grid grid-cols-2 gap-4 md:grid-cols-5">
         {cards.map((c) => (
           <div key={c.label} className="glass-card p-5">
-            <dt className="text-xs uppercase tracking-widest text-fg-faint">{c.label}</dt>
+            <dt className="text-[0.68rem] leading-snug uppercase tracking-[0.14em] break-words text-fg-faint">{c.label}</dt>
             <dd className="mt-2 font-display text-3xl">{c.value}</dd>
           </div>
         ))}
