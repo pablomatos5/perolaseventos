@@ -1890,3 +1890,8 @@ html { scroll-snap-type: y proximity; }
 .lite .starfield > i, .lite .necklace-pearl { animation: none; }
 .lite .light-swirls .swirl { stroke-dashoffset: 0; }
 .lite .tilt { transform: none; }
+/* modo leve na maré: a onda só anda quando troca de etapa; pérolas da areia paradas */
+.lite .tide-stage .beach-wave { animation: none; }
+.lite .tide-stage.washing .beach-wave { animation: swash 1.8s cubic-bezier(0.45, 0, 0.25, 1) both; }
+.lite .tide-stage.washing.fast .beach-wave { animation-duration: 0.99s; }
+.lite .beach-pearl::after, .lite .beach.is-in .beach-pearl::after, .lite .beach-foam, .lite .sand-pearl { animation: none; }
