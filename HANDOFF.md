@@ -76,6 +76,23 @@ ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. PD
 - Entrega só por **e-mail (PDF anexo) + PDF para baixar na página do pedido**; opção de WhatsApp removida.
 - DJ Caçulinha e Guilherme Menezes anunciados no banco de produção (sem foto: aparecem as iniciais).
 
+## Auditoria de 16-17/10 (front, back, segurança) — feito
+- Segurança: ingresso de pagamento simulado (paymentRef "mock_") é recusado na portaria e fica fora da lista
+  offline/busca (`REAL_ORDER` em `src/lib/checkin.ts`); pedido com o mesmo setor repetido é somado antes da
+  checagem de estoque e do máximo por pedido (antes dava para vender além do lote); túnel trycloudflare removido
+  (deixava falsificar o IP dos limites de tentativa); robots.txt + sitemap (painel/pedido/portaria fora da busca);
+  backups com permissão 600; renovação do certificado: `/opt/perolaseventos-cert-renew.sh` (cron terça 03:40).
+  Verificado ok: sem portas do app/banco expostas, ufw 22/80/443, SSH só chave + fail2ban, HSTS/CSP/X-Frame,
+  `npm audit` sem vulnerabilidades, /admin sem login não vaza dados.
+- Front: carrossel da areia (antigo "maré") não depende mais da rolagem: troca sozinho a cada 5,6 s e responde a
+  arrasto/setas/pontinhos/teclado, uma etapa por gesto. Patrocinadores giram e podem ser arrastados (laço só roda
+  na tela). Relatos em carrossel com setas. Portaria em modo noturno de alto contraste.
+- Celular: animações de SVG só no computador; **modo leve** automático (`html.lite`, script no layout) para
+  aparelho com ≤4 GB/≤4 núcleos/economia de dados; seções de baixo com `content-visibility: auto`; máscara da
+  praia só na camada parada da areia. Lighthouse: acessibilidade 93→97, desktop ~92-97, celular ~60-66 (limitado
+  pela hidratação do React; rolagem medida com CPU 6× mais lenta: quadros travados 158→24 no modo leve).
+- Scripts de captura/medição na VPS: `/opt/perolas-shots/*.mjs` (playwright em container; `--ipc=host`).
+
 ## Pendências / próximos passos (em ordem)
 0. **AGORA — foto e vídeo das 2 novas atrações**, igual ao card do Baltazar (foto na frente; ao virar, vídeo do show).
    - Fonte: Instagram deles. O usuário deu permissão para **só ver e baixar** (nunca curtir, seguir, comentar,
@@ -98,6 +115,7 @@ ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. PD
    (vence em ~90 dias), vhost fase 2 instalado (backup da fase 1 em `/opt/sites-extra/perolas/vhost-fase1.bak`).
 2. **Pendente**: cron de renovação próprio do certificado (perguntar ao usuário antes de mexer no crontab) e remover o
    túnel (`docker rm -f perolas-tunel`).
+2b. **Apagar os pedidos de teste do modo demonstração** antes das vendas reais (thiago, Pablo Matos, indiano jonta: 3 ingressos, R$ 540 de "receita"); eles já não entram na portaria.
 3. **Confirmar com a Pérolas**: preços/lotes reais (seed tem valores FICTÍCIOS), patrocinadores 2027 (Bió Costa = cartaz de casa de apostas, não publicado), uso das fotos/vídeos, textos de termos e privacidade (+ CNPJ).
 4. **Antes das vendas reais**: `PAYMENT_PROVIDER=mercadopago` + chaves, apagar pedidos de teste, `check:config` em produção, Resend (SPF/DKIM), backup fora da VPS, trocar o túnel pelo domínio.
 5. Termos de compra e política de privacidade (+ aceite no checkout, anonimização após o evento).
