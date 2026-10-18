@@ -1073,24 +1073,29 @@ body {
   box-shadow: inset -0.5rem -0.7rem 1.2rem rgb(40 20 60 / 0.35), inset 0.3rem 0.3rem 0.8rem rgb(255 255 255 / 0.45);
   pointer-events: none;
 }
-/* Concha: chega FECHADA (tampa dourada = espelho da valva de baixo), balança, a tampa inclina para trás
-   e some enquanto o leque perolado se ergue da dobradiça; por fim a pérola com a foto sobe. */
-.sand-shell-back { transform-origin: 50% 76%; }
-.sand-shell-lid { z-index: 3; transform-origin: 50% 76%; opacity: 0; }
-.tide-writing.is-active .sand-shell { animation: shell-wobble 2.6s ease-in-out both; transform-origin: 50% 90%; }
-.tide-writing.is-active .sand-shell-lid { animation: lid-lift 2.6s both; }
-.tide-writing.is-active .sand-shell-back { animation: fan-rise 2.6s both; }
-.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.75s both, pearl-float 7s ease-in-out 2.7s infinite; }
-@keyframes lid-lift {
-  0%, 36% { opacity: 1; transform: perspective(600px) rotateX(0deg) translateY(0); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
-  58% { opacity: 1; transform: perspective(600px) rotateX(58deg) translateY(-6%); }
-  70%, 100% { opacity: 0; transform: perspective(600px) rotateX(78deg) translateY(-10%); }
+/* Concha: UMA valva de cima presa na dobradiça de trás (altura da boca da valva de baixo).
+   Fechada, ela está deitada sobre a de baixo com a ponta para a frente: vê-se o lado de fora dourado,
+   visto de cima. Ao abrir, gira para cima (rotateX -128° → 0°): passa de lado e mostra o interior
+   perolado de frente até ficar em pé. As duas faces giram juntas; cada uma some quando está de costas. */
+.sand-shell-back, .sand-shell-lid {
+  transform-origin: 50% 74.8%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-@keyframes fan-rise {
-  0%, 42% { opacity: 0; transform: perspective(600px) rotateX(78deg); animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1.15); }
-  52% { opacity: 1; }
-  88% { transform: perspective(600px) rotateX(-4deg); }
-  100% { opacity: 1; transform: perspective(600px) rotateX(0deg); }
+.sand-shell-lid { z-index: 3; transform: perspective(520px) rotateX(0deg) rotateY(180deg); }
+.tide-writing.is-active .sand-shell { animation: shell-wobble 2.6s ease-in-out both; transform-origin: 50% 90%; }
+.tide-writing.is-active .sand-shell-back { animation: valve-in 2.6s both; }
+.tide-writing.is-active .sand-shell-lid { animation: valve-out 2.6s both; }
+.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.8s both, pearl-float 7s ease-in-out 2.7s infinite; }
+@keyframes valve-in {
+  0%, 32% { transform: perspective(520px) rotateX(-128deg); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+  86% { transform: perspective(520px) rotateX(5deg); animation-timing-function: ease-in-out; }
+  100% { transform: perspective(520px) rotateX(0deg); }
+}
+@keyframes valve-out {
+  0%, 32% { transform: perspective(520px) rotateX(-128deg) rotateY(180deg); animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1); }
+  86% { transform: perspective(520px) rotateX(5deg) rotateY(180deg); animation-timing-function: ease-in-out; }
+  100% { transform: perspective(520px) rotateX(0deg) rotateY(180deg); }
 }
 /* concha fechada "respira" antes de abrir */
 @keyframes shell-wobble {
@@ -1529,8 +1534,8 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 }
 @keyframes pearl-fall {
   0% { translate: 0 0; scale: 1; opacity: 1; animation-timing-function: ease-in-out; }
-  92% { translate: 0 var(--fall, 0px); scale: 0.75; opacity: 1; animation-timing-function: ease-in; }
-  100% { translate: 0 calc(var(--fall, 0px) + 18px); scale: 0.35; opacity: 0; }
+  88% { translate: 0 var(--fall, 0px); scale: 0.75; opacity: 1; animation-timing-function: ease-out; }
+  100% { translate: 0 calc(var(--fall, 0px) + 6px); scale: 0.3; opacity: 0; }
 }
 .trail { view-timeline: --trail block; }
 @supports (animation-timeline: view()) {
@@ -1983,3 +1988,7 @@ main { overflow-x: clip; }
 .hero-2027 .wave-mid path { fill: #fff; fill-opacity: 0.05; stroke: none; }
 .hero-2027 .wave-front path { fill: var(--sea); }
 .beach::before { background: var(--sea); }
+
+/* a pérola cai POR CIMA da água (mergulho = dissolve na superfície com o respingo, sem corte reto) */
+.hero-2027 .pearl-horizon { z-index: 3; }
+.pearl-2027.is-sunk { transition: opacity 0.35s ease-out, scale 0.35s ease-out, translate 0.35s ease-out; }

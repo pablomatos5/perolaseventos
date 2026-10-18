@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   // Só afeta o `next dev`: libera abrir o site pelo IP da rede local (testar no celular).
-  allowedDevOrigins: ["192.168.*.*", "10.*.*.*"],
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "localhost", "127.0.0.1"],
   turbopack: {
     rules: {
       "*.css": {

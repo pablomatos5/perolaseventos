@@ -27,13 +27,14 @@ export function PearlDrop() {
       pearl.style.scale = "";
       const p = pearl.getBoundingClientRect();
       const w = water.getBoundingClientRect();
-      fall = w.top + w.height * 0.42 - (p.top + p.height / 2);
+      // para na superfície (logo abaixo da borda da água) e mergulha se dissolvendo: nunca atravessa a borda
+      fall = w.top + w.height * 0.12 - (p.top + p.height / 2);
       hitAt = Math.max(1, fall / 1.35); // a pérola desce um pouco mais rápido que a rolagem
       water.style.setProperty("--splash-x", `${p.left + p.width / 2 - w.left}px`);
       if (native && fall > 0) {
         pearl.style.setProperty("--fall", `${fall.toFixed(1)}px`);
-        // a queda vai até 92% da animação; os 8% finais são o mergulho (afunda, encolhe e some)
-        pearl.style.setProperty("--fall-range", `${(hitAt / 0.92).toFixed(1)}px`);
+        // a queda vai até 88% da animação; os 12% finais são o mergulho (encolhe e se dissolve na superfície)
+        pearl.style.setProperty("--fall-range", `${(hitAt / 0.88).toFixed(1)}px`);
         pearl.classList.add("sd");
       }
     };
@@ -54,7 +55,7 @@ export function PearlDrop() {
       pearl.style.translate = `0 ${(eased * fall).toFixed(1)}px`;
       pearl.classList.toggle("is-sunk", hit);
       pearl.style.scale = hit ? "0.35" : String(1 - eased * 0.25);
-      if (hit) pearl.style.translate = `0 ${(fall + 18).toFixed(1)}px`;
+      if (hit) pearl.style.translate = `0 ${(fall + 6).toFixed(1)}px`;
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
