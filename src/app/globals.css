@@ -1831,19 +1831,20 @@ main { overflow-x: clip; }
   position: absolute;
   z-index: 0;
   top: 50%;
-  height: min(86vh, 48rem);
+  height: min(94vh, 54rem);
   width: auto;
   translate: 0 -50%;
-  opacity: 0.8;
+  opacity: 0.9;
   pointer-events: none;
-  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
-  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+  /* o lado de dentro já vem esfumado no webp; aqui só o alto e a base somem no céu */
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 80%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 18%, #000 80%, transparent);
 }
-.side-mermaid.is-left { left: -2rem; }
-.side-mermaid.is-right { right: -2rem; }
+.side-mermaid.is-left { left: 0; }
+.side-mermaid.is-right { right: 0; }
 .with-mermaid { position: relative; overflow: hidden; }
 .with-mermaid > :not(.side-mermaid) { position: relative; z-index: 1; }
-@media (max-width: 1535px) { .with-mermaid > .side-mermaid { opacity: 0.4; height: 40rem; } .side-mermaid.is-left { left: -6rem; } .side-mermaid.is-right { right: -6rem; } }
+@media (max-width: 1535px) { .with-mermaid > .side-mermaid { opacity: 0.45; height: 44rem; } .side-mermaid.is-left { left: -5rem; } .side-mermaid.is-right { right: -5rem; } }
 @media (max-width: 1023px) { .with-mermaid > .side-mermaid { display: none; } }
 
 /* borda de concha (vieira): fileira de arcos dourados no alto do card */
@@ -1904,9 +1905,11 @@ main { overflow-x: clip; }
 }
 .seabed-pearl .pearl { box-shadow: 0 0 40px 12px rgb(255 236 214 / 0.8), 0 0 110px 30px rgb(255 214 178 / 0.45), inset -10px -12px 26px rgb(150 100 140 / 0.35); }
 @media (max-width: 767px) {
-  .seabed-mermaid { height: 15rem; }
-  .seabed-mermaid.is-left { left: -18vw; }
-  .seabed-mermaid.is-right { right: -18vw; }
+  .seabed-footer { padding-bottom: 21rem; }
+  .seabed-mermaid { height: 17rem; bottom: 4.5rem; }
+  .seabed-mermaid.is-left { left: -12vw; }
+  .seabed-mermaid.is-right { right: -12vw; }
+  .seabed-pearl { bottom: 7.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sea-ornament, .sea-bubbles > i { animation: none; }
