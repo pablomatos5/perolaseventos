@@ -1074,17 +1074,34 @@ body {
   box-shadow: inset -0.5rem -0.7rem 1.2rem rgb(40 20 60 / 0.35), inset 0.3rem 0.3rem 0.8rem rgb(255 255 255 / 0.45);
   pointer-events: none;
 }
-/* quando a onda revela a atração, a concha se abre e a pérola sobe */
-.tide-writing.is-active .sand-shell-back { animation: shell-open 1.3s var(--ease) 0.5s both; }
-.tide-writing.is-active .sand-pearl { animation: pearl-rise 1.1s var(--ease) 0.9s both, pearl-float 7s ease-in-out 2s infinite; }
+/* quando a maré recua, a concha está FECHADA (valva de cima deitada, lado de fora dourado), dá uma
+   balançadinha, abre devagar e só então a pérola com a foto sobe. Tudo transform/opacity. */
+.sand-shell-lid { opacity: 0; }
+.tide-writing.is-active .sand-shell { animation: shell-wobble 2.6s ease-in-out both; transform-origin: 50% 90%; }
+.tide-writing.is-active .sand-shell-back { animation: shell-open 2.6s both; }
+.tide-writing.is-active .sand-shell-lid { animation: shell-lid 2.6s both; }
+.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 2.05s both, pearl-float 7s ease-in-out 3s infinite; }
 @keyframes shell-open {
-  from { transform: scaleY(0.12); }
+  0%, 52% { transform: scaleY(0.3); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+  100% { transform: scaleY(1); }
+}
+@keyframes shell-lid {
+  0%, 56% { opacity: 1; }
+  82%, 100% { opacity: 0; }
+}
+@keyframes shell-wobble {
+  0%, 30% { rotate: 0deg; }
+  36% { rotate: -3deg; }
+  42% { rotate: 3deg; }
+  48% { rotate: -1.5deg; }
+  52%, 100% { rotate: 0deg; }
 }
 @keyframes pearl-rise {
   from { opacity: 0; translate: 0 35%; scale: 0.8; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sand-pearl, .tide-writing.is-active .sand-shell-back, .tide-writing.is-active .sand-pearl { animation: none; }
+  .sand-pearl, .tide-writing.is-active .sand-shell, .tide-writing.is-active .sand-shell-back,
+  .tide-writing.is-active .sand-shell-lid, .tide-writing.is-active .sand-pearl { animation: none; }
 }
 
 
@@ -1909,3 +1926,10 @@ main { overflow-x: clip; }
 .lite .tide-stage.washing .beach-wave { animation: swash 1.8s cubic-bezier(0.45, 0, 0.25, 1) both; }
 .lite .beach-pearl::after, .lite .beach.is-in .beach-pearl::after, .lite .beach-foam, .lite .sand-pearl { animation: none; }
 @media (max-width: 767px) { .tide-writing { bottom: 9.5rem; } }
+
+/* celular: a pérola do topo fica na altura do rosto das sereias (e os raios atrás dela) */
+@media (max-width: 767px) {
+  .pearl-2027 { bottom: 74%; }
+  .pearl-rays { bottom: 78%; }
+}
+.lite .tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 2.05s both; }

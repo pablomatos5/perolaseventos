@@ -1,4 +1,5 @@
-// Concha aberta na areia com a foto da atração como pérola (usada na maré de atrações).
+// Concha na areia com a foto da atração como pérola (carrossel da areia). Quando a maré recua ela está
+// fechada (valva de cima deitada sobre a de baixo, lado de fora dourado), balança e abre: a pérola sobe.
 // Mesma linguagem da concha do hero (gomos + nervuras), mas preenchida para ler bem sobre a areia.
 import { useId } from "react";
 
@@ -93,6 +94,13 @@ export function ShellPearl({ src }: { src: string }) {
         {ribs.map((d) => (
           <path key={d} d={d} {...line} strokeWidth={1.4} strokeOpacity={0.45} />
         ))}
+        {/* lado de fora da valva: aparece com a concha fechada e some enquanto ela abre */}
+        <g className="sand-shell-lid">
+          <path d={fan} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={3} strokeLinejoin="round" />
+          {ribs.map((d) => (
+            <path key={d} d={d} {...line} strokeWidth={2.2} strokeOpacity={0.7} />
+          ))}
+        </g>
       </svg>
 
       <span className="sand-pearl">

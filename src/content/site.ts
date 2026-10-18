@@ -80,9 +80,14 @@ export const testimonials = [
  */
 export const pastVideos: { src: string; poster: string; alt: string; quote?: string; author?: string; role?: string }[] = [
   { src: "/edicoes/2026-1.mp4", poster: "/edicoes/2026-1.jpg", alt: "Pista lotada sob as luzes no Réveillon Pérolas 2026", ...testimonials[0] },
+  // 7 a 10: carrossel "Um pouco do nosso Réveillon 2026" do @perolaseventos (post DTD4ZY9kdMx)
+  { src: "/edicoes/2026-7.mp4", poster: "/edicoes/2026-7.jpg", alt: "Pista lotada sob a luz rosa no Réveillon Pérolas 2026" },
   { src: "/edicoes/2026-2.mp4", poster: "/edicoes/2026-2.jpg", alt: "DJ no palco do Réveillon Pérolas 2026", ...testimonials[2] },
+  { src: "/edicoes/2026-8.mp4", poster: "/edicoes/2026-8.jpg", alt: "Galera de branco dançando sob o telhado do Réveillon Pérolas 2026" },
   { src: "/edicoes/2026-3.mp4", poster: "/edicoes/2026-3.jpg", alt: "Público de branco curtindo a virada 2026", ...testimonials[3] },
+  { src: "/edicoes/2026-9.mp4", poster: "/edicoes/2026-9.jpg", alt: "DJ comandando a pista do Réveillon Pérolas 2026" },
   { src: "/edicoes/2026-4.mp4", poster: "/edicoes/2026-4.jpg", alt: "Show na virada do Réveillon Pérolas 2026", ...testimonials[1] },
+  { src: "/edicoes/2026-10.mp4", poster: "/edicoes/2026-10.jpg", alt: "DJ de óculos tocando no Réveillon Pérolas 2026" },
   { src: "/edicoes/2026-5.mp4", poster: "/edicoes/2026-5.jpg", alt: "Galera dançando no Réveillon Pérolas 2026", ...testimonials[4] },
   { src: "/edicoes/2026-6.mp4", poster: "/edicoes/2026-6.jpg", alt: "DJ animando a pista no Réveillon Pérolas 2026" },
 ];
