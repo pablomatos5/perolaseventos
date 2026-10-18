@@ -44,10 +44,10 @@ export function QuantityForm({ batchId, quantity }: { batchId: string; quantity:
 export function CourtesyForm({ batches }: { batches: { id: string; label: string; remaining: number }[] }) {
   const [state, action, pending] = useActionState(createCourtesyAction, undefined);
   return (
-    <form action={action} className="glass-card grid gap-4 p-6 md:grid-cols-2 md:p-8">
+    <form action={action} className="glass-card grid min-w-0 gap-4 p-6 md:grid-cols-2 md:p-8 [&>*]:min-w-0">
       <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint md:col-span-2">
         Lote de cortesia
-        <select name="batchId" required className={input}>
+        <select name="batchId" required className={`${input} w-full min-w-0 truncate`}>
           {batches.map((b) => (
             <option key={b.id} value={b.id} disabled={b.remaining === 0}>
               {b.label} · {b.remaining} disponíveis

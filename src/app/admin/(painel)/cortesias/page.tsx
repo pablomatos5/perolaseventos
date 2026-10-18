@@ -21,7 +21,7 @@ export default async function CortesiasPage() {
   });
 
   return (
-    <div className="grid gap-10">
+    <div className="grid min-w-0 gap-10 [&>*]:min-w-0">
       <div>
         <span className="eyebrow rule">Lista e convidados</span>
         <h1 className="display mt-3 text-[clamp(2rem,4vw,3rem)]!">
@@ -45,7 +45,7 @@ export default async function CortesiasPage() {
             <li key={o.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 py-3">
               <span className="font-mono text-xs text-accent">{o.code}</span>
               <span className="flex-1">{o.buyerName}</span>
-              <span className="text-fg-muted">{o.email}</span>
+              <span className="min-w-0 break-all text-fg-muted">{o.email}</span>
               <span className="tabular-nums">{o._count.tickets}×</span>
               <span className="text-fg-faint">{o.paymentRef?.replace(/^cortesia:?\s*/, "") || "—"}</span>
               <span className="text-xs text-fg-faint">{formatDateTime(o.createdAt)}</span>

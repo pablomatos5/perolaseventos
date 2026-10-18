@@ -207,13 +207,17 @@ export function Scanner() {
   }
 
   const check = useCallback(
-    async (raw: string) => {
+    async (raw: string, fromCamera = false) => {
       const code = raw.trim();
       if (!code || !token) return;
-      // a câmera lê o mesmo QR várias vezes por segundo: ignora repetição em 4 s
-      const seen = recent.current.get(code);
-      if (seen && Date.now() - seen < 4000) return;
+      // a câmera lê o mesmo QR várias vezes por segundo: só ela ignora repetição (1,5 s). Leitor pistola e
+      // código digitado conferem sempre (senão a tela verde anterior ficava parada para um print repetido).
+      if (fromCamera) {
+        const seen = recent.current.get(code);
+        if (seen && Date.now() - seen < 1500) return;
+      }
       recent.current.set(code, Date.now());
+      setLast(null); // limpa o resultado anterior enquanto confere (nunca mostra o verde de outra pessoa)
 
       let r: Result;
       try {
@@ -283,7 +287,7 @@ export function Scanner() {
       const scanner = new Html5Qrcode("reader");
       scannerRef.current = scanner;
       scanner
-        .start({ facingMode: "environment" }, { fps: 10, qrbox: 240 }, (text) => check(text), () => {})
+        .start({ facingMode: "environment" }, { fps: 10, qrbox: 240 }, (text) => check(text, true), () => {})
         .then(() => {
           try {
             const supported = scanner.getRunningTrackCameraCapabilities().torchFeature().isSupported();
@@ -364,7 +368,7 @@ export function Scanner() {
         )}
       </div>
 
-      <div className="grid gap-3 border-t border-line p-5">
+      <div className="grid min-w-0 gap-3 border-t border-line p-5 [&>*]:min-w-0">
         <div className="grid grid-cols-2 gap-2" role="tablist">
           {(["ler", "buscar"] as const).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} type="button" className={`btn ${tab === t ? "solid" : ""}`} onClick={() => setTab(t)}>
@@ -407,10 +411,10 @@ export function Scanner() {
               autoFocus
               className="w-full rounded-xl border border-line bg-bg px-4 py-3"
             />
-            <ul className="grid max-h-[45svh] gap-2 overflow-y-auto">
+            <ul className="grid min-w-0 max-h-[45svh] grid-cols-1 gap-2 overflow-y-auto">
               {hits?.map((h) => (
-                <li key={h.ticketId} className="flex items-center justify-between gap-3 rounded-xl border border-line p-3 text-sm">
-                  <div className="min-w-0">
+                <li key={h.ticketId} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-line p-3 text-sm">
+                  <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{h.holder}</div>
                     <div className="truncate text-xs text-fg-faint">
                       {h.type} · {h.batch}
