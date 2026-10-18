@@ -223,8 +223,23 @@ export function Scanner() {
     setLast(r);
     // a tela volta ao normal sozinha: a próxima pessoa não vê o resultado da anterior
     clearTimeout(clearTimer.current);
-    clearTimer.current = window.setTimeout(() => setLast(null), r.result === "ok" ? 4000 : 7000);
+    // verde some rápido (fila andando); erro fica mais, mas o porteiro fecha na hora com um toque
+    clearTimer.current = window.setTimeout(() => setLast(null), r.result === "ok" ? 2500 : 6000);
   }, []);
+
+  /** Fecha o aviso na hora. Depois de erro, libera ler o mesmo QR de novo ("tentar de novo"). */
+  const dismiss = useCallback(
+    (then?: "buscar") => {
+      clearTimeout(clearTimer.current);
+      setLast((l) => {
+        if (l && l.result !== "ok") recent.current.clear();
+        return null;
+      });
+      if (then === "buscar") setTab("buscar");
+      else window.setTimeout(() => wedgeRef.current?.focus(), 0);
+    },
+    [],
+  );
 
   // ── validação offline (lista + fila) ──
   const checkOffline = useCallback(
@@ -340,7 +355,8 @@ export function Scanner() {
         .start(
           { facingMode: "environment" },
           // quadro de leitura proporcional à tela (a câmera ocupa a área principal)
-          { fps: 12, qrbox: (w, h) => ({ width: Math.round(Math.min(w, h) * 0.7), height: Math.round(Math.min(w, h) * 0.7) }) },
+          // vídeo quadrado; lê dentro do quadro de mira (78% do lado)
+          { fps: 12, aspectRatio: 1, qrbox: (w, h) => ({ width: Math.round(Math.min(w, h) * 0.78), height: Math.round(Math.min(w, h) * 0.78) }) },
           (text) => check(text, true),
           () => {},
         )
@@ -411,14 +427,22 @@ export function Scanner() {
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {/* câmera ocupa a área principal; o resultado cobre a câmera por alguns segundos */}
-        <div id="reader" className={camera && tab === "ler" ? "portaria-reader" : "hidden"} />
+        <div className={camera && tab === "ler" ? "portaria-cam" : "hidden"}>
+          <div id="reader" className="portaria-reader" />
+          <span className="portaria-aim" aria-hidden />
+        </div>
         {camera && tab === "ler" && !last && <p className="portaria-hint">Aponte para o QR do ingresso</p>}
         <div
           className={`grid flex-1 place-items-center p-6 text-center transition-colors ${last ? COLORS[last.result] : ""} ${camera && tab === "ler" ? "absolute inset-0" : ""} ${camera && tab === "ler" && !last ? "pointer-events-none opacity-0" : ""}`}
           aria-live="assertive"
+          onClick={(e) => {
+            if (!last) return;
+            e.stopPropagation();
+            dismiss();
+          }}
         >
           {last ? (
-            <div>
+            <div className="grid justify-items-center">
               <div className="text-7xl font-semibold md:text-8xl">{last.result === "ok" ? "✓" : last.result === "error" ? "!" : "✕"}</div>
               <div className="mt-3 text-2xl font-semibold md:text-4xl">{last.message}</div>
               {last.holder && (
@@ -429,6 +453,32 @@ export function Scanner() {
                   {last.gender && <strong className="mt-2 block text-3xl uppercase">{last.gender}</strong>}
                 </div>
               )}
+              {/* ações grandes: um toque e já lê o próximo */}
+              <div className="mt-7 flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  className="portaria-act"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dismiss();
+                  }}
+                >
+                  {last.result === "ok" ? "Próximo" : "Tentar de novo"}
+                </button>
+                {last.result !== "ok" && (
+                  <button
+                    type="button"
+                    className="portaria-act is-ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dismiss("buscar");
+                    }}
+                  >
+                    Buscar por nome
+                  </button>
+                )}
+              </div>
+              <p className="mt-3 text-xs opacity-70">ou toque em qualquer lugar</p>
             </div>
           ) : (
             <p className="text-fg-muted">{tab === "ler" ? "Aponte para o QR ou use o leitor" : "Procure pelo nome, código do pedido ou CPF"}</p>
