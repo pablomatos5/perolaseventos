@@ -127,7 +127,7 @@ export function PastEditions() {
   }
 
   return (
-    <section className="cv-auto relative py-20 md:py-28" aria-labelledby="edicoes-titulo">
+    <section className="cv-auto relative py-16 md:py-22" aria-labelledby="edicoes-titulo">
       <Bubbles />
       <div className="mx-auto w-full max-w-6xl px-5 md:px-8">
         <span className="eyebrow rule">Réveillon 2026 · 5ª edição</span>

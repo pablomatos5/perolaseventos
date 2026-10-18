@@ -8,7 +8,6 @@ import { HeroMermaids, LightSwirls, PearlHorizon, PerolasLogo, Star4 } from "@/c
 import { OceanWaves, Sparkles } from "@/components/shell-opening";
 import { Campaign, Faq, Story, Ticker } from "@/components/story-sections";
 import { PastEditions } from "@/components/past-editions";
-import { PearlDrop } from "@/components/pearl-drop";
 import { StickyBuy } from "@/components/sticky-buy";
 import { Starfield } from "@/components/starfield";
 import { campaign } from "@/content/site";
@@ -153,9 +152,8 @@ async function EventPage() {
       <Story />
       <Faq />
       <StickyBuy />
-      <PearlDrop />
 
-      <footer className="cv-auto seabed-footer px-5 pt-14 text-center">
+      <footer className="cv-auto seabed-footer px-5 pt-6 text-center">
         <Seabed />
         <KorakiMark />
         <div className="footer-content grid justify-items-center gap-5">

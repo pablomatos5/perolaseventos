@@ -119,7 +119,7 @@ export function Sparkles() {
   );
 }
 
-/** Ondas preenchidas que deslizam devagar na base do hero. O anel de "splash" é disparado pela queda da pérola. */
+/** Ondas preenchidas que deslizam devagar na base do hero. */
 export function OceanWaves() {
   const wave = (amp: number, y: number) => {
     let d = `M 0 ${y}`;
@@ -129,19 +129,10 @@ export function OceanWaves() {
     return `${d} V 200 H 0 Z`;
   };
   return (
-    <div className="ocean-waves" data-water aria-hidden>
+    <div className="ocean-waves" aria-hidden>
       <svg viewBox="0 0 2880 200" preserveAspectRatio="none" className="wave-layer wave-back">
         <path d={wave(28, 70)} fill="var(--sea)" fillOpacity=".35" />
       </svg>
-      <div className="splash">
-        <span className="ring" />
-        <span className="ring" />
-        <span className="ring" />
-        <span className="flash" />
-        {[-34, -18, -6, 8, 20, 36].map((x, i) => (
-          <i key={x} className="drop" style={{ "--dx": `${x}px`, "--dy": `${-(26 + (i % 3) * 14)}px`, "--dd": `${i * 0.03}s` } as React.CSSProperties} />
-        ))}
-      </div>
       <svg viewBox="0 0 2880 200" preserveAspectRatio="none" className="wave-layer wave-mid">
         <path d={wave(22, 100)} fill="var(--sea)" fillOpacity=".7" stroke="var(--accent)" strokeOpacity=".35" strokeWidth="2" />
       </svg>

@@ -1,7 +1,7 @@
 // Topo do site na identidade 2027 da Pérolas (artes oficiais da campanha "Um novo ciclo"):
 // céu violeta → lavanda → rosa → pêssego, redemoinhos de luz dourada, a sereia deles sobre as pedras
 // (recorte da arte "31 dezembro", em /public/2027) e a pérola sobre o mar, que cai na água ao rolar
-// (pearl-drop.tsx usa [data-pearl] e [data-water]).
+//.
 
 /** Estrela de 4 pontas (elemento gráfico da marca). */
 export function Star4({ className = "" }: { className?: string }) {
@@ -55,14 +55,11 @@ export function LightSwirls() {
   );
 }
 
-/** Pérola sobre o mar com os raios do amanhecer (a pérola é a que cai no mar ao rolar). */
+/** Brilho do sol nascendo no horizonte, sobre o mar da arte oficial. */
 export function PearlHorizon() {
   return (
     <div className="pearl-horizon" aria-hidden>
       <div className="pearl-rays" />
-      <div className="pearl-2027" data-pearl>
-        <div className="pearl w-full" />
-      </div>
       {/* eslint-disable-next-line @next/next/no-img-element -- faixa de mar da arte oficial, já otimizada */}
       <img src="/2027/mar.webp" alt="" className="sea-strip" fetchPriority="high" />
     </div>

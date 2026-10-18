@@ -25,8 +25,8 @@ export function Story() {
             {stats.map((s) => (
               <div key={s.label}>
                 <dt className="sr-only">{s.label}</dt>
-                <dd className="font-display text-4xl text-accent-2 md:text-5xl">{s.value}</dd>
-                <dd className="mt-1 text-[0.62rem] leading-snug uppercase tracking-[0.1em] text-fg-faint sm:text-xs sm:tracking-[0.18em]">{s.label}</dd>
+                <dd className="font-display text-5xl text-accent md:text-6xl">{s.value}</dd>
+                <dd className="mt-1 text-[0.66rem] leading-snug font-semibold uppercase tracking-[0.1em] text-fg-muted sm:text-xs sm:tracking-[0.18em]">{s.label}</dd>
               </div>
             ))}
           </dl>
@@ -55,7 +55,7 @@ export function Story() {
 /** Perguntas frequentes com <details>: abre e fecha sem JavaScript. */
 export function Faq() {
   return (
-    <section className="cv-auto relative mx-auto w-full max-w-3xl px-5 py-20 md:py-28">
+    <section className="cv-auto relative mx-auto w-full max-w-3xl px-5 py-16 md:py-22">
       <SeaDecor
         items={[
           { kind: "scallop", at: "-right-24 top-20", size: "size-16", rotate: 16 },
@@ -89,7 +89,7 @@ export function Faq() {
 export function Campaign() {
   const [lead, rest] = splitTagline(campaign.tagline);
   return (
-    <section className="cv-auto relative overflow-hidden py-24 text-center md:py-32">
+    <section className="cv-auto relative overflow-hidden py-18 text-center md:py-24">
       <div className="ambient-glow left-1/2 top-1/2 size-[34rem] -translate-x-1/2 -translate-y-1/2 bg-ocean opacity-25" />
       <SeaDecor
         items={[
