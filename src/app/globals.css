@@ -1073,23 +1073,24 @@ body {
   box-shadow: inset -0.5rem -0.7rem 1.2rem rgb(40 20 60 / 0.35), inset 0.3rem 0.3rem 0.8rem rgb(255 255 255 / 0.45);
   pointer-events: none;
 }
-/* Concha abrindo como dobradiça de verdade (3D): a valva de cima começa deitada sobre a de baixo
-   (vê-se o lado de fora dourado) e gira para cima em perspectiva até mostrar o interior perolado.
-   Duas faces que giram juntas: interior (.sand-shell-back) e exterior (.sand-shell-lid, de costas),
-   cada uma escondida quando está de costas para a tela. Depois a pérola com a foto sobe. */
-.sand-shell-back, .sand-shell-lid { transform-origin: 50% 74.8%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.sand-shell-lid { z-index: 3; transform: perspective(700px) rotateX(180deg); }
-.tide-writing.is-active .sand-shell { animation: shell-wobble 2.5s ease-in-out both; transform-origin: 50% 90%; }
-.tide-writing.is-active .sand-shell-back { animation: valve-inside 2.5s both; }
-.tide-writing.is-active .sand-shell-lid { animation: valve-outside 2.5s both; }
-.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.85s both, pearl-float 7s ease-in-out 2.8s infinite; }
-@keyframes valve-inside {
-  0%, 34% { transform: perspective(700px) rotateX(-100deg); animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1.25); }
-  100% { transform: perspective(700px) rotateX(0deg); }
+/* Concha: chega FECHADA (tampa dourada = espelho da valva de baixo), balança, a tampa inclina para trás
+   e some enquanto o leque perolado se ergue da dobradiça; por fim a pérola com a foto sobe. */
+.sand-shell-back { transform-origin: 50% 76%; }
+.sand-shell-lid { z-index: 3; transform-origin: 50% 76%; opacity: 0; }
+.tide-writing.is-active .sand-shell { animation: shell-wobble 2.6s ease-in-out both; transform-origin: 50% 90%; }
+.tide-writing.is-active .sand-shell-lid { animation: lid-lift 2.6s both; }
+.tide-writing.is-active .sand-shell-back { animation: fan-rise 2.6s both; }
+.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.75s both, pearl-float 7s ease-in-out 2.7s infinite; }
+@keyframes lid-lift {
+  0%, 36% { opacity: 1; transform: perspective(600px) rotateX(0deg) translateY(0); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  58% { opacity: 1; transform: perspective(600px) rotateX(58deg) translateY(-6%); }
+  70%, 100% { opacity: 0; transform: perspective(600px) rotateX(78deg) translateY(-10%); }
 }
-@keyframes valve-outside {
-  0%, 34% { transform: perspective(700px) rotateX(80deg); animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1.25); }
-  100% { transform: perspective(700px) rotateX(180deg); }
+@keyframes fan-rise {
+  0%, 42% { opacity: 0; transform: perspective(600px) rotateX(78deg); animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1.15); }
+  52% { opacity: 1; }
+  88% { transform: perspective(600px) rotateX(-4deg); }
+  100% { opacity: 1; transform: perspective(600px) rotateX(0deg); }
 }
 /* concha fechada "respira" antes de abrir */
 @keyframes shell-wobble {
@@ -1107,6 +1108,7 @@ body {
   .sand-pearl, .tide-writing.is-active .sand-shell, .tide-writing.is-active .sand-shell-back,
   .tide-writing.is-active .sand-shell-lid, .tide-writing.is-active .sand-pearl { animation: none; }
   .sand-shell-lid { display: none; }
+  .sand-shell-back { opacity: 1; }
 }
 
 
@@ -1824,22 +1826,25 @@ main { overflow-x: clip; }
   90% { opacity: 0.7; }
   100% { transform: translate3d(-6px, -90vh, 0); opacity: 0; }
 }
-/* sereia das artes aparecendo pela lateral de uma seção */
+/* sereias das artes nas duas laterais de uma seção, grandes e bem esfumadas (máscara redonda) */
 .side-mermaid {
   position: absolute;
   z-index: 0;
-  bottom: 2rem;
-  opacity: 0.55;
-  height: min(62vh, 34rem);
+  top: 50%;
+  height: min(86vh, 48rem);
   width: auto;
+  translate: 0 -50%;
+  opacity: 0.8;
   pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
 }
-.side-mermaid.is-left { left: 0; }
-.side-mermaid.is-right { right: 0; }
-.with-mermaid { position: relative; }
+.side-mermaid.is-left { left: -2rem; }
+.side-mermaid.is-right { right: -2rem; }
+.with-mermaid { position: relative; overflow: hidden; }
 .with-mermaid > :not(.side-mermaid) { position: relative; z-index: 1; }
-@media (max-width: 1535px) { .with-mermaid > .side-mermaid { opacity: 0.25; height: 46vh; } }
-@media (max-width: 767px) { .with-mermaid > .side-mermaid { display: none; } }
+@media (max-width: 1535px) { .with-mermaid > .side-mermaid { opacity: 0.4; height: 40rem; } .side-mermaid.is-left { left: -6rem; } .side-mermaid.is-right { right: -6rem; } }
+@media (max-width: 1023px) { .with-mermaid > .side-mermaid { display: none; } }
 
 /* borda de concha (vieira): fileira de arcos dourados no alto do card */
 .scallop-top { position: relative; }
@@ -1857,25 +1862,54 @@ main { overflow-x: clip; }
 .faq-shell { width: 1.6rem; height: 1.6rem; flex-shrink: 0; color: var(--accent); transition: rotate 0.4s var(--ease), scale 0.4s var(--ease), color 0.4s; }
 .faq[open] .faq-shell { rotate: 180deg; scale: 1.15; color: #6a4ecf; }
 
-/* rodapé no fundo do mar */
-.seabed-footer { position: relative; overflow: hidden; padding-bottom: clamp(13rem, 25vw, 20rem); }
+/* rodapé: espelho do topo no pôr do sol (sereias, mar da arte e a pérola no centro) */
+.seabed-footer { position: relative; overflow: hidden; padding-bottom: clamp(17rem, 34vw, 27rem); }
 .seabed-footer > .footer-content { position: relative; z-index: 3; }
 .seabed { position: absolute; inset: 0; pointer-events: none; }
-/* o céu vira água aos poucos: lavanda translúcida embaixo */
-.seabed-water { position: absolute; inset: 0; background: linear-gradient(180deg, transparent, rgb(201 180 242 / 0.35) 55%, rgb(185 163 230 / 0.45)); }
-.seabed-art { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(14rem, 26vw, 21rem); }
-.seabed-mermaid { position: absolute; z-index: 1; left: 0; bottom: clamp(2.5rem, 4vw, 4rem); height: clamp(16rem, 32vw, 30rem); width: auto; }
-.seabed-weed path { transform-box: fill-box; transform-origin: 50% 100%; animation: weed-sway 6s ease-in-out infinite alternate; }
-.seabed-weed path:nth-child(2n) { animation-delay: -2s; animation-duration: 7s; }
-.seabed-weed path:nth-child(3n) { animation-delay: -4s; }
-@keyframes weed-sway { from { rotate: -5deg; } to { rotate: 5deg; } }
-.seabed-rays { animation: rays 7s ease-in-out infinite alternate; }
-@keyframes rays { from { opacity: 0.55; } to { opacity: 1; } }
-.seabed-pearl-glow { animation: pearl-breathe 4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
-@keyframes pearl-breathe { from { opacity: 0.6; scale: 0.9; } to { opacity: 1; scale: 1.08; } }
-@media (max-width: 767px) { .seabed-mermaid { left: -14vw; height: 15rem; opacity: 0.9; } }
+.seabed-sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 40% at 50% 82%, rgb(255 236 214 / 0.95), rgb(255 201 163 / 0.5) 45%, transparent 75%),
+    linear-gradient(180deg, transparent, rgb(247 168 199 / 0.35) 45%, rgb(255 201 163 / 0.55) 75%, rgb(255 227 178 / 0.6));
+}
+.seabed-sea {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: clamp(6rem, 13vw, 10rem);
+  object-fit: cover;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%);
+  mask-image: linear-gradient(180deg, transparent, #000 35%);
+}
+.seabed-mermaid {
+  position: absolute;
+  z-index: 1;
+  bottom: clamp(2.5rem, 5vw, 4rem);
+  height: clamp(15rem, 34vw, 30rem);
+  width: auto;
+}
+.seabed-mermaid.is-left { left: 0; }
+.seabed-mermaid.is-right { right: 0; }
+.seabed-pearl {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: clamp(4.5rem, 9vw, 7rem);
+  width: clamp(3.4rem, 6vw, 4.8rem);
+  translate: -50% 0;
+}
+.seabed-pearl .pearl { box-shadow: 0 0 40px 12px rgb(255 236 214 / 0.8), 0 0 110px 30px rgb(255 214 178 / 0.45), inset -10px -12px 26px rgb(150 100 140 / 0.35); }
+@media (max-width: 767px) {
+  .seabed-mermaid { height: 15rem; }
+  .seabed-mermaid.is-left { left: -18vw; }
+  .seabed-mermaid.is-right { right: -18vw; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .sea-ornament, .sea-bubbles > i, .seabed-weed path, .seabed-rays, .seabed-pearl-glow { animation: none; }
+  .sea-ornament, .sea-bubbles > i { animation: none; }
   .sea-bubbles { display: none; }
 }
 
@@ -1939,7 +1973,7 @@ main { overflow-x: clip; }
   .pearl-2027 { bottom: 74%; }
   .pearl-rays { bottom: 78%; }
 }
-.lite .tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.85s both; }
+.lite .tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.75s both; }
 
 /* topo → areia: água numa cor só; as ondas do topo viram reflexos claros (sem linha nem faixas) */
 .hero-2027 .wave-back path { fill: #fff; fill-opacity: 0.06; }

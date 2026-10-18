@@ -96,13 +96,16 @@ export function ShellPearl({ src }: { src: string }) {
         ))}
       </svg>
 
-      {/* lado de fora da valva de cima: é o que se vê com a concha fechada (gira junto, de costas) */}
+      {/* tampa: com a concha fechada, a valva de cima é o espelho da de baixo (contorno clássico de
+          concha fechada, lado de fora dourado). Ao abrir, ela inclina para trás e some. */}
       <svg className="sand-shell-lid" viewBox={`0 0 ${W} ${H}`} aria-hidden>
-          <path d={fan} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={3} strokeLinejoin="round" />
-          {ribs.map((d) => (
-            <path key={d} d={d} {...line} strokeWidth={2.2} strokeOpacity={0.7} />
+        <g transform={`translate(0 ${2 * LIP_Y}) scale(1 -1)`}>
+          <path d={bowl} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={3} strokeLinejoin="round" />
+          {bowlLines.map((d) => (
+            <path key={d} d={d} {...line} strokeWidth={1.5} strokeOpacity={0.55} />
           ))}
-              </svg>
+        </g>
+      </svg>
 
       <span className="sand-pearl">
         {/* eslint-disable-next-line @next/next/no-img-element -- foto em /public, já otimizada */}

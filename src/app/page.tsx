@@ -135,6 +135,7 @@ async function EventPage() {
       <Lineup attractions={event.attractions} />
 
       <section id="ingressos" className="with-mermaid scroll-mt-8">
+        <SideMermaid side="left" />
         <SideMermaid side="right" />
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
           <span className="eyebrow rule">Ingressos</span>
