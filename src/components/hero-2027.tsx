@@ -29,6 +29,9 @@ function Sparkle({ className = "" }: { className?: string }) {
 export function PerolasLogo({ year, className = "" }: { year: string; className?: string }) {
   return (
     <div className={`pl ${className}`}>
+      {/* concha aberta do flyer oficial atrás do nome: leque atrás de RÉVEILLON/PÉROLAS, valva sob o arabesco */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- arte da concha do flyer, já otimizada */}
+      <img src="/2027/concha-logo.webp" alt="" className="pl-shell" width={1000} height={722} fetchPriority="high" />
       <div className="pl-kicker">
         <i aria-hidden />
         <span>Réveillon</span>

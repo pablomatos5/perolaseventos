@@ -1560,6 +1560,18 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 /* logo: caixa-alta fina e bem espaçada (moderna), com uma pérola de verdade no lugar do O */
 /* ───────── Logo PÉROLAS 2K27 (arte oficial 2027) ───────── */
 .pl { --pl: clamp(3rem, min(12vw, 12.5svh), 8.2rem); display: grid; justify-items: center; }
+.pl { position: relative; isolation: isolate; padding-top: calc(var(--pl) * 0.85); }
+.pl-shell {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 0;
+  width: calc(var(--pl) * 3.6);
+  height: auto;
+  translate: -50% 0;
+  filter: drop-shadow(0 0.4rem 1.4rem rgb(60 30 110 / 0.28));
+  pointer-events: none;
+}
 /* dourado metálico: claro em cima, dourado no meio, bronze embaixo, com brilho na linha do meio */
 .pl-gold {
   background: linear-gradient(180deg, #fff1c4 0%, #f2cf7a 28%, #d9a54a 52%, #f6d98e 60%, #b47c2c 100%);
@@ -1641,7 +1653,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .pl-spark-o { width: 0.34em; top: -0.06em; right: -0.08em; }
 .pl-spark-o2 { width: 0.13em; top: -0.18em; right: -0.22em; }
 .pl-spark-l { width: 0.16em; left: -0.32em; top: 50%; translate: 0 -50%; }
-.pl-flourish { width: calc(var(--pl) * 4.6); max-width: 92vw; margin-top: calc(var(--pl) * 0.04); filter: drop-shadow(0 1px 0 rgb(122 76 22 / 0.4)); }
+.pl-flourish { width: calc(var(--pl) * 4); max-width: 92vw; margin-top: calc(var(--pl) * 0.04); filter: drop-shadow(0 1px 0 rgb(122 76 22 / 0.4)); }
 .pl-year {
   display: flex;
   align-items: center;
