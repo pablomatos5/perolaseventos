@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { reserveAction } from "@/app/actions";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { reserveAction, type BuyerField } from "@/app/actions";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { formatBRL, SERVICE_FEE_CENTS } from "@/lib/format";
 
@@ -41,6 +41,23 @@ function Stepper({ value, onChange, max, label }: { value: number; onChange: (v:
 export function TicketPicker({ eventId, types }: { eventId: string; types: PickerType[] }) {
   const [qty, setQty] = useState<Qty>({});
   const [state, action, pending] = useActionState(reserveAction, undefined);
+  // dados do comprador guardados aqui: o envio do formulário não apaga o que foi digitado
+  const [buyer, setBuyer] = useState<Record<BuyerField, string>>({ buyerName: "", email: "", phone: "", cpf: "" });
+  const [errField, setErrField] = useState<BuyerField | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const setField = (f: BuyerField, v: string) => {
+    setBuyer((b) => ({ ...b, [f]: v }));
+    if (errField === f) setErrField(null);
+  };
+  // erro do servidor: marca o campo, foca e rola até ele
+  useEffect(() => {
+    if (!state?.error) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reflete a resposta do servidor
+    setErrField(state.field ?? null);
+    const el = state.field ? formRef.current?.querySelector<HTMLInputElement>(`[name="${state.field}"]`) : formRef.current?.querySelector<HTMLElement>("[role=alert]");
+    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (el instanceof HTMLInputElement) el.focus({ preventScroll: true });
+  }, [state]);
 
   const get = (id: string) => qty[id] ?? { masc: 0, fem: 0 };
   const set = (id: string, patch: Partial<{ masc: number; fem: number }>) => setQty((q) => ({ ...q, [id]: { ...get(id), ...patch } }));
@@ -51,7 +68,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
   const items = types.map((t) => ({ ticketTypeId: t.id, ...get(t.id) })).filter((i) => i.masc + i.fem > 0);
 
   return (
-    <form action={action} className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
+    <form ref={formRef} action={action} className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="items" value={JSON.stringify(items)} />
 
@@ -114,10 +131,17 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
       <aside className="glass-card scallop-top h-fit p-6 md:p-8">
         <span className="eyebrow rule">Seus dados</span>
         <div className="mt-6 grid gap-4">
-          <Field name="buyerName" label="Nome completo" autoComplete="name" />
-          <Field name="email" label="E-mail" type="email" autoComplete="email" />
-          <Field name="phone" label="Celular com DDD" type="tel" autoComplete="tel" inputMode="numeric" />
-          <Field name="cpf" label="CPF" inputMode="numeric" maxLength={14} />
+          {BUYER_FIELDS.map(({ name, label, mask, ...rest }) => (
+            <Field
+              key={name}
+              name={name}
+              label={label}
+              value={buyer[name]}
+              onChange={(e) => setField(name, mask ? mask(e.target.value) : e.target.value)}
+              error={errField === name ? state?.error : undefined}
+              {...rest}
+            />
+          ))}
         </div>
 
         <dl className="mt-8 grid gap-1.5 border-t border-line pt-6 text-sm text-fg-muted">
@@ -139,7 +163,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
             <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} resetKey={state} />
           </div>
         )}
-        {state?.error && (
+        {state?.error && !errField && (
           <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
             {state.error}
           </p>
@@ -155,15 +179,44 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
   );
 }
 
-function Field({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+type FieldDef = { name: BuyerField; label: string; mask?: (v: string) => string } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "name">;
+const BUYER_FIELDS: FieldDef[] = [
+  { name: "buyerName", label: "Nome completo", autoComplete: "name" },
+  { name: "email", label: "E-mail", type: "email", autoComplete: "email", inputMode: "email" },
+  { name: "phone", label: "Celular com DDD", type: "tel", autoComplete: "tel", inputMode: "numeric", placeholder: "(91) 99999-9999", mask: (v) => maskPhone(v) },
+  { name: "cpf", label: "CPF", inputMode: "numeric", placeholder: "000.000.000-00", mask: (v) => maskCpf(v) },
+];
+
+const digits = (v: string, n: number) => v.replace(/\D/g, "").slice(0, n);
+function maskCpf(v: string) {
+  const d = digits(v, 11);
+  return d.replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
+}
+function maskPhone(v: string) {
+  const d = digits(v, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+function Field({ label, error, ...props }: { label: string; error?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const id = `f-${props.name}`;
   return (
     <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint">
       {label}
       <input
         required
         {...props}
-        className="rounded-xl border border-line bg-bg/60 px-4 py-3 text-base normal-case tracking-normal text-fg outline-none transition focus:border-accent"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-err` : undefined}
+        className={`rounded-xl border bg-bg/60 px-4 py-3 text-base normal-case tracking-normal text-fg outline-none transition focus:border-accent ${error ? "border-danger ring-2 ring-danger/25" : "border-line"}`}
       />
+      {error && (
+        <span id={`${id}-err`} role="alert" className="text-xs font-medium normal-case tracking-normal text-danger">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

@@ -29,17 +29,20 @@ function validCpf(raw: string) {
 
 const schema = z.object({
   eventId: z.string().min(1),
-  buyerName: z.string().trim().min(5, "Informe nome e sobrenome."),
+  buyerName: z.string().trim().min(5, "Informe nome e sobrenome.").refine((n) => n.includes(" "), "Informe nome e sobrenome."),
   email: z.email("E-mail inválido.").trim().toLowerCase(),
   phone: z.string().transform(onlyDigits).pipe(z.string().min(10, "Celular com DDD.").max(11, "Celular inválido.")),
-  cpf: z.string().refine(validCpf, "CPF inválido.").transform(onlyDigits),
+  cpf: z.string().refine(validCpf, "CPF inválido: confira os 11 números.").transform(onlyDigits),
   items: z
     .array(z.object({ ticketTypeId: z.string().max(40), masc: z.number().int().min(0).max(50), fem: z.number().int().min(0).max(50) }))
     .max(10)
     .refine((items) => new Set(items.map((i) => i.ticketTypeId)).size === items.length, "Pedido inválido: setor repetido."),
 });
 
-export type ReserveState = { error?: string } | undefined;
+export type BuyerField = "buyerName" | "email" | "phone" | "cpf";
+/** `field` = campo com problema (o formulário marca e foca); `at` muda a cada resposta. */
+export type ReserveState = { error?: string; field?: BuyerField; at?: number } | undefined;
+const BUYER_FIELDS = new Set<string>(["buyerName", "email", "phone", "cpf"]);
 
 export async function reserveAction(_prev: ReserveState, form: FormData): Promise<ReserveState> {
   const parsed = schema.safeParse({
@@ -50,7 +53,11 @@ export async function reserveAction(_prev: ReserveState, form: FormData): Promis
     cpf: form.get("cpf") ?? "",
     items: JSON.parse(String(form.get("items") ?? "[]")),
   });
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const f = String(issue.path[0] ?? "");
+    return { error: issue.message, field: BUYER_FIELDS.has(f) ? (f as BuyerField) : undefined, at: Date.now() };
+  }
   // Sem cobrança configurada não adianta reservar: o cliente não teria como pagar.
   if (paymentMode() === "off") return { error: "As vendas online abrem em breve." };
 
