@@ -1752,7 +1752,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   z-index: 1;
   height: 70%;
   /* fim do mar da arte se dissolve devagar na cor única da água (sem degrau) */
-  background: linear-gradient(180deg, rgb(154 132 232 / 0) 0%, rgb(154 132 232 / 0.25) 35%, rgb(154 132 232 / 0.65) 65%, rgb(154 132 232 / 0.92) 85%, var(--sea) 100%);
+  background: linear-gradient(180deg, rgb(154 132 232 / 0) 0%, rgb(154 132 232 / 0.3) 35%, rgb(154 132 232 / 0.75) 62%, var(--sea) 82%);
   pointer-events: none;
 }
 @media (max-width: 767px) {
@@ -1868,53 +1868,27 @@ main { overflow-x: clip; }
 .faq-shell { width: 1.6rem; height: 1.6rem; flex-shrink: 0; color: var(--accent); transition: rotate 0.4s var(--ease), scale 0.4s var(--ease), color 0.4s; }
 .faq[open] .faq-shell { rotate: 180deg; scale: 1.15; color: #6a4ecf; }
 
-/* rodapé: espelho do topo no pôr do sol (sereias, mar da arte e a pérola no centro) */
-.seabed-footer { position: relative; overflow: hidden; padding-bottom: clamp(17rem, 34vw, 27rem); }
+/* rodapé no fundo do mar (cena 3D pré-renderizada) */
+.seabed-footer { position: relative; overflow: hidden; padding-bottom: clamp(14rem, 26vw, 24rem); }
 .seabed-footer > .footer-content { position: relative; z-index: 3; }
 .seabed { position: absolute; inset: 0; pointer-events: none; }
-.seabed-sky {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 55% 40% at 50% 82%, rgb(255 236 214 / 0.95), rgb(255 201 163 / 0.5) 45%, transparent 75%),
-    linear-gradient(180deg, transparent, rgb(247 168 199 / 0.35) 45%, rgb(255 201 163 / 0.55) 75%, rgb(255 227 178 / 0.6));
-}
-.seabed-sea {
-  position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: clamp(6rem, 13vw, 10rem);
-  object-fit: cover;
-  -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%);
-  mask-image: linear-gradient(180deg, transparent, #000 35%);
-}
-.seabed-mermaid {
+.seabed-scene {
   position: absolute;
   z-index: 1;
-  bottom: clamp(2.5rem, 5vw, 4rem);
-  height: clamp(15rem, 34vw, 30rem);
-  width: auto;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: clamp(14rem, 26vw, 24rem);
+  object-fit: cover;
+  object-position: 50% 100%;
+  /* o alto da cena (névoa) some no céu da página */
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%);
+  mask-image: linear-gradient(180deg, transparent, #000 30%);
 }
-.seabed-mermaid.is-left { left: 0; }
-.seabed-mermaid.is-right { right: 0; }
-.seabed-pearl {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: clamp(4.5rem, 9vw, 7rem);
-  width: clamp(3.4rem, 6vw, 4.8rem);
-  translate: -50% 0;
-}
-.seabed-pearl .pearl { box-shadow: 0 0 40px 12px rgb(255 236 214 / 0.8), 0 0 110px 30px rgb(255 214 178 / 0.45), inset -10px -12px 26px rgb(150 100 140 / 0.35); }
+.seabed .sea-bubbles { z-index: 2; }
 @media (max-width: 767px) {
-  .seabed-footer { padding-bottom: 21rem; }
-  .seabed-mermaid { height: 17rem; bottom: 4.5rem; }
-  .seabed-mermaid.is-left { left: -12vw; }
-  .seabed-mermaid.is-right { right: -12vw; }
-  .seabed-pearl { bottom: 7.5rem; }
+  .seabed-footer { padding-bottom: 24rem; }
+  .seabed-scene { height: 24rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sea-ornament, .sea-bubbles > i { animation: none; }
@@ -1992,3 +1966,11 @@ main { overflow-x: clip; }
 /* a pérola cai POR CIMA da água (mergulho = dissolve na superfície com o respingo, sem corte reto) */
 .hero-2027 .pearl-horizon { z-index: 3; }
 .pearl-2027.is-sunk { transition: opacity 0.35s ease-out, scale 0.35s ease-out, translate 0.35s ease-out; }
+
+/* concha 3D: mesma caixa da 2D, mais alta para caber a valva em pé */
+.sand-shell-3d { aspect-ratio: 400 / 330 !important; }
+.sand-shell-3d::before { inset: auto 10% 2% 10%; height: 16%; }
+.sand-shell-3d canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+
+/* topo: a faixa das ondas sobe por baixo do fim do mar e entra esfumada (sem linha reta entre as duas) */
+.hero-2027 .ocean-waves { margin-top: -2.5rem; -webkit-mask-image: linear-gradient(180deg, transparent, #000 2.5rem); mask-image: linear-gradient(180deg, transparent, #000 2.5rem); }

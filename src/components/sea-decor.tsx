@@ -113,23 +113,18 @@ export function SideMermaid({ side }: { side: "left" | "right" }) {
 }
 
 /**
- * Fim da página como o topo, só que no fim do dia: céu do pôr do sol, o mar da arte oficial e as duas
- * sereias da campanha emoldurando a pérola. Mesmas imagens do topo (já em cache), nada animado além
- * da pérola flutuando. O conteúdo do rodapé fica por cima.
+ * Fim da página no fundo do mar: cena 3D (corais, algas, estrelas-do-mar, conchas e a pérola na concha
+ * aberta) renderizada uma vez por scripts/fundo-mar/ e servida como imagem — qualidade de 3D com custo
+ * zero no celular. Bolhas por cima dão vida. O conteúdo do rodapé fica por cima.
  */
 export function Seabed() {
   return (
     <div className="seabed" aria-hidden>
-      <div className="seabed-sky" />
-      {/* eslint-disable-next-line @next/next/no-img-element -- recortes da arte oficial (esfumados no alfa) */}
-      <img src="/2027/sereia-esq.webp" alt="" loading="lazy" className="seabed-mermaid is-left" />
-      {/* eslint-disable-next-line @next/next/no-img-element -- recortes da arte oficial (esfumados no alfa) */}
-      <img src="/2027/sereia-dir.webp" alt="" loading="lazy" className="seabed-mermaid is-right" />
-      <div className="seabed-pearl">
-        <div className="pearl w-full" />
-      </div>
-      {/* eslint-disable-next-line @next/next/no-img-element -- faixa de mar da arte oficial */}
-      <img src="/2027/mar.webp" alt="" loading="lazy" className="seabed-sea" />
+      <Bubbles />
+      <picture>
+        <source media="(max-width: 767px)" srcSet="/2027/fundo-mar-cel.webp" width={1170} height={1000} />
+        <img src="/2027/fundo-mar-pc.webp" alt="" width={2880} height={760} loading="lazy" decoding="async" className="seabed-scene" />
+      </picture>
     </div>
   );
 }

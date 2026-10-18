@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShellPearl } from "./shell-pearl";
+import { ShellPearl3D } from "./shell-pearl-3d";
 
 export type TideStep = {
   key: string;
@@ -166,7 +166,7 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
 
         {steps.map((s, i) => (
           <div key={s.key} className={`tide-writing ${i === shown ? "is-active" : ""}`} aria-hidden={i !== shown}>
-            {s.imageUrl && <ShellPearl src={s.imageUrl} />}
+            {s.imageUrl && <ShellPearl3D src={s.imageUrl} active={i === shown} />}
             {s.eyebrow && <p className="sand-eyebrow">{s.eyebrow}</p>}
             {s.mystery ? (
               <p className="sand-mystery">
