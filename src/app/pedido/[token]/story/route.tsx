@@ -41,7 +41,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
   if (!order || order.status !== "PAID") return new Response("Pedido sem pagamento confirmado", { status: 404 });
 
   const { fonts, img } = await load();
-  const first = order.buyerName.trim().split(/\s+/)[0].slice(0, 18);
+  const raw = order.buyerName.trim().split(/\s+/)[0].slice(0, 18).toLocaleLowerCase("pt-BR");
+  const first = raw.charAt(0).toLocaleUpperCase("pt-BR") + raw.slice(1);
   const tz = "America/Belem";
   const dmy = order.event.startsAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: tz }).split("/").join(" · ");
   const n = order._count.tickets;

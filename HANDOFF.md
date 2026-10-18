@@ -113,6 +113,21 @@ Desligar quando não precisar: `docker rm -f pdev-app pdev-db`.
 - Fluxos testados ponta a ponta (dev, celular e PC): compra M/F + taxa, simular pagamento, PDF, e-mail, painel
   (vendas, pedidos/busca, cortesia, aparelhos, registro), portaria (QR válido, repetido, falso, busca e liberar).
 
+## 18/10 (noite)
+- Logo do topo como o flyer oficial (Cinzel dourada, pérola no aro, arabesco) DENTRO da concha do flyer
+  (`public/2027/concha-logo.webp`); o mesmo logo vai no ingresso (`assets/pdf/logo-2027.png`, renderizado do site)
+  e na prévia do link (`src/app/opengraph-image.jpg`, estática).
+- Presença confirmada: `/pedido/<token>/story` (1080×1920) e `?f=feed` (1080×1350), só para pedido pago, sem QR;
+  botões abrem o compartilhar do celular (Instagram story/feed/direct). Fontes/imagens em `assets/story` e
+  `assets/fonts/Cinzel.ttf` (estática: a variável quebra o next/og).
+- Portaria: câmera quadrada com mira, aviso fecha com um toque (Próximo / Tentar de novo / Buscar por nome).
+- Formulário: dados não somem em erro, erro no campo, máscaras de CPF/celular.
+- Varredura em produção (Playwright, `/opt/perolas-shots/sweep2.mjs`): 45 checagens ok (as falhas da 1ª rodada
+  eram do roteiro: hover pausa patrocinadores; câmera relendo QR inválido; ingressos de demonstração não entram na
+  lista da portaria — de propósito). O `next dev` (pdev-app) recarrega a página de pedido em loop e cai sob carga:
+  é só do modo dev, produção ok.
+- Pedido de teste criado pela varredura em produção: "Ana Varredura" — apagar junto com os outros de teste.
+
 ## Pendências / próximos passos (em ordem)
 0. **AGORA — foto e vídeo das 2 novas atrações**, igual ao card do Baltazar (foto na frente; ao virar, vídeo do show).
    - Fonte: Instagram deles. O usuário deu permissão para **só ver e baixar** (nunca curtir, seguir, comentar,
