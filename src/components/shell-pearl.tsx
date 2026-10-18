@@ -94,14 +94,15 @@ export function ShellPearl({ src }: { src: string }) {
         {ribs.map((d) => (
           <path key={d} d={d} {...line} strokeWidth={1.4} strokeOpacity={0.45} />
         ))}
-        {/* lado de fora da valva: aparece com a concha fechada e some enquanto ela abre */}
-        <g className="sand-shell-lid">
+      </svg>
+
+      {/* lado de fora da valva de cima: é o que se vê com a concha fechada (gira junto, de costas) */}
+      <svg className="sand-shell-lid" viewBox={`0 0 ${W} ${H}`} aria-hidden>
           <path d={fan} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={3} strokeLinejoin="round" />
           {ribs.map((d) => (
             <path key={d} d={d} {...line} strokeWidth={2.2} strokeOpacity={0.7} />
           ))}
-        </g>
-      </svg>
+              </svg>
 
       <span className="sand-pearl">
         {/* eslint-disable-next-line @next/next/no-img-element -- foto em /public, já otimizada */}

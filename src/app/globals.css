@@ -298,7 +298,7 @@ body {
     radial-gradient(2px 2px at 260px 50px, rgb(255 236 200), transparent),
     radial-gradient(1.2px 1.2px at 330px 120px, rgb(255 255 255 / 0.8), transparent),
     radial-gradient(1.4px 1.4px at 95px 140px, rgb(255 246 228 / 0.9), transparent),
-    linear-gradient(180deg, #8a74e2 0%, var(--sea) 55%, var(--wave-body) 100%);
+    linear-gradient(180deg, var(--sea) 0%, var(--sea) 84%, var(--wave-body) 100%);
   background-size: 360px 170px, 360px 170px, 360px 170px, 360px 170px, 360px 170px, 100% 100%;
   transform: translateY(-84%);
   will-change: transform;
@@ -1040,7 +1040,6 @@ body {
   background: radial-gradient(closest-side, rgb(80 50 20 / 0.4), transparent);
 }
 .sand-shell svg { inset: 0; width: 100%; height: 100%; overflow: visible; }
-.sand-shell-back { transform-origin: 50% 75%; }
 .sand-shell-front { z-index: 2; }
 .sand-pearl {
   z-index: 1;
@@ -1074,27 +1073,32 @@ body {
   box-shadow: inset -0.5rem -0.7rem 1.2rem rgb(40 20 60 / 0.35), inset 0.3rem 0.3rem 0.8rem rgb(255 255 255 / 0.45);
   pointer-events: none;
 }
-/* quando a maré recua, a concha está FECHADA (valva de cima deitada, lado de fora dourado), dá uma
-   balançadinha, abre devagar e só então a pérola com a foto sobe. Tudo transform/opacity. */
-.sand-shell-lid { opacity: 0; }
-.tide-writing.is-active .sand-shell { animation: shell-wobble 2.6s ease-in-out both; transform-origin: 50% 90%; }
-.tide-writing.is-active .sand-shell-back { animation: shell-open 2.6s both; }
-.tide-writing.is-active .sand-shell-lid { animation: shell-lid 2.6s both; }
-.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 2.05s both, pearl-float 7s ease-in-out 3s infinite; }
-@keyframes shell-open {
-  0%, 52% { transform: scaleY(0.3); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
-  100% { transform: scaleY(1); }
+/* Concha abrindo como dobradiça de verdade (3D): a valva de cima começa deitada sobre a de baixo
+   (vê-se o lado de fora dourado) e gira para cima em perspectiva até mostrar o interior perolado.
+   Duas faces que giram juntas: interior (.sand-shell-back) e exterior (.sand-shell-lid, de costas),
+   cada uma escondida quando está de costas para a tela. Depois a pérola com a foto sobe. */
+.sand-shell-back, .sand-shell-lid { transform-origin: 50% 74.8%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.sand-shell-lid { z-index: 3; transform: perspective(700px) rotateX(180deg); }
+.tide-writing.is-active .sand-shell { animation: shell-wobble 2.5s ease-in-out both; transform-origin: 50% 90%; }
+.tide-writing.is-active .sand-shell-back { animation: valve-inside 2.5s both; }
+.tide-writing.is-active .sand-shell-lid { animation: valve-outside 2.5s both; }
+.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.85s both, pearl-float 7s ease-in-out 2.8s infinite; }
+@keyframes valve-inside {
+  0%, 34% { transform: perspective(700px) rotateX(-100deg); animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1.25); }
+  100% { transform: perspective(700px) rotateX(0deg); }
 }
-@keyframes shell-lid {
-  0%, 56% { opacity: 1; }
-  82%, 100% { opacity: 0; }
+@keyframes valve-outside {
+  0%, 34% { transform: perspective(700px) rotateX(80deg); animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1.25); }
+  100% { transform: perspective(700px) rotateX(180deg); }
 }
+/* concha fechada "respira" antes de abrir */
 @keyframes shell-wobble {
-  0%, 30% { rotate: 0deg; }
-  36% { rotate: -3deg; }
-  42% { rotate: 3deg; }
-  48% { rotate: -1.5deg; }
-  52%, 100% { rotate: 0deg; }
+  0% { scale: 0.92; opacity: 0; }
+  10% { scale: 1; opacity: 1; }
+  18% { rotate: -2.5deg; }
+  25% { rotate: 2.5deg; }
+  31% { rotate: 0deg; scale: 1.02; }
+  36%, 100% { rotate: 0deg; scale: 1; }
 }
 @keyframes pearl-rise {
   from { opacity: 0; translate: 0 35%; scale: 0.8; }
@@ -1102,6 +1106,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sand-pearl, .tide-writing.is-active .sand-shell, .tide-writing.is-active .sand-shell-back,
   .tide-writing.is-active .sand-shell-lid, .tide-writing.is-active .sand-pearl { animation: none; }
+  .sand-shell-lid { display: none; }
 }
 
 
@@ -1692,7 +1697,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 .hero-countdown { --fg-faint: rgb(69 53 143 / 0.75); }
 .hero-countdown .font-display { color: #45358f; }
 /* o mar continua até as ondas (sem a faixa do céu entre eles) */
-.hero-2027 .ocean-waves { z-index: 2; background: linear-gradient(180deg, #a58ce9, var(--sea)); }
+.hero-2027 .ocean-waves { z-index: 2; background: var(--sea); }
 
 /* pérola sobre o mar com os raios do amanhecer */
 .pearl-horizon { --pw: clamp(3.6rem, 7.5vw, 5.4rem); position: relative; z-index: 2; height: clamp(7.5rem, 22svh, 12rem); margin-top: 0.5rem; }
@@ -1738,8 +1743,9 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   position: absolute;
   inset: auto 0 0;
   z-index: 1;
-  height: 42%;
-  background: linear-gradient(180deg, rgb(165 140 233 / 0), rgb(165 140 233 / 0.55) 55%, #a58ce9);
+  height: 70%;
+  /* fim do mar da arte se dissolve devagar na cor única da água (sem degrau) */
+  background: linear-gradient(180deg, rgb(154 132 232 / 0) 0%, rgb(154 132 232 / 0.25) 35%, rgb(154 132 232 / 0.65) 65%, rgb(154 132 232 / 0.92) 85%, var(--sea) 100%);
   pointer-events: none;
 }
 @media (max-width: 767px) {
@@ -1933,4 +1939,10 @@ main { overflow-x: clip; }
   .pearl-2027 { bottom: 74%; }
   .pearl-rays { bottom: 78%; }
 }
-.lite .tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 2.05s both; }
+.lite .tide-writing.is-active .sand-pearl { animation: pearl-rise 0.9s var(--ease) 1.85s both; }
+
+/* topo → areia: água numa cor só; as ondas do topo viram reflexos claros (sem linha nem faixas) */
+.hero-2027 .wave-back path { fill: #fff; fill-opacity: 0.06; }
+.hero-2027 .wave-mid path { fill: #fff; fill-opacity: 0.05; stroke: none; }
+.hero-2027 .wave-front path { fill: var(--sea); }
+.beach::before { background: var(--sea); }
