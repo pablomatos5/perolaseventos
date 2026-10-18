@@ -4,7 +4,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb, degrees, type PDFFont, type PDFImage, type PDFPage, type RGB } from "pdf-lib";
 import { formatBRL } from "@/lib/format";
 import { isDemo } from "@/lib/payment-mode";
-import { qrMatrix } from "@/lib/qr";
+import { QR_OPTIONS, qrShape } from "@/lib/qr";
 import { ticketToken } from "@/lib/tokens";
 
 // Ingresso em PDF: uma página por ingresso, formato "de bolso" (bom na tela do celular e impresso).
@@ -183,22 +183,30 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, ev: Pdf
   const qrX = (W - qrSize) / 2;
   const qrY = cutY - 30 - qrSize;
   roundRect(p, qrX - 14, qrY - 14, qrSize + 28, qrSize + 28, 18, C.white, 1, C.gold, 1);
-  const { size, dark } = qrMatrix(ticketToken(t.id, t.qrVersion));
-  const q = 4; // zona quieta em módulos
-  const mod = qrSize / (size + 2 * q);
-  // um único caminho preenchido (faixas horizontais de módulos escuros): sem frestas entre os quadradinhos
-  let d = "";
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      if (!dark(x, y)) continue;
-      let run = 1;
-      while (x + run < size && dark(x + run, y)) run++;
-      const px = (x + q) * mod, py = (y + q) * mod;
-      d += `M${px.toFixed(3)} ${py.toFixed(3)}h${(run * mod).toFixed(3)}v${mod.toFixed(3)}h${(-run * mod).toFixed(3)}z`;
-      x += run - 1;
-    }
+  // QR personalizado (mesmo desenho da página, src/lib/qr.ts): pontinhos, olhos arredondados e a pérola
+  const shape = qrShape(ticketToken(t.id, t.qrVersion));
+  const q = QR_OPTIONS.margin; // zona quieta em módulos
+  const mod = qrSize / (shape.size + 2 * q);
+  const P = (v: number) => ((v + q) * mod).toFixed(3);
+  const rr = (x: number, y: number, w: number, h: number, r: number) =>
+    `M${P(x + r)} ${P(y)}H${P(x + w - r)}A${(r * mod).toFixed(3)} ${(r * mod).toFixed(3)} 0 0 1 ${P(x + w)} ${P(y + r)}V${P(y + h - r)}A${(r * mod).toFixed(3)} ${(r * mod).toFixed(3)} 0 0 1 ${P(x + w - r)} ${P(y + h)}H${P(x + r)}A${(r * mod).toFixed(3)} ${(r * mod).toFixed(3)} 0 0 1 ${P(x)} ${P(y + h - r)}V${P(y + r)}A${(r * mod).toFixed(3)} ${(r * mod).toFixed(3)} 0 0 1 ${P(x + r)} ${P(y)}Z`;
+  let dots = "";
+  for (let y = 0; y < shape.size; y++)
+    for (let x = 0; x < shape.size; x++) if (shape.dark(x, y) && !shape.inEye(x, y) && !shape.inLogo(x, y)) dots += rr(x, y, 1, 1, 0.28);
+  const ink = hex("#160e3d");
+  const at = { x: qrX, y: qrY + qrSize };
+  p.drawSvgPath(dots, { ...at, color: ink });
+  for (const [ex, ey] of shape.eyes) {
+    p.drawSvgPath(rr(ex, ey, 7, 7, 2), { ...at, color: ink });
+    p.drawSvgPath(rr(ex + 1, ey + 1, 5, 5, 1.4), { ...at, color: C.white });
+    p.drawSvgPath(rr(ex + 2, ey + 2, 3, 3, 0.9), { ...at, color: ink });
   }
-  p.drawSvgPath(d, { x: qrX, y: qrY + qrSize, color: rgb(0, 0, 0) });
+  // pérola central com aro dourado e brilho
+  const lc = { x: qrX + (shape.logo.c + q) * mod, y: qrY + qrSize - (shape.logo.c + q) * mod };
+  p.drawCircle({ ...lc, size: (shape.logo.r + 0.25) * mod, color: hex("#c9944a") });
+  p.drawCircle({ ...lc, size: (shape.logo.r - 0.25) * mod, color: hex("#d9c8f5") });
+  p.drawCircle({ ...lc, size: (shape.logo.r - 0.9) * mod, color: hex("#efe6ff") });
+  p.drawCircle({ x: lc.x - shape.logo.r * 0.35 * mod, y: lc.y + shape.logo.r * 0.35 * mod, size: shape.logo.r * 0.28 * mod, color: C.white });
   center(p, `Ingresso ${n} de ${total}  ·  Pedido ${orderCode}`, qrY - 30, F.sansMedium, 9, C.deep);
   center(p, `Nº ${t.id.slice(-10).toUpperCase()}${t.qrVersion ? ` · v${t.qrVersion}` : ""}`, qrY - 44, F.sans, 7.5, C.soft, 1);
 

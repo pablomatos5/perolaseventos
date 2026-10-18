@@ -63,6 +63,23 @@ function beep(ok: boolean) {
   } catch {}
 }
 
+// preferências deste aparelho (localStorage; sem acesso = valores padrão)
+const pref = {
+  get(k: string) {
+    try {
+      return localStorage.getItem(k);
+    } catch {
+      return null;
+    }
+  },
+  set(k: string, v: string) {
+    try {
+      localStorage.setItem(k, v);
+    } catch {}
+  },
+};
+const countKey = () => `portaria-entradas-${new Date().toLocaleDateString("sv-SE")}`; // contador do dia
+
 const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 const noSubscribe = () => () => {};
 
@@ -77,6 +94,34 @@ export function Scanner() {
   const [last, setLast] = useState<Result | null>(null);
   const [count, setCount] = useState(0);
   const [camera, setCamera] = useState(false);
+
+  // ao abrir: câmera ligada por padrão no celular (ou o que o porteiro escolheu da última vez) e o
+  // contador de entradas do dia que já estava neste aparelho
+  useEffect(() => {
+    const saved = pref.get("portaria-camera");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- preferência lida só no navegador
+    setCamera(saved ? saved === "1" : matchMedia("(pointer: coarse)").matches);
+    setCount(Number(pref.get(countKey()) ?? 0));
+  }, []);
+  const toggleCamera = () =>
+    setCamera((c) => {
+      pref.set("portaria-camera", c ? "0" : "1");
+      return !c;
+    });
+
+  // tela sempre acesa enquanto a portaria está aberta (o celular não apaga no meio da fila)
+  useEffect(() => {
+    let lock: WakeLockSentinel | null = null;
+    const ask = () => {
+      if (document.visibilityState === "visible") navigator.wakeLock?.request("screen").then((l) => (lock = l)).catch(() => {});
+    };
+    ask();
+    document.addEventListener("visibilitychange", ask);
+    return () => {
+      document.removeEventListener("visibilitychange", ask);
+      lock?.release().catch(() => {});
+    };
+  }, []);
   const [torch, setTorch] = useState<{ supported: boolean; on: boolean }>({ supported: false, on: false });
   const [online, setOnline] = useState(true);
   // lista e fila salvas no aparelho (no servidor não existe localStorage: começa vazio)
@@ -169,7 +214,11 @@ export function Scanner() {
   }, [token, refresh]);
 
   const show = useCallback((r: Result) => {
-    if (r.result === "ok") setCount((c) => c + 1);
+    if (r.result === "ok")
+      setCount((c) => {
+        pref.set(countKey(), String(c + 1));
+        return c + 1;
+      });
     beep(r.result === "ok");
     setLast(r);
     // a tela volta ao normal sozinha: a próxima pessoa não vê o resultado da anterior
@@ -210,11 +259,11 @@ export function Scanner() {
     async (raw: string, fromCamera = false) => {
       const code = raw.trim();
       if (!code || !token) return;
-      // a câmera lê o mesmo QR várias vezes por segundo: só ela ignora repetição (1,5 s). Leitor pistola e
+      // a câmera lê o mesmo QR várias vezes por segundo: só ela ignora repetição (4,5 s). Leitor pistola e
       // código digitado conferem sempre (senão a tela verde anterior ficava parada para um print repetido).
       if (fromCamera) {
         const seen = recent.current.get(code);
-        if (seen && Date.now() - seen < 1500) return;
+        if (seen && Date.now() - seen < 4500) return; // enquanto o resultado (4 s) está na tela
       }
       recent.current.set(code, Date.now());
       setLast(null); // limpa o resultado anterior enquanto confere (nunca mostra o verde de outra pessoa)
@@ -284,10 +333,17 @@ export function Scanner() {
     let cancelled = false;
     import("html5-qrcode").then(({ Html5Qrcode }) => {
       if (cancelled) return;
-      const scanner = new Html5Qrcode("reader");
+      // leitor nativo de QR do navegador quando existe (Android/Chrome): mais rápido e lê QR pequeno/torto
+      const scanner = new Html5Qrcode("reader", { verbose: false, experimentalFeatures: { useBarCodeDetectorIfSupported: true } });
       scannerRef.current = scanner;
       scanner
-        .start({ facingMode: "environment" }, { fps: 10, qrbox: 240 }, (text) => check(text, true), () => {})
+        .start(
+          { facingMode: "environment" },
+          // quadro de leitura proporcional à tela (a câmera ocupa a área principal)
+          { fps: 12, qrbox: (w, h) => ({ width: Math.round(Math.min(w, h) * 0.7), height: Math.round(Math.min(w, h) * 0.7) }) },
+          (text) => check(text, true),
+          () => {},
+        )
         .then(() => {
           try {
             const supported = scanner.getRunningTrackCameraCapabilities().torchFeature().isSupported();
@@ -296,7 +352,11 @@ export function Scanner() {
             setTorch({ supported: false, on: false });
           }
         })
-        .catch(() => show({ result: "error", message: "Não foi possível abrir a câmera" }));
+        .catch(() => {
+          // sem permissão ou sem câmera: volta para o leitor/código e explica
+          setCamera(false);
+          show({ result: "error", message: "Câmera bloqueada: permita o acesso à câmera nas configurações do navegador" });
+        });
     });
     return () => {
       cancelled = true;
@@ -333,7 +393,7 @@ export function Scanner() {
   const listInfo = list ? `${list.tickets.length} ingressos · lista ${hhmm(list.at)}` : "lista ainda não baixada";
 
   return (
-    <main className="portaria-night flex min-h-svh flex-col" onClick={() => tab === "ler" && !camera && wedgeRef.current?.focus()}>
+    <main className="portaria-night flex h-svh flex-col overflow-hidden" onClick={() => tab === "ler" && !camera && wedgeRef.current?.focus()}>
       <header className="grid gap-1 border-b border-line px-5 py-3 text-sm">
         <div className="flex items-center justify-between gap-3">
           <span className="font-medium">{device}</span>
@@ -349,23 +409,31 @@ export function Scanner() {
         </div>
       </header>
 
-      <div className={`grid flex-1 place-items-center p-6 text-center transition-colors ${last ? COLORS[last.result] : ""}`}>
-        {last ? (
-          <div>
-            <div className="text-6xl font-semibold md:text-8xl">{last.result === "ok" ? "✓" : last.result === "error" ? "!" : "✕"}</div>
-            <div className="mt-3 text-2xl font-semibold md:text-4xl">{last.message}</div>
-            {last.holder && (
-              <div className="mt-4 text-lg">
-                {last.holder}
-                {last.type && ` · ${last.type}`}
-                {last.batch && ` · ${last.batch}`}
-                {last.gender && <strong className="mt-2 block text-2xl uppercase">{last.gender}</strong>}
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-fg-muted">{tab === "ler" ? "Aponte para o QR ou use o leitor" : "Procure pelo nome, código do pedido ou CPF"}</p>
-        )}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {/* câmera ocupa a área principal; o resultado cobre a câmera por alguns segundos */}
+        <div id="reader" className={camera && tab === "ler" ? "portaria-reader" : "hidden"} />
+        {camera && tab === "ler" && !last && <p className="portaria-hint">Aponte para o QR do ingresso</p>}
+        <div
+          className={`grid flex-1 place-items-center p-6 text-center transition-colors ${last ? COLORS[last.result] : ""} ${camera && tab === "ler" ? "absolute inset-0" : ""} ${camera && tab === "ler" && !last ? "pointer-events-none opacity-0" : ""}`}
+          aria-live="assertive"
+        >
+          {last ? (
+            <div>
+              <div className="text-7xl font-semibold md:text-8xl">{last.result === "ok" ? "✓" : last.result === "error" ? "!" : "✕"}</div>
+              <div className="mt-3 text-2xl font-semibold md:text-4xl">{last.message}</div>
+              {last.holder && (
+                <div className="mt-4 text-lg">
+                  {last.holder}
+                  {last.type && ` · ${last.type}`}
+                  {last.batch && ` · ${last.batch}`}
+                  {last.gender && <strong className="mt-2 block text-3xl uppercase">{last.gender}</strong>}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-fg-muted">{tab === "ler" ? "Aponte para o QR ou use o leitor" : "Procure pelo nome, código do pedido ou CPF"}</p>
+          )}
+        </div>
       </div>
 
       <div className="grid min-w-0 gap-3 border-t border-line p-5 [&>*]:min-w-0">
@@ -379,7 +447,6 @@ export function Scanner() {
 
         {tab === "ler" ? (
           <>
-            <div id="reader" className={camera ? "mx-auto w-full max-w-sm overflow-hidden rounded-xl" : "hidden"} />
             {/* Leitor tipo pistola funciona como teclado: "digita" o código e manda Enter. */}
             <form
               onSubmit={(e) => {
@@ -392,7 +459,7 @@ export function Scanner() {
               <input ref={wedgeRef} autoFocus placeholder="Leitor / código manual" className="w-full rounded-xl border border-line bg-bg px-4 py-3" />
             </form>
             <div className="flex gap-2">
-              <button type="button" className="btn flex-1" onClick={() => setCamera((c) => !c)}>
+              <button type="button" className="btn flex-1" onClick={toggleCamera}>
                 {camera ? "Desligar câmera" : "Usar câmera"}
               </button>
               {camera && torch.supported && (

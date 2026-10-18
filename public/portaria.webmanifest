@@ -1,0 +1,14 @@
+{
+  "name": "Portaria · Réveillon Pérolas",
+  "short_name": "Portaria",
+  "start_url": "/portaria",
+  "scope": "/portaria",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#110c2e",
+  "theme_color": "#110c2e",
+  "icons": [
+    { "src": "/icon", "sizes": "any", "type": "image/png" },
+    { "src": "/apple-icon", "sizes": "180x180", "type": "image/png" }
+  ]
+}
