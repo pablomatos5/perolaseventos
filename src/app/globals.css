@@ -1822,8 +1822,9 @@ main { overflow-x: clip; }
 .side-mermaid {
   position: absolute;
   z-index: 0;
-  bottom: 0;
-  height: min(78vh, 42rem);
+  bottom: 2rem;
+  opacity: 0.55;
+  height: min(62vh, 34rem);
   width: auto;
   pointer-events: none;
 }
@@ -1831,7 +1832,7 @@ main { overflow-x: clip; }
 .side-mermaid.is-right { right: 0; }
 .with-mermaid { position: relative; }
 .with-mermaid > :not(.side-mermaid) { position: relative; z-index: 1; }
-@media (max-width: 1535px) { .with-mermaid > .side-mermaid { opacity: 0.3; height: 50vh; } }
+@media (max-width: 1535px) { .with-mermaid > .side-mermaid { opacity: 0.25; height: 46vh; } }
 @media (max-width: 767px) { .with-mermaid > .side-mermaid { display: none; } }
 
 /* borda de concha (vieira): fileira de arcos dourados no alto do card */

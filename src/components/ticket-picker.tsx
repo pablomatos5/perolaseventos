@@ -61,13 +61,13 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
           const cap = Math.min(t.maxPerOrder, t.remaining);
           return (
             <article key={t.id} className="glass-card scallop-top p-6 md:p-8">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="grid items-start gap-4 sm:grid-cols-[1fr_auto]">
                 <div>
                   <h3 className="font-display text-3xl font-light">{t.name}</h3>
                   <p className="mt-1 max-w-md text-sm text-fg-muted">{t.description}</p>
                 </div>
                 {t.status === "open" && (
-                  <div className="w-full sm:w-auto sm:text-right">
+                  <div className="grid justify-items-start sm:justify-items-end sm:text-right">
                     <span className="eyebrow">{t.batchName}</span>
                     <div className="font-display text-4xl text-accent">
                       {t.femaleCents === t.priceCents ? formatBRL(t.priceCents) : `a partir de ${formatBRL(Math.min(t.priceCents, t.femaleCents))}`}
@@ -111,7 +111,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
         })}
       </div>
 
-      <aside className="glass-card scallop-top h-fit p-6 md:p-8 lg:sticky lg:top-8">
+      <aside className="glass-card scallop-top h-fit p-6 md:p-8">
         <span className="eyebrow rule">Seus dados</span>
         <div className="mt-6 grid gap-4">
           <Field name="buyerName" label="Nome completo" autoComplete="name" />
