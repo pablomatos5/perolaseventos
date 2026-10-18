@@ -8,6 +8,10 @@ export const RESERVATION_MINUTES = 15;
 
 export class SaleError extends Error {}
 
+// Pico de vendas (abertura de lote): os compradores do mesmo setor esperam na fila do FOR UPDATE.
+// Espera até 20 s por uma conexão/transação em vez dos 2 s padrão, senão a venda falha com ingresso sobrando.
+const TX = { maxWait: 20_000, timeout: 20_000 } as const;
+
 export type ReservationInput = {
   eventId: string;
   buyerName: string;
@@ -83,7 +87,7 @@ export async function createReservation(input: ReservationInput) {
         tickets: { create: tickets },
       },
     });
-  });
+  }, TX);
 }
 
 /**
@@ -117,7 +121,7 @@ export async function markOrderPaid(orderId: string, paymentRef: string) {
       }
     }
     return true;
-  });
+  }, TX);
 }
 
 /**
@@ -166,7 +170,7 @@ export async function createCourtesy(input: {
         },
       },
     });
-  });
+  }, TX);
 }
 
 /** Estorno ou chargeback: o pedido sai de PAID e os QR codes deixam de passar na portaria. */

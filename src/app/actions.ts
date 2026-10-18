@@ -74,6 +74,10 @@ export async function reserveAction(_prev: ReserveState, form: FormData): Promis
     orderId = (await createReservation(parsed.data)).id;
   } catch (e) {
     if (e instanceof SaleError) return { error: e.message };
+    // fila do banco cheia num pico de vendas: nada foi reservado, a pessoa só precisa tentar de novo
+    if (/transaction/i.test(String((e as Error)?.message))) {
+      return { error: "Muita gente comprando agora. Seus ingressos não foram reservados: toque em “Ir para o pagamento” de novo." };
+    }
     throw e;
   }
   redirect(`/pedido/${orderToken(orderId)}`);
