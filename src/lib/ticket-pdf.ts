@@ -55,6 +55,7 @@ const FONT_DIR = path.join(process.cwd(), "assets", "fonts");
 let fontBytes: Promise<Record<string, Uint8Array>> | null = null;
 let bgBytes: Promise<Uint8Array> | null = null;
 let topBytes: Promise<Uint8Array> | null = null;
+let logoBytes: Promise<Uint8Array> | null = null;
 function loadFonts() {
   const files = {
     display: "CormorantGaramond-LightItalic.ttf",
@@ -95,13 +96,15 @@ export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tic
   const glow = await doc.embedPng(await (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png"))));
   // topo: as sereias e o mar das artes oficiais (assets/pdf/topo-ingresso.jpg, ~40 KB, uma vez por PDF)
   const art = await doc.embedJpg(await (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg"))));
-  opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, art, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total));
+  // logo do site (concha do flyer + PÉROLAS 2K27), renderizado do próprio site em alta resolução
+  const logo = await doc.embedPng(await (logoBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "logo-2027.png"))));
+  opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, art, logo, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total));
   return doc.save();
 }
 
 type Fonts = Record<"display" | "serif" | "serifItalic" | "sans" | "sansMedium" | "sansBold", PDFFont>;
 
-function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number) {
+function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number) {
   // ── fundo: céu da campanha 2027 (violeta no alto → pêssego embaixo) ──
   p.drawImage(glow, { x: 0, y: 0, width: W, height: H });
   // ── topo: sereias e mar das artes oficiais ──
@@ -112,31 +115,18 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, ev: Pdf
   drawStar(p, 334, H - 50, 7, C.cream, 0.95);
   drawStar(p, 86, H - 34, 5, C.cream, 0.8);
 
-  // ── logo: RÉVEILLON · PÉROLAS (pérola no lugar do O) · 2K27 em serifa dourada ──
-  center(p, "RÉVEILLON", H - 78, F.sansBold, 9.5, C.cream, 5);
-  const ns = 44;
-  const sp = 5;
-  const L1 = "PÉR";
-  const L2 = "LAS";
-  const pearlD = ns * 0.62;
-  const w1 = F.sans.widthOfTextAtSize(L1, ns) + L1.length * sp;
-  const w2 = F.sans.widthOfTextAtSize(L2, ns) + (L2.length - 1) * sp;
-  const lx = (W - (w1 + pearlD + sp + w2)) / 2;
-  const ly = H - 128;
-  text(p, L1, lx, ly, F.sans, ns, C.white, sp);
-  const pcx = lx + w1 + pearlD / 2;
-  const pcy = ly + ns * 0.35;
-  p.drawCircle({ x: pcx, y: pcy, size: pearlD * 0.85, color: C.cream, opacity: 0.25 });
-  p.drawCircle({ x: pcx, y: pcy, size: pearlD / 2, color: hex("#f3ebff") });
-  p.drawCircle({ x: pcx + 2, y: pcy - 2, size: pearlD / 2 - 3, color: hex("#e2d4f7"), opacity: 0.6 });
-  p.drawCircle({ x: pcx - pearlD * 0.15, y: pcy + pearlD * 0.15, size: pearlD * 0.13, color: C.white });
-  text(p, L2, lx + w1 + pearlD + sp, ly, F.sans, ns, C.white, sp);
-  const ed = ev.edition.toUpperCase();
-  const ew = F.serif.widthOfTextAtSize(ed, 30) + (ed.length - 1) * 2;
-  center(p, ed, H - 166, F.serif, 30, C.cream, 2);
-  p.drawLine({ start: { x: W / 2 - ew / 2 - 70, y: H - 157 }, end: { x: W / 2 - ew / 2 - 14, y: H - 157 }, thickness: 0.8, color: C.cream, opacity: 0.9 });
-  p.drawLine({ start: { x: W / 2 + ew / 2 + 14, y: H - 157 }, end: { x: W / 2 + ew / 2 + 70, y: H - 157 }, thickness: 0.8, color: C.cream, opacity: 0.9 });
-  center(p, "UM NOVO CICLO. INFINITAS POSSIBILIDADES.", H - 190, F.sansBold, 6.8, C.white, 2.4);
+  // ── logo: o mesmo do site (concha do flyer oficial com RÉVEILLON · PÉROLAS · 2K27) ──
+  const lw = 292;
+  const lh = (lw * logo.height) / logo.width;
+  p.drawImage(logo, { x: (W - lw) / 2, y: H - 22 - lh, width: lw, height: lh });
+  center(p, "UM NOVO CICLO. INFINITAS POSSIBILIDADES.", H - 222, F.sansBold, 6.8, C.white, 2.4);
+  // data e local em dourado, como no flyer oficial
+  const dmy = ev.startsAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: TZ }).split("/").join(" · ");
+  const dw = F.serif.widthOfTextAtSize(dmy, 26) + (dmy.length - 1) * 1.5;
+  center(p, dmy, H - 268, F.serif, 26, C.cream, 1.5);
+  p.drawLine({ start: { x: W / 2 - dw / 2 - 52, y: H - 259 }, end: { x: W / 2 - dw / 2 - 12, y: H - 259 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
+  p.drawLine({ start: { x: W / 2 + dw / 2 + 12, y: H - 259 }, end: { x: W / 2 + dw / 2 + 52, y: H - 259 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
+  center(p, ev.venue.toUpperCase(), H - 296, F.serif, 17, C.cream, 2.2);
 
   // ── moldura dourada fina com cantos de concha ──
   const fm = 12;
