@@ -93,6 +93,14 @@ ciclo. Infinitas possibilidades." Local 2027 confirmado: Ponte do Assunção. PD
   pela hidratação do React; rolagem medida com CPU 6× mais lenta: quadros travados 158→24 no modo leve).
 - Scripts de captura/medição na VPS: `/opt/perolas-shots/*.mjs` (playwright em container; `--ipc=host`).
 
+## Ambiente de desenvolvimento ao vivo (18/10)
+`next dev` roda NA VPS (notebook é fraco): containers `pdev-app` (porta 127.0.0.1:3100, código em
+`/opt/perolas-dev/src-app`, env em `/opt/perolas-dev/dev.env`: pagamento mock, senha do painel `desenvolvimento`)
+e `pdev-db` (banco de teste próprio, com seed). Atualizar: `rsync -az --exclude node_modules --exclude .git
+--exclude .next --exclude src/generated --exclude .env ./ root@92.112.178.48:/opt/perolas-dev/src-app/` (recarrega
+sozinho). Ver no notebook: `ssh -N -L 3100:127.0.0.1:3100 root@92.112.178.48` e abrir http://localhost:3100.
+Desligar quando não precisar: `docker rm -f pdev-app pdev-db`.
+
 ## Pendências / próximos passos (em ordem)
 0. **AGORA — foto e vídeo das 2 novas atrações**, igual ao card do Baltazar (foto na frente; ao virar, vídeo do show).
    - Fonte: Instagram deles. O usuário deu permissão para **só ver e baixar** (nunca curtir, seguir, comentar,
