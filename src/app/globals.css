@@ -1142,11 +1142,12 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   pointer-events: none;
   overflow: hidden;
   contain: strict;
-  /* céu do amanhecer das artes 2027: violeta-lavanda no alto (onde as estrelas aparecem), rosa no meio,
-     pêssego embaixo; um clarão dourado baixo, como o sol nascendo atrás da pérola */
+  /* céu do flyer oficial "Lote promocional": violeta-azulado estrelado no alto, lavanda, rosa e pêssego
+     embaixo, com o brilho quente da pérola à direita */
   background:
-    radial-gradient(ellipse 70% 38% at 50% 108%, rgb(255 226 190 / 0.7), transparent 70%),
-    linear-gradient(180deg, #ad9ff1 0%, #c3b0f4 18%, #dcc0f0 42%, #f1c7df 66%, #fcd3c8 86%, #ffdfcb 100%);
+    radial-gradient(ellipse 50% 34% at 82% 78%, rgb(255 240 222 / 0.95), rgb(255 226 200 / 0.5) 45%, transparent 75%),
+    radial-gradient(ellipse 70% 40% at 62% 60%, rgb(255 228 222 / 0.55), transparent 70%),
+    linear-gradient(180deg, #6a5ed0 0%, #7c6ed6 12%, #9584de 24%, #b29be6 36%, #d3b6ea 48%, #ecc6dd 60%, #f8d5cf 72%, #fde3d1 84%, #fbe6d8 100%);
 }
 .starfield > i { position: absolute; inset: 0; animation: star-twinkle 5s ease-in-out infinite alternate; will-change: opacity; }
 /* estrelas pequenas paradas: menos camadas animadas do tamanho da tela (pesam na memória do celular) */
@@ -1226,7 +1227,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   50% { opacity: 1; scale: 1; rotate: 45deg; }
 }
 /* fios de luz dourada parados no céu, como nas artes (desenhados uma vez, sem animação) */
-.starfield > svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.55; }
+.starfield > svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 1; filter: drop-shadow(0 0 3px rgb(255 248 230)) drop-shadow(0 0 10px rgb(255 220 170 / 0.9)) drop-shadow(0 0 26px rgb(255 200 140 / 0.55)); }
 @keyframes star-twinkle {
   from { opacity: 0.35; }
   to { opacity: 1; }

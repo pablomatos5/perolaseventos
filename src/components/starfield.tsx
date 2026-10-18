@@ -24,17 +24,25 @@ export function Starfield() {
       {SPARKLES.map(([x, y, s, d, gold]) => (
         <s key={`${x}-${y}`} className={gold ? "gold" : undefined} style={{ left: `${x}%`, top: `${y}%`, "--s": `${s}px`, animationDelay: `${d}s` } as React.CSSProperties} />
       ))}
-      <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+      {/* redemoinhos de luz dourada do flyer: curvam pela esquerda, com faíscas pontilhadas */}
+      <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
         <defs>
-          <linearGradient id="sky-thread" x1="0" x2="1">
+          <linearGradient id="sky-thread" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#fff" stopOpacity="0" />
-            <stop offset="0.4" stopColor="#ffe3b2" stopOpacity="0.9" />
-            <stop offset="0.75" stopColor="#fff" stopOpacity="0.7" />
+            <stop offset="0.2" stopColor="#ffe3b2" stopOpacity="1" />
+            <stop offset="0.6" stopColor="#fff6e6" stopOpacity="0.9" />
             <stop offset="1" stopColor="#ffc9a3" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <path d="M -60 640 C 240 560, 420 380, 720 360 S 1180 420, 1500 240" stroke="url(#sky-thread)" strokeWidth="1" fill="none" />
-        <path d="M 1500 760 C 1220 700, 1060 560, 820 560 S 380 600, -60 420" stroke="url(#sky-thread)" strokeWidth="0.8" fill="none" />
+        <g fill="none" stroke="url(#sky-thread)" strokeLinecap="round">
+          <path d="M470 70C250 120 70 300 70 520S260 900 620 960" strokeWidth="3" />
+          <path d="M430 90C230 150 95 320 105 520S300 870 680 930" strokeWidth="1.8" />
+          <path d="M520 60C300 110 120 280 110 470S240 820 560 990" strokeWidth="1.4" />
+          <path d="M380 120C200 190 40 360 55 560S260 920 520 1000" strokeWidth="2.2" />
+          {/* faíscas: o mesmo arco em pontinhos */}
+          <path d="M460 80C240 135 85 310 88 525S280 885 650 945" strokeWidth="5" strokeDasharray="0 20" />
+          <path d="M400 110C215 175 60 340 75 540S275 905 600 975" strokeWidth="3.6" strokeDasharray="0 28" />
+        </g>
       </svg>
     </div>
   );
