@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { payAction, simulatePaymentAction } from "@/app/actions";
 import { AutoRefresh } from "@/components/auto-refresh";
-import { HolderForm, ShareTicketButton } from "@/components/ticket-actions";
+import { HolderForm, ShareTicketButton, StoryShare } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
 import { formatBRL, formatDateTime, genderLabel } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
@@ -130,6 +130,27 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
         <p className="glass-card mt-10 p-6 text-fg-muted">
           O prazo de {RESERVATION_MINUTES} minutos acabou e os ingressos voltaram para a venda. <Link href="/#ingressos" className="text-accent underline">Fazer novo pedido</Link>.
         </p>
+      )}
+
+      {order.status === "PAID" && (
+        <section className="story-confirm mt-10">
+          {/* eslint-disable-next-line @next/next/no-img-element -- imagem gerada no servidor (story 1080×1920) */}
+          <img src={`/pedido/${token}/story`} alt="Presença confirmada no Réveillon Pérolas 2K27" width={1080} height={1920} className="story-confirm-img" />
+          <div className="grid content-center gap-4">
+            <span className="eyebrow rule">Presença confirmada</span>
+            <h2 className="display text-[clamp(2rem,5vw,3rem)]!">
+              Agora é só <em>contar os dias</em>
+            </h2>
+            <p className="text-sm text-fg-muted">Mostre para todo mundo que você vai: poste no story ou no feed e marque o <strong className="text-fg">@perolaseventos</strong>. A imagem não mostra o seu QR: pode compartilhar sem medo.</p>
+            <div className="flex flex-wrap gap-3">
+              <StoryShare src={`/pedido/${token}/story`} filename="presenca-confirmada-perolas.png" label="Postar no story" />
+              <StoryShare src={`/pedido/${token}/story?f=feed`} filename="presenca-confirmada-perolas-feed.png" label="Postar no feed" />
+            </div>
+            <p className="text-xs text-fg-faint">
+              No celular, escolha <strong className="text-fg-muted">Instagram</strong> no menu que abrir (Story, Feed ou Direct). No computador, a imagem é baixada.
+            </p>
+          </div>
+        </section>
       )}
 
       {order.status === "PAID" && (

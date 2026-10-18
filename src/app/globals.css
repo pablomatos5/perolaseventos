@@ -2089,3 +2089,15 @@ main { overflow-x: clip; }
 }
 .portaria-act.is-ghost { background: rgb(255 255 255 / 0.9); color: #110c2e; }
 .portaria-act:active { scale: 0.96; }
+
+/* pedido pago: cartão "Presença confirmada" (story) */
+.story-confirm { display: grid; gap: 1.75rem; align-items: center; }
+.story-confirm-img {
+  width: min(100%, 22rem);
+  height: auto;
+  justify-self: center;
+  border-radius: 1.4rem;
+  box-shadow: 0 0 0 1.5px rgb(226 180 92 / 0.8), 0 2rem 4rem -1.5rem rgb(70 45 150 / 0.55);
+  animation: rv-in 900ms var(--ease) both;
+}
+@media (min-width: 768px) { .story-confirm { grid-template-columns: 22rem 1fr; } }

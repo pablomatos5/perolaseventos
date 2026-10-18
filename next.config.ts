@@ -39,6 +39,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/pedido/[token]/pdf": ["./assets/fonts/**", "./assets/pdf/**"],
     "/i/[token]/pdf": ["./assets/fonts/**", "./assets/pdf/**"],
+    "/pedido/[token]/story": ["./assets/fonts/**", "./assets/story/**"],
   },
   async headers() {
     return [

@@ -70,3 +70,36 @@ export function HolderForm({ orderToken, ticketId, holder }: { orderToken: strin
     </form>
   );
 }
+
+/**
+ * "Presença confirmada" para o Instagram: abre o menu de compartilhar do celular com a imagem
+ * (Instagram → Story, Feed ou Direct; também WhatsApp etc.). Sem esse menu (computador), baixa o PNG.
+ */
+export function StoryShare({ src, label, filename }: { src: string; label: string; filename: string }) {
+  const [busy, setBusy] = useState(false);
+  async function share() {
+    setBusy(true);
+    try {
+      const blob = await (await fetch(src)).blob();
+      const file = new File([blob], filename, { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text: "Presença confirmada no Réveillon Pérolas 2K27 ✨ @perolaseventos" });
+      } else {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = file.name;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+    } catch {
+      /* cancelado */
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <button type="button" className="btn solid" onClick={share} disabled={busy}>
+      {busy ? "Preparando…" : label}
+    </button>
+  );
+}
