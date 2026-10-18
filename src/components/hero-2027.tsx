@@ -12,21 +12,75 @@ export function Star4({ className = "" }: { className?: string }) {
   );
 }
 
-/** Logo "RÉVEILLON PÉROLAS 2K27": caixa-alta fina e espaçada, com uma pérola no lugar do O. */
+/** Estrelinha de 4 pontas fina (brilho), usada em volta do logo. */
+function Sparkle({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path d="M12 0C12.5 8 16 11.5 24 12 16 12.5 12.5 16 12 24 11.5 16 8 12.5 0 12 8 11.5 11.5 8 12 0Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+/**
+ * Logo "RÉVEILLON · PÉROLAS · 2K27" como na arte oficial da campanha 2027: romanas douradas (Cinzel),
+ * a pérola no lugar do O dentro de um aro dourado com brilho, arabesco com uma perolinha embaixo.
+ * Tudo em vetor/CSS: nítido em qualquer tela.
+ */
 export function PerolasLogo({ year, className = "" }: { year: string; className?: string }) {
   return (
-    <div className={`perolas-logo ${className}`}>
-      <span className="perolas-logo-kicker">Réveillon</span>
-      <h1 className="perolas-logo-name" aria-label={`Réveillon Pérolas ${year}`}>
-        <span aria-hidden>PÉR</span>
-        <span className="perolas-logo-pearl" aria-hidden />
-        <span aria-hidden>LAS</span>
+    <div className={`pl ${className}`}>
+      <div className="pl-kicker">
+        <i aria-hidden />
+        <span>Réveillon</span>
+        <i aria-hidden />
+      </div>
+      <h1 className="pl-name" aria-label={`Réveillon Pérolas ${year}`}>
+        <Sparkle className="pl-spark pl-spark-l" />
+        <span className="pl-gold" aria-hidden>
+          PÉR
+        </span>
+        <span className="pl-o" aria-hidden>
+          <span className="pl-pearl" />
+          <Sparkle className="pl-spark pl-spark-o" />
+          <Sparkle className="pl-spark pl-spark-o2" />
+        </span>
+        <span className="pl-gold" aria-hidden>
+          LAS
+        </span>
       </h1>
-      <span className="perolas-logo-year">
+      <svg className="pl-flourish" viewBox="0 0 600 70" aria-hidden>
+        <defs>
+          <linearGradient id="pl-gold-g" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fbe3a4" />
+            <stop offset="0.45" stopColor="#e2b45c" />
+            <stop offset="1" stopColor="#a8742a" />
+          </linearGradient>
+          <radialGradient id="pl-mini-pearl" cx="0.38" cy="0.32" r="0.75">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="0.6" stopColor="#f6e6f3" />
+            <stop offset="1" stopColor="#d9b8d4" />
+          </radialGradient>
+        </defs>
+        <g fill="none" stroke="url(#pl-gold-g)" strokeLinecap="round" strokeLinejoin="round">
+          {/* traço principal: sai da perolinha, sobe suave e termina numa voluta enrolando para dentro */}
+          <path d="M286 40 C250 44 190 45 140 38 C110 34 92 26 88 16 C85 7 94 2 102 5 C110 8 108 18 100 18 C95 18 93 13 96 10" strokeWidth="3.6" />
+          <path d="M314 40 C350 44 410 45 460 38 C490 34 508 26 512 16 C515 7 506 2 498 5 C490 8 492 18 500 18 C505 18 507 13 504 10" strokeWidth="3.6" />
+          {/* segundo traço, fino, embaixo */}
+          <path d="M282 51 C250 56 205 56 170 50" strokeWidth="1.5" />
+          <path d="M318 51 C350 56 395 56 430 50" strokeWidth="1.5" />
+        </g>
+        {/* estrelinhas ao lado das volutas */}
+        <path d="M62 44C62.3 48 64 49.7 68 50 64 50.3 62.3 52 62 56 61.7 52 60 50.3 56 50 60 49.7 61.7 48 62 44Z" fill="#f2cf7a" />
+        <path d="M538 44C538.3 48 540 49.7 544 50 540 50.3 538.3 52 538 56 537.7 52 536 50.3 532 50 536 49.7 537.7 48 538 44Z" fill="#f2cf7a" />
+        <circle cx="300" cy="40" r="11" fill="none" stroke="url(#pl-gold-g)" strokeWidth="2.4" />
+        <circle cx="300" cy="40" r="7" fill="url(#pl-mini-pearl)" />
+        <circle cx="297.5" cy="37.5" r="2" fill="#fff" />
+      </svg>
+      <div className="pl-year">
         <i aria-hidden />
-        <b>{year}</b>
+        <span className="pl-gold">{year}</span>
         <i aria-hidden />
-      </span>
+      </div>
     </div>
   );
 }

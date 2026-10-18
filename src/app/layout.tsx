@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Montserrat } from "next/font/google";
+import { Cinzel, Cormorant_Garamond, Montserrat } from "next/font/google";
 import { CURRENT_EDITION } from "@/content/site";
 import "./globals.css";
+
+// logo "PÉROLAS 2K27" (romana clássica das artes oficiais)
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+});
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -32,13 +39,13 @@ export const viewport: Viewport = { themeColor: "#0c0719", colorScheme: "dark" }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning data-edition={CURRENT_EDITION} className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}>
+    <html lang="pt-BR" suppressHydrationWarning data-edition={CURRENT_EDITION} className={`${cinzel.variable} ${cormorant.variable} ${montserrat.variable} h-full antialiased`}>
       <head>
-        {/* Modo leve: celular com pouca memória ou poucos núcleos (ou economia de dados) desliga os enfeites
+        {/* Modo leve: só aparelho realmente fraco (≤2 GB, ≤2 núcleos) ou economia de dados desliga os enfeites
             animados. Roda antes da primeira pintura para não "pular" visualmente. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var n=navigator,m=n.deviceMemory||8,c=n.hardwareConcurrency||8,s=n.connection&&n.connection.saveData;if(m<=4||c<=4||s)document.documentElement.classList.add("lite")}catch(e){}`,
+            __html: `try{var n=navigator,m=n.deviceMemory||8,c=n.hardwareConcurrency||8,s=n.connection&&n.connection.saveData;if(m<=2||c<=2||s)document.documentElement.classList.add("lite")}catch(e){}`,
           }}
         />
       </head>

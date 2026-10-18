@@ -1558,72 +1558,106 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 
 /* logo: serifa clássica dourada com a estrela de 4 pontas dentro do O */
 /* logo: caixa-alta fina e bem espaçada (moderna), com uma pérola de verdade no lugar do O */
-.perolas-logo { display: grid; justify-items: center; }
-.perolas-logo-kicker {
-  font-weight: 600;
-  font-size: clamp(0.8rem, 1.5vw, 1.05rem);
-  letter-spacing: 0.58em;
-  margin-right: -0.58em;
-  text-transform: uppercase;
-  color: #7d5122;
-  text-shadow: 0 0 0.6em rgb(255 244 228), 0 0 1.2em rgb(255 236 214 / 0.9);
-}
-.perolas-logo-name {
-  display: flex;
-  align-items: center;
-  margin-top: 0.12em;
-  font-family: var(--font-montserrat), system-ui, sans-serif;
-  font-weight: 300;
-  font-size: clamp(2.9rem, min(12vw, 12svh), 7.6rem);
-  line-height: 1;
-  letter-spacing: 0.14em;
-  margin-right: -0.14em;
-  /* violeta-noite com brilho de madrepérola atravessando as letras */
-  background: linear-gradient(172deg, #241a5c 15%, #4b37a8 44%, #7d63dc 51%, #4b37a8 58%, #241a5c 88%);
+/* ───────── Logo PÉROLAS 2K27 (arte oficial 2027) ───────── */
+.pl { --pl: clamp(3rem, min(12vw, 12.5svh), 8.2rem); display: grid; justify-items: center; }
+/* dourado metálico: claro em cima, dourado no meio, bronze embaixo, com brilho na linha do meio */
+.pl-gold {
+  background: linear-gradient(180deg, #fff1c4 0%, #f2cf7a 28%, #d9a54a 52%, #f6d98e 60%, #b47c2c 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0.035em 0 rgb(255 255 255 / 0.85)) drop-shadow(0 0 0.3em rgb(255 255 255 / 0.6));
+  filter: drop-shadow(0 0.02em 0 rgb(122 76 22 / 0.55)) drop-shadow(0 0.06em 0.12em rgb(60 30 90 / 0.25));
 }
-.perolas-logo-pearl {
-  display: inline-block;
-  width: 0.7em;
+.pl-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  font-family: var(--font-cinzel), Georgia, serif;
+  font-weight: 500;
+  font-size: calc(var(--pl) * 0.2);
+  letter-spacing: 0.42em;
+  color: #e9bf6a;
+  text-shadow: 0 1px 0 rgb(122 76 22 / 0.45);
+}
+.pl-kicker span { margin-right: -0.42em; background: linear-gradient(180deg, #fbe3a4, #c9913c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pl-kicker i, .pl-year i {
+  position: relative;
+  width: calc(var(--pl) * 1.25);
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, #e2b45c 40%, #e2b45c);
+}
+.pl-kicker i:last-child, .pl-year i:last-child { background: linear-gradient(90deg, #e2b45c, #e2b45c 60%, transparent); }
+/* estrelinha na ponta de fora de cada fio do RÉVEILLON */
+.pl-kicker i::before {
+  content: "✦";
+  position: absolute;
+  top: 50%;
+  translate: 0 -52%;
+  left: -0.9em;
+  font-size: 0.55em;
+  letter-spacing: 0;
+  color: #f2cf7a;
+}
+.pl-kicker i:last-child::before { left: auto; right: -0.9em; }
+.pl-name {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: calc(var(--pl) * 0.08);
+  font-family: var(--font-cinzel), Georgia, serif;
+  font-weight: 500;
+  font-size: var(--pl);
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.pl-o { position: relative; display: inline-grid; place-items: center; width: 0.86em; height: 0.86em; margin: 0 0.05em; }
+/* pérola realista (prata com reflexo esverdeado e rosado) dentro do aro dourado */
+.pl-o::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 0.035em;
+  background: conic-gradient(from 210deg, #b47c2c, #fbe3a4, #d9a54a, #fff1c4, #b47c2c, #e2b45c, #b47c2c);
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  filter: drop-shadow(0 0.02em 0 rgb(122 76 22 / 0.5));
+}
+.pl-pearl {
+  width: 78%;
   aspect-ratio: 1;
-  margin: 0 0.16em 0 0.02em;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 28%, #fff 0 14%, transparent 34%),
-    radial-gradient(circle at 70% 76%, rgb(255 201 163 / 0.9), transparent 46%),
-    radial-gradient(circle at 24% 72%, rgb(247 168 199 / 0.55), transparent 42%),
-    radial-gradient(circle at 50% 50%, #fbf7ff, #e3d6fb 58%, #b9a3e6);
+    radial-gradient(circle at 30% 26%, #ffffff 0 9%, rgb(255 255 255 / 0.85) 13%, transparent 30%),
+    radial-gradient(circle at 70% 78%, rgb(255 236 246 / 0.9), transparent 42%),
+    radial-gradient(circle at 60% 55%, rgb(150 168 150 / 0.55), transparent 55%),
+    radial-gradient(circle at 45% 42%, #fbfbf7 0%, #e3e5df 45%, #b9bdb3 78%, #8e938a 100%);
   box-shadow:
-    0 0.06em 0.16em rgb(43 31 107 / 0.28),
-    0 0 0.5em 0.06em rgb(255 236 214 / 0.85),
-    inset -0.06em -0.08em 0.14em rgb(84 64 168 / 0.35);
+    0 0 0.35em 0.06em rgb(255 248 236 / 0.85),
+    inset -0.06em -0.08em 0.14em rgb(70 74 68 / 0.45),
+    inset 0.04em 0.05em 0.08em rgb(255 255 255 / 0.9);
 }
-/* 2K27 na serifa clássica dourada (como era o "Pérolas" antes), entre dois fios */
-.perolas-logo-year {
+.pl-spark { position: absolute; color: #f6d98e; filter: drop-shadow(0 0 0.08em rgb(255 240 200 / 0.9)); pointer-events: none; }
+.pl-spark-o { width: 0.34em; top: -0.06em; right: -0.08em; }
+.pl-spark-o2 { width: 0.13em; top: -0.18em; right: -0.22em; }
+.pl-spark-l { width: 0.16em; left: -0.32em; top: 50%; translate: 0 -50%; }
+.pl-flourish { width: calc(var(--pl) * 4.6); max-width: 92vw; margin-top: calc(var(--pl) * 0.04); filter: drop-shadow(0 1px 0 rgb(122 76 22 / 0.4)); }
+.pl-year {
   display: flex;
   align-items: center;
-  gap: clamp(0.8rem, 2vw, 1.4rem);
-  margin-top: 0.15em;
-  font-family: var(--font-cormorant), Georgia, serif;
+  gap: 0.6em;
+  margin-top: calc(var(--pl) * 0.08);
+  font-family: var(--font-cinzel), Georgia, serif;
   font-weight: 500;
-  font-size: clamp(2.2rem, min(6.5vw, 7svh), 4.4rem);
+  font-size: calc(var(--pl) * 0.48);
   line-height: 1;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
-.perolas-logo-year b {
-  font-weight: inherit;
-  padding: 0 0.04em;
-  background: linear-gradient(180deg, #7d5424 0%, #c9944a 46%, #e7bf78 56%, #6e4a1c 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0.03em 0 rgb(255 248 236 / 0.9)) drop-shadow(0 0 0.25em rgb(255 244 228 / 0.95));
+.pl-year i { width: calc(var(--pl) * 1.6); opacity: 0.55; }
+@media (max-width: 767px) {
+  .pl { --pl: clamp(2.6rem, 14.5vw, 4.2rem); }
+  .pl-kicker i { width: calc(var(--pl) * 0.9); }
 }
-.perolas-logo-year i { width: clamp(2.5rem, 9vw, 6rem); height: 1.5px; background: linear-gradient(90deg, transparent, #9a6a2e); }
-.perolas-logo-year i:last-child { background: linear-gradient(90deg, #9a6a2e, transparent); }
 .hero-tagline { margin-top: 1.1rem; font-size: clamp(0.62rem, 1.3vw, 0.82rem); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: #5440a8; }
 .hero-countdown { --fg-faint: rgb(69 53 143 / 0.75); }
 .hero-countdown .font-display { color: #45358f; }
@@ -1833,8 +1867,6 @@ main { overflow-x: clip; }
 .cv-auto { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 @media (max-width: 767px) {
   /* celular: sem filtros de sombra caros (re-pintados a cada quadro) no logo e nos fios de luz */
-  .perolas-logo-name { filter: none; }
-  .perolas-logo-year b { filter: none; }
   .light-swirls { filter: none; opacity: 0.75; }
   .sea-ornament { filter: none; }
 }
