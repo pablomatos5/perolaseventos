@@ -128,3 +128,17 @@ export function Seabed() {
     </div>
   );
 }
+
+/** Assinatura do time de desenvolvimento (Koraki): marcada na areia do rodapé, discreta, no tom da areia. */
+export function KorakiMark() {
+  return (
+    <span className="koraki-mark">
+      <span>feito por</span>
+      <svg viewBox="0 0 152 152" aria-hidden>
+        <rect width="152" height="152" rx="18" fill="currentColor" />
+        <path d="M0 76H66L152 34M66 76L152 118M66 76H152" stroke="var(--koraki-cut)" strokeWidth="13" fill="none" strokeLinejoin="round" />
+      </svg>
+      <b>koraki</b>
+    </span>
+  );
+}

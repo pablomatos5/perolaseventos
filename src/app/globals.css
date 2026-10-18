@@ -1971,6 +1971,29 @@ main { overflow-x: clip; }
 .sand-shell-3d { aspect-ratio: 400 / 330 !important; }
 .sand-shell-3d::before { inset: auto 10% 2% 10%; height: 16%; }
 .sand-shell-3d canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+.sand-shell-3d { display: block; }
 
 /* topo: a faixa das ondas sobe por baixo do fim do mar e entra esfumada (sem linha reta entre as duas) */
 .hero-2027 .ocean-waves { margin-top: -2.5rem; -webkit-mask-image: linear-gradient(180deg, transparent, #000 2.5rem); mask-image: linear-gradient(180deg, transparent, #000 2.5rem); }
+
+/* assinatura Koraki: "escrita" na areia do rodapé (tom de areia molhada, relevo de dedo na areia) */
+.koraki-mark {
+  --koraki-cut: #f0cdb9;
+  position: absolute;
+  z-index: 3;
+  left: clamp(1rem, 4vw, 3rem);
+  bottom: clamp(0.8rem, 1.8vw, 1.4rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgb(140 90 60 / 0.55);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 0 rgb(255 240 228 / 0.7), 0 -1px 0 rgb(110 64 40 / 0.18);
+  transition: color 0.3s;
+}
+.koraki-mark svg { width: 0.95rem; height: 0.95rem; filter: drop-shadow(0 1px 0 rgb(255 240 228 / 0.7)); }
+.koraki-mark b { font-weight: 600; font-size: 0.78rem; letter-spacing: 0.02em; }
+.koraki-mark:hover { color: #e3a043; }
+/* celular: no canto esquerdo (o botão fixo de compra fica embaixo à direita) */
+@media (max-width: 767px) { .koraki-mark { left: 50%; translate: -50% 0; bottom: 5.4rem; } }

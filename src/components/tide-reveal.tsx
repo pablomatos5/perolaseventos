@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShellPearl3D } from "./shell-pearl-3d";
+import { prewarmShell3D, ShellPearl3D } from "./shell-pearl-3d";
 
 export type TideStep = {
   key: string;
@@ -45,6 +45,27 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
   const [shown, setShown] = useState(-1); // escrita visível (-1 = areia lisa, antes da primeira onda)
   const goRef = useRef<(i: number, manual?: boolean) => void>(() => {});
   const n = steps.length;
+
+  // concha 3D e fotos das atrações carregam enquanto a pessoa ainda está no topo: quando a praia
+  // aparece, a abertura começa na hora (sem esperar baixar e montar o 3D)
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const srcs = steps.flatMap((s) => (s.imageUrl ? [s.imageUrl] : []));
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      prewarmShell3D(srcs);
+    };
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && go(), { rootMargin: "250% 0px" });
+    io.observe(section);
+    const idle = window.setTimeout(go, 2500); // ou logo depois da página carregar
+    return () => {
+      io.disconnect();
+      clearTimeout(idle);
+    };
+  }, [steps]);
 
   useEffect(() => {
     const section = sectionRef.current;

@@ -16,7 +16,7 @@ import { TicketPicker, type PickerType } from "@/components/ticket-picker";
 import { currentBatch } from "@/lib/batches";
 import { db } from "@/lib/db";
 import { femalePrice } from "@/lib/format";
-import { Seabed, SideMermaid } from "@/components/sea-decor";
+import { KorakiMark, Seabed, SideMermaid } from "@/components/sea-decor";
 
 export default function Home() {
   return (
@@ -157,6 +157,7 @@ async function EventPage() {
 
       <footer className="cv-auto seabed-footer px-5 pt-14 text-center">
         <Seabed />
+        <KorakiMark />
         <div className="footer-content grid justify-items-center gap-5">
           <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3!">
             <InstagramIcon />
