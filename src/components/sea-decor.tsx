@@ -113,9 +113,9 @@ export function SideMermaid({ side }: { side: "left" | "right" }) {
 }
 
 /**
- * Fim da página no fundo do mar: cena 3D (corais, algas, estrelas-do-mar, conchas e a pérola na concha
- * aberta) renderizada uma vez por scripts/fundo-mar/ e servida como imagem — qualidade de 3D com custo
- * zero no celular. Bolhas por cima dão vida. O conteúdo do rodapé fica por cima.
+ * Fim da página no fundo do mar: ilustração 2D detalhada (corais, algas, anêmonas, estrelas-do-mar,
+ * conchas, luz na areia e a pérola na concha aberta) gerada por scripts/fundo-mar/ilustracao.py e servida
+ * como imagem webp leve — custo zero no celular. Bolhas por cima dão vida. O rodapé fica por cima.
  */
 export function Seabed() {
   return (
