@@ -101,6 +101,18 @@ e `pdev-db` (banco de teste próprio, com seed). Atualizar: `rsync -az --exclude
 sozinho). Ver no notebook: `ssh -N -L 3100:127.0.0.1:3100 root@92.112.178.48` e abrir http://localhost:3100.
 Desligar quando não precisar: `docker rm -f pdev-app pdev-db`.
 
+## Varredura de prontidão para vendas (18/10)
+- Capacidade testada (banco descartável): 2000 ingressos, 400 compradores simultâneos → vendeu os 2000 sem perda,
+  sem overbooking; 1200 leituras de portaria simultâneas a 2 ms cada, sem entrada dupla. Para isso: transações de
+  venda com fila de 20 s (`TX` em src/lib/orders.ts) e pool de 20 conexões (src/lib/db.ts).
+- Pico de acessos: microcache no nginx (infra/perolaseventos.store.https.conf): `/` 10 s, mídia 1 dia → 435 req/s com
+  300 conexões, app ocioso. Reserva/pedido/painel/portaria nunca passam pelo cache.
+- Ingresso PDF redesenhado (sereias e mar das artes, logo 2K27, moldura com conchas, picote de canhoto).
+- Portaria: leitura repetida não deixa mais a tela verde parada (trava de 1,5 s só para a câmera; pistola/digitação
+  conferem sempre → amarelo "já liberado neste aparelho").
+- Fluxos testados ponta a ponta (dev, celular e PC): compra M/F + taxa, simular pagamento, PDF, e-mail, painel
+  (vendas, pedidos/busca, cortesia, aparelhos, registro), portaria (QR válido, repetido, falso, busca e liberar).
+
 ## Pendências / próximos passos (em ordem)
 0. **AGORA — foto e vídeo das 2 novas atrações**, igual ao card do Baltazar (foto na frente; ao virar, vídeo do show).
    - Fonte: Instagram deles. O usuário deu permissão para **só ver e baixar** (nunca curtir, seguir, comentar,
