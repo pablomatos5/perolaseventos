@@ -2733,3 +2733,13 @@ main { overflow-x: clip; }
   .pl-mark .pl-year { font-size: calc(var(--lw) * 0.1); }
   .hero-copy .hero-tagline { margin-top: 0.15rem; }
 }
+/* 2K27 bem legível dentro da concha: concha mais apagada, ano maior, dourado mais claro e contorno escuro suave */
+.pl-mark .pl-shell { opacity: 0.32; }
+.pl-mark .pl-year { font-size: calc(var(--lw) * 0.095); font-weight: 700; }
+.pl-mark .pl-year span {
+  background: linear-gradient(180deg, #fff1c9 0%, #f1cd82 45%, #d9a650 60%, #fbe2a6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgb(60 30 10 / 0.55)) drop-shadow(0 0 6px rgb(30 18 90 / 0.65));
+}
+@media (max-width: 767px) { .pl-mark .pl-year { font-size: calc(var(--lw) * 0.11); } }
