@@ -2523,3 +2523,6 @@ main { overflow-x: clip; }
 .ingressos-sand::before { mix-blend-mode: normal; opacity: 0.38; }
 /* brilho da onda só na beira (parte que aparece em repouso): camada animada 3× menor */
 .beach-wave::after { top: 68%; }
+
+/* concha da areia um pouco maior */
+.sand-shell { width: min(clamp(17rem, 94vw, 30rem), 56svh); }
