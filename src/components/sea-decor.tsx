@@ -104,11 +104,12 @@ export function Bubbles({ className = "" }: { className?: string }) {
   );
 }
 
-/** Sereia das artes oficiais aparecendo pela lateral da seção (esfumado já gravado no webp). */
+/** Sereia das artes oficiais aparecendo pela lateral da seção (esfumado já gravado no webp).
+ *  No celular (400 px) a da esquerda vem com o esfumado redondo gravado (sereia-se-areia-cel.webp): sem máscara no CSS. */
 export function SideMermaid({ side }: { side: "left" | "right" }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027
-    <img src={side === "left" ? "/2027/sereia-se-areia.webp" : "/2027/sereia-sd-areia.webp"} alt="" width={600} height={1254} loading="lazy" decoding="async" className={`side-mermaid is-${side}`} />
+    <img src={`/2027/sereia-${side === "left" ? "se" : "sd"}-areia.webp`} srcSet={`/2027/sereia-${side === "left" ? "se-areia-cel" : "sd-areia-400"}.webp 400w, /2027/sereia-${side === "left" ? "se" : "sd"}-areia.webp 600w`} sizes="(max-width: 1023px) 8rem, 26rem" alt="" width={600} height={1254} loading="lazy" decoding="async" className={`side-mermaid is-${side}`} />
   );
 }
 
@@ -151,7 +152,7 @@ const TREASURES = [
   [64, 9, 2.8, 24, "s", false], [76, 7, 2.5, -28, "e", false],
   [55, 88, 3.2, -8, "e", true], [86, 86, 3.4, 12, "c", true], [12, 86, 3, 30, "s", true],
   [8, 89, 1, 0, "p", true], [93, 80, 1.1, 0, "p", true], [60, 84, 0.75, 0, "p", false],
-  [92, 10, 2.6, -20, "s", true], [6, 9, 2.3, 18, "e", true],
+  [92, 10, 2.6, -20, "s", false], [6, 9, 2.3, 18, "e", false],
 ] as const;
 
 /** Estrela-do-mar coral com pontinhos em relevo. */

@@ -2743,3 +2743,43 @@ main { overflow-x: clip; }
   filter: drop-shadow(0 1px 0 rgb(60 30 10 / 0.55)) drop-shadow(0 0 6px rgb(30 18 90 / 0.65));
 }
 @media (max-width: 767px) { .pl-mark .pl-year { font-size: calc(var(--lw) * 0.11); } }
+
+/* sereia da direita = a da esquerda espelhada (um download só) */
+.hero-mermaid.is-right { scale: -1 1; }
+
+/* ───────── Fluidez no celular (varredura final) ─────────
+   praia da maré: só a onda vai e vem (transform, na placa de vídeo); brilhos correndo e balanço da espuma
+   param no celular — eram camadas grandes animadas o tempo todo */
+.beach-wave { will-change: transform; }
+@media (max-width: 767px) {
+  .beach-wave::after, .hero-2027 .ocean-waves::after { animation: none; }
+  .beach-foam { animation: none; }
+  .tide-stage .beach-wave { animation-duration: 3.6s; }
+}
+/* enfeites da areia: sombra desenhada uma vez (antes filter: drop-shadow, repintado a cada quadro com a onda passando) */
+.sand-deco { filter: none; isolation: isolate; }
+.sand-deco::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: -10%;
+  height: 34%;
+  background: radial-gradient(closest-side, rgb(110 70 30 / 0.38), transparent);
+}
+.sand-pearl-deco { box-shadow: 0 3px 3px rgb(110 70 30 / 0.35); }
+@media (max-width: 767px) {
+  /* céu estrelado parado no celular (camadas do tamanho da tela piscando atrás de tudo) */
+  .starfield > i, .starfield > b, .starfield > s { animation: none !important; }
+  /* sereia de areia do celular já vem com o esfumado gravado na imagem */
+  .ingressos-sand.with-mermaid > .side-mermaid.is-left { -webkit-mask-image: none; mask-image: none; }
+}
+/* pérolas da praia: brilho sem filtro; no celular a estrela fica parada (não pisca sem parar) */
+.beach-pearl::after { filter: none; }
+@media (max-width: 767px) {
+  .beach.is-in .beach-pearl::after { animation: none; opacity: 0.6; transform: scale(0.5); will-change: auto; }
+  .beach-pearl { box-shadow: 0 0.18rem 0.25rem -0.05rem rgb(80 50 20 / 0.45); }
+}
+/* seção de ingressos com o esfumado da borda numa camada própria (a máscara não é refeita a cada rolagem) */
+.ingressos-sand { will-change: transform; }

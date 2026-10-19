@@ -24,7 +24,7 @@ export function PerolasLogo({ year, className = "" }: { year: string; className?
       {/* 2K27 dentro da concha Pérolas (identidade 2027), preenchendo o espaço abaixo do logotipo */}
       <div className="pl-mark">
         <picture className="pl-shell">
-          <source type="image/webp" srcSet="/2027/logo/concha-dourada.webp" />
+          <source type="image/webp" srcSet="/2027/logo/concha-dourada-300.webp 300w, /2027/logo/concha-dourada-380.webp 380w, /2027/logo/concha-dourada.webp 600w" sizes="(max-width: 767px) 7rem, 11rem" />
           {/* eslint-disable-next-line @next/next/no-img-element -- arte oficial com fallback PNG */}
           <img src="/2027/logo/concha-dourada.png" width={600} height={495} alt="" />
         </picture>
@@ -105,10 +105,11 @@ export function PearlHorizon() {
 export function HeroMermaids() {
   return (
     <>
+      {/* a da direita é a mesma imagem espelhada no CSS: um download só; 400 px no celular */}
       {/* eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027 */}
-      <img src="/2027/sereia-se-inteira.webp" alt="" className="hero-mermaid is-left" fetchPriority="high" />
+      <img src="/2027/sereia-se-inteira.webp" srcSet="/2027/sereia-se-inteira-400.webp 400w, /2027/sereia-se-inteira.webp 600w" sizes="(max-width: 767px) 30vw, 24rem" width={600} height={1254} alt="" className="hero-mermaid is-left" fetchPriority="high" />
       {/* eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027 */}
-      <img src="/2027/sereia-sd-inteira.webp" alt="Sereias da campanha Réveillon Pérolas 2027" className="hero-mermaid is-right" fetchPriority="high" />
+      <img src="/2027/sereia-se-inteira.webp" srcSet="/2027/sereia-se-inteira-400.webp 400w, /2027/sereia-se-inteira.webp 600w" sizes="(max-width: 767px) 30vw, 24rem" width={600} height={1254} alt="Sereias da campanha Réveillon Pérolas 2027" className="hero-mermaid is-right" fetchPriority="high" />
     </>
   );
 }

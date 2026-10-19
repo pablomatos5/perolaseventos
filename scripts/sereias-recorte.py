@@ -32,7 +32,4 @@ for n in ("se",):
     Image.fromarray(np.dstack([rgb, (a * 255).astype(np.uint8)])).save(out / f"sereia-{n}-inteira.webp", quality=86, method=6)
     print(n, rgb.shape)
 
-# a da direita é a da esquerda espelhada: as duas ficam idênticas (mesmo recorte, opacidade e base na água;
-# a arte original da direita trazia uma névoa clara na base que a outra não tinha)
-Image.open(out / "sereia-se-inteira.webp").transpose(Image.FLIP_LEFT_RIGHT).save(out / "sereia-sd-inteira.webp", quality=86, method=6)
-print("sd = se espelhada")
+# a da direita é a mesma imagem espelhada no CSS (.hero-mermaid.is-right { scale: -1 1 }): um download só

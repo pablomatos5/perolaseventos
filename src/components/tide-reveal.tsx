@@ -64,7 +64,9 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
     const go = () => {
       if (done) return;
       done = true;
-      prewarmShell3D(srcs);
+      // prepara o 3D só num momento ocioso (não disputa a rolagem do topo no celular)
+      const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 200));
+      ric(() => prewarmShell3D(srcs), { timeout: 3000 });
     };
     const io = new IntersectionObserver(([e]) => e.isIntersecting && go(), { rootMargin: "250% 0px" });
     io.observe(section);
