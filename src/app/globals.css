@@ -2542,8 +2542,9 @@ main { overflow-x: clip; }
 /* sereias integradas ao mar: a base da pedra se dissolve na água e o reflexo aparece logo abaixo
    (antes terminavam num corte reto acima da água e pareciam recortes soltos) */
 .hero-mermaid {
-  -webkit-mask-image: linear-gradient(0deg, transparent 0%, rgb(0 0 0 / 0.55) 7%, #000 17%);
-  mask-image: linear-gradient(0deg, transparent 0%, rgb(0 0 0 / 0.55) 7%, #000 17%);
+  /* só um fio de esfumado na base (o resto vem do próprio webp): a cauda fica inteira */
+  -webkit-mask-image: none;
+  mask-image: none;
   -webkit-box-reflect: below -0.35rem linear-gradient(transparent 62%, rgb(0 0 0 / 0.22));
   bottom: clamp(1.75rem, 5vw, 3.75rem);
 }
@@ -2551,20 +2552,23 @@ main { overflow-x: clip; }
   .hero-mermaid { bottom: calc(4.5rem - 3svh); }
 }
 
-/* celular/tablet: as sereias de areia aparecem no alto da seção de ingressos, uma de cada lado, como
-   esculturas na areia emoldurando o título (antes ficavam escondidas abaixo de 1024 px) */
+/* celular/tablet: uma sereia de areia só, centralizada, como escultura de fundo atrás dos formulários
+   de compra (as duas nas laterais ficavam apertadas) */
 @media (max-width: 1023px) {
-  .ingressos-sand.with-mermaid > .side-mermaid {
+  .ingressos-sand.with-mermaid > .side-mermaid.is-right { display: none; }
+  .ingressos-sand.with-mermaid > .side-mermaid.is-left {
     display: block;
-    top: 5.5rem;
-    translate: none;
-    height: clamp(14rem, 62vw, 22rem);
-    opacity: 1;
-    -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 82%, transparent);
-    mask-image: linear-gradient(180deg, transparent, #000 14%, #000 82%, transparent);
+    top: 9rem;
+    left: 50%;
+    right: auto;
+    translate: -50% 0;
+    height: min(150vw, 44rem);
+    opacity: 0.55;
+    filter: none;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 12%, #000 75%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 12%, #000 75%, transparent);
   }
-  .ingressos-sand .side-mermaid.is-left { left: -3vw; }
-  .ingressos-sand .side-mermaid.is-right { right: -3vw; }
-  /* o título desce para baixo das esculturas */
-  .ingressos-sand.with-mermaid > div:last-of-type { padding-top: calc(5.5rem + clamp(14rem, 62vw, 22rem) - 0.5rem); }
 }
+
+/* sereias do topo na frente da água (a pedra apoia no mar, com reflexo), em todas as telas */
+.hero-mermaid { z-index: 4; }
