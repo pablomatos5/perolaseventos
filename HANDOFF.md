@@ -128,38 +128,68 @@ Desligar quando não precisar: `docker rm -f pdev-app pdev-db`.
   é só do modo dev, produção ok.
 - Pedido de teste criado pela varredura em produção: "Ana Varredura" — apagar junto com os outros de teste.
 
-## Pendências / próximos passos (em ordem)
-0. **AGORA — foto e vídeo das 2 novas atrações**, igual ao card do Baltazar (foto na frente; ao virar, vídeo do show).
-   - Fonte: Instagram deles. O usuário deu permissão para **só ver e baixar** (nunca curtir, seguir, comentar,
-     mandar mensagem ou postar). Sem login o Instagram só entrega a foto de perfil 100×100 e nenhum reel.
-   - O login automático parou no reCAPTCHA "Não sou um robô": **quem resolve é o usuário**, não o Claude.
-     A senha NUNCA vai para arquivo, código ou git; o usuário vai trocá-la (passou pelo chat).
-   - Como baixar (já funcionou com os vídeos da Pérolas): Chrome com `--remote-debugging-port`, perfil logado,
-     abrir `instagram.com/<perfil>/reels/`, rolar, e ler as respostas de rede que têm `video_versions`
-     (pegar a maior versão; capa em `image_versions2`). Escolher um reel com o show (palco, público, luzes).
-   - Processar com `node_modules/ffmpeg-static/ffmpeg.exe` no padrão do Baltazar: vídeo mp4 854 de largura,
-     crf ~28, `-movflags +faststart`, sem áudio pesado; foto jpg em `public/atracoes/<nome>-capa.jpg`; capa do
-     vídeo em `public/atracoes/<nome>-poster.jpg` (o card procura `<videoUrl>-poster.jpg`).
-   - Preencher `imageUrl`/`videoUrl` no `prisma/seed.ts`, no banco local e no de produção.
-   - **Produção ainda NÃO tem as 2 atrações** (o site no ar está no commit c02100f; no banco da VPS só o Baltazar
-     está anunciado). Depois das fotos: deploy (ver acima) e no banco da VPS:
-     `docker exec perolas-db psql -U perolas -d perolas -c "update \"Attraction\" set name=..., genre=..., instagram=..., \"imageUrl\"=..., \"videoUrl\"=..., announced=true where \"sortOrder\"=2"` (idem 3).
-     Perguntar ao usuário antes de publicar no servidor.
-1. ~~Domínio e HTTPS~~ **NO AR em 16/10 (18:23)**: https://perolaseventos.store (www e http redirecionam). DNS na
-   Hostinger (A `@` → 92.112.178.48, www = CNAME), certificado Let's Encrypt em `/opt/sites-extra/perolas/certs`
-   (vence em ~90 dias), vhost fase 2 instalado (backup da fase 1 em `/opt/sites-extra/perolas/vhost-fase1.bak`).
-2. **Pendente**: cron de renovação próprio do certificado (perguntar ao usuário antes de mexer no crontab) e remover o
-   túnel (`docker rm -f perolas-tunel`).
-2b. **Apagar os pedidos de teste do modo demonstração** antes das vendas reais (thiago, Pablo Matos, indiano jonta: 3 ingressos, R$ 540 de "receita"); eles já não entram na portaria.
-3. **Confirmar com a Pérolas**: preços/lotes reais (seed tem valores FICTÍCIOS), patrocinadores 2027 (Bió Costa = cartaz de casa de apostas, não publicado), uso das fotos/vídeos, textos de termos e privacidade (+ CNPJ).
-4. **Antes das vendas reais**: `PAYMENT_PROVIDER=mercadopago` + chaves, apagar pedidos de teste, `check:config` em produção, Resend (SPF/DKIM), backup fora da VPS, trocar o túnel pelo domínio.
-5. Termos de compra e política de privacidade (+ aceite no checkout, anonimização após o evento).
-6. Mais atrações conforme forem anunciadas (banco: `name, genre, instagram, imageUrl, videoUrl, headliner, announced`; vídeo com `node_modules/ffmpeg-static/ffmpeg.exe`). WhatsApp oficial quando a Meta aprovar.
+## 19/10 — pedidos do cliente (Thiago) e publicação
+Fluxo do dia: tudo testado primeiro no localhost (pdev-app na VPS) e só publicado com "pode subir" do usuário.
+Produção = `main` = `alteracoes-cliente` = **cd6edad** (19/10, fim da tarde). Backup do banco antes de cada deploy.
+
+**Identidade / visual**
+- Logotipo oficial do kit (`public/2027/logo/`, componente `src/components/brand-logo.tsx`): sempre imagem
+  (`<picture>` WebP + PNG, 600/1200/2400 px), nunca recriado com fonte; margem livre = altura do "R".
+  Capa: "Réveillon Pérolas" + **2K27 dentro da concha dourada** (mesmo dourado do logo). Canto do topo: assinatura
+  concha + @perolaseventos (`assinatura-creme`). Ingresso PDF e story usam o mesmo logo (exportado do site).
+- Concha da marca (`concha-icone.png`, `concha-dourada.*`) em todos os enfeites; concha 3D da areia no estilo da logo
+  (faixas onduladas em cima, aro + raios embaixo, peça única) — `src/lib/sea3d.ts`; versão 2D igual.
+- Sereias: recorte com rembg (`scripts/sereias-recorte.py`, máscaras em scratch), a da direita = a da esquerda
+  espelhada no CSS. Celular: grandes e mais ao centro emoldurando a pérola. Ingressos: 1 sereia de areia centralizada
+  no celular, 2 nas bordas no PC.
+- **Céu da capa = arte "Lote promocional"** (violeta → lavanda → rosa → pêssego luminoso, sol atrás da pérola), com as
+  estrelas de antes. Textos do meio em violeta-escuro.
+- **Anoitecer**: a página escurece do fim de tarde (praia) até a noite (rodapé) — degradê em `main.pagina-inicio::before`,
+  estrelas surgem com a rolagem, areia dos ingressos e fundo do mar à luz da lua, textos claros nas seções da noite.
+- Areia: conchas, pérolas, estrelas-do-mar e caranguejos (seção ingressos e maré); maré com uma água só.
+- Páginas de pedido/ingresso (`.pagina-noite`): noite estrelada, logo oficial, cards creme com borda dourada.
+  Imagem de presença confirmada (story/feed) refeita no visual atual (`assets/story/`).
+- Ingresso PDF: concha como marca d'água, selo no picote e assinatura @perolaseventos; versão noturna em `?tema=noite`
+  (alternativa, não é o padrão).
+
+**Pagamento — Pix em 2x (novo)**
+- No pedido: Pix à vista · Cartão (crédito até 12x / débito) · Pix em 2x. Migração `20261019180000_pix_parcelado`
+  (status `PARTIAL`, `PaymentPlan`, `firstPaidCents/At/Ref`, `Event.splitPixEnabled/splitPixDays`).
+- 1ª parcela (metade, arredondada para cima) → pedido `PARTIAL`, ingressos RESERVED até o prazo (seguram a vaga do
+  lote, sem QR/PDF/story), e-mail com o que falta. 2ª parcela → `PAID` e entrega normal. Prazo vencido → vaga volta à
+  venda; a 1ª parcela NÃO é devolvida automaticamente (decidir regra com o cliente / termos).
+- Mercado Pago: `external_reference` = `<orderId>:full|p1|p2`, conferência de valor por parte (`src/lib/mercadopago.ts`).
+- Painel `/admin`: liga/desliga e prazo em dias. **Produção: ligado, 30 dias** (nunca passa de 2 dias antes da festa).
+
+**Produção / dados**
+- Lotes de produção: só "Lote promocional" R$ 150 (200 un.) aberto; 1º/2º/3º/final fechados (7 ingressos de teste no
+  2º), Camarote fechado e escondido. Nada apagado.
+- Otimização para celular: imagens menores (srcset), sem filtros/animações contínuas pesadas, 3D preparado em ocioso.
+- Ambiente de testes: túnel do notebook em `0.0.0.0:3100` (celular na rede: http://192.168.0.117:3100), vigia que
+  religa o túnel sozinho (script no scratchpad da sessão).
+
+## Onde paramos (19/10)
+Último pedido atendido: sereias da capa no celular maiores e mais ao centro (publicado, cd6edad). Nada pendente de
+publicar. Próximos passos naturais:
+1. Regra para a 1ª parcela quando a 2ª vence (devolver / aceitar atrasado / não devolver) e lembrete automático
+   antes do vencimento da 2ª parcela.
+2. Prévia de link (`src/app/opengraph-image.jpg` / twitter) ainda com o logo antigo.
+3. Decidir se o ingresso noturno (`?tema=noite`) vira o padrão.
+
+## Pendências / próximos passos (antes das vendas reais)
+1. **Mercado Pago**: `PAYMENT_PROVIDER=mercadopago` + `MP_ACCESS_TOKEN`/`MP_WEBHOOK_SECRET` (produção hoje sem cobrança real).
+2. **E-mail**: Resend (`RESEND_API_KEY`, SPF/DKIM).
+3. Valores do 1º lote com o cliente (~R$ 185 masc / R$ 175 fem); termos de compra e privacidade (+ CNPJ, regra do Pix 2x).
+4. Apagar pedidos de teste (demo e varreduras: "Ana Varredura", "Teste Varredura" etc.), trocar a senha do admin,
+   `check:config` em produção.
+5. Certificado: cron de renovação próprio; backup fora da VPS.
+6. Mais atrações conforme forem anunciadas; WhatsApp oficial quando a Meta aprovar.
 
 ## Armadilhas conhecidas
 - **Migração em produção**: o serviço `migrate` usa imagem própria (target deps). Depois de mudar `prisma/`, rode
   `docker compose -f docker-compose.prod.yml --profile tools build migrate` ANTES do `run --rm migrate` (senão ele
   diz "No pending migrations" com a imagem velha). Ordem: backup (pg_dump) → build app → build+run migrate → up app.
+- **Build de produção pode falhar 1x por memória** na VPS: rode o `up -d --build app` de novo (o site antigo segue no ar).
 - O `next dev` às vezes **não percebe mudança no `globals.css`**: depois de editar, salve de novo (`printf '\n' >> src/app/globals.css`) e confira o CSS compilado.
 - Mudou schema do Prisma? `npx prisma migrate dev` + `npx prisma generate` **e reinicie o `npm run dev`** (o cliente fica em memória).
 - Ao parar o dev server em segundo plano, o processo do Next pode ficar órfão na porta 3000 — mate pelo PID (`Get-NetTCPConnection -LocalPort 3000`).
