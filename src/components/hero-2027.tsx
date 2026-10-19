@@ -17,6 +17,17 @@ export function Star4({ className = "" }: { className?: string }) {
  * o O é um aro fino com a estrela de 4 pontas dentro, "2027" entre fios e a frase da campanha.
  * Em dourado (o manual em IA usava marrom; o cliente pediu dourado). Tudo em texto/SVG: nítido em qualquer tela.
  */
+// aro do O que nasce da perna do R: cauda por baixo (do pé do R até o fundo do O) e a elipse dando a volta
+// pela direita e por cima até o alto à esquerda (abertura em cima, à esquerda)
+const O_RING = (() => {
+  let d = "M-14 96C6 101 32 99 50 95";
+  for (let a = 90; a >= -150; a -= 6) {
+    const t = (a * Math.PI) / 180;
+    d += `L${(50 + 41 * Math.cos(t)).toFixed(2)} ${(50 + 45 * Math.sin(t)).toFixed(2)}`;
+  }
+  return d;
+})();
+
 export function PerolasLogo({ year, className = "" }: { year: string; className?: string }) {
   return (
     <div className={`pl ${className}`}>
@@ -33,9 +44,15 @@ export function PerolasLogo({ year, className = "" }: { year: string; className?
               <stop offset="0.6" stopColor="#f6d98e" />
               <stop offset="1" stopColor="#a8742a" />
             </linearGradient>
+            <linearGradient id="pl-o-ring" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="100">
+              <stop offset="0" stopColor="#fbe7b4" />
+              <stop offset="0.5" stopColor="#e9bd68" />
+              <stop offset="1" stopColor="#f3cf86" />
+            </linearGradient>
           </defs>
-          {/* aro do O, fino como a serifa, com a estrela de 4 pontas dentro */}
-          <ellipse cx="50" cy="50" rx="41" ry="45" fill="none" stroke="url(#pl-o-gold)" strokeWidth="5" />
+          {/* a perna do R continua por baixo e vira o aro do O (aberto no alto à esquerda, como na arte),
+              com a estrela de 4 pontas dentro */}
+          <path className="pl-o-ring" d={O_RING} fill="none" stroke="url(#pl-o-ring)" strokeWidth="5" strokeLinecap="round" />
           <path d="M50 20C51.3 40 54 46 70 50 54 54 51.3 60 50 80 48.7 60 46 54 30 50 46 46 48.7 40 50 20Z" fill="url(#pl-o-gold)" />
         </svg>
         <span className="pl-gold" aria-hidden>
