@@ -2997,3 +2997,18 @@ html[data-edition="2k27"] { background: #070719; }
 .installment strong { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.6rem; font-weight: 500; }
 .installment em { font-style: normal; font-size: 0.8rem; color: rgb(40 30 96 / 0.75); }
 .installment.is-paid { border-style: solid; background: rgb(212 236 214 / 0.55); border-color: rgb(80 150 100 / 0.45); }
+/* céu de volta ao azulado → lavanda → rosa (pedido do cliente); o pôr do sol fica só no horizonte */
+.hero-sky-2027 {
+  background:
+    radial-gradient(ellipse 46% 24% at 50% 82%, rgb(255 236 180 / 0.9), rgb(255 180 110 / 0.45) 40%, transparent 75%),
+    radial-gradient(ellipse 80% 22% at 50% 88%, rgb(255 160 110 / 0.35), transparent 70%),
+    linear-gradient(180deg, #2c2a8f 0%, #3a3cb0 14%, #4a4fc6 28%, #6f6bd8 40%, #a68fe8 50%, #e2a7d6 60%, #f7a8c7 68%, #ffc9a3 80%, #ffe3b2 90%);
+}
+.hero-sky-2027::before { background: none; }
+/* celular: sereias da capa maiores */
+@media (max-width: 767px) {
+  .hero-mermaid { height: 44svh; }
+  .hero-mermaid.is-left { left: -12vw; }
+  .hero-mermaid.is-right { right: -12vw; }
+}
+@media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 38svh; } }
