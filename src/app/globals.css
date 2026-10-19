@@ -3012,3 +3012,41 @@ html[data-edition="2k27"] { background: #070719; }
   .hero-mermaid.is-right { right: -12vw; }
 }
 @media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 38svh; } }
+/* céu azul-claro → lavanda → rosa (como antes do pôr do sol), mais claro no alto; sol só no horizonte */
+.hero-sky-2027 {
+  background:
+    radial-gradient(ellipse 46% 22% at 50% 84%, rgb(255 238 190 / 0.9), rgb(255 190 130 / 0.4) 42%, transparent 75%),
+    linear-gradient(180deg, #4a63cf 0%, #5d7be0 14%, #7f95ea 28%, #a7a2ef 40%, #c9a6e6 50%, #e7aad6 60%, #f7b2c6 70%, #ffcaa8 82%, #ffe3b6 92%);
+}
+/* celular: sereias bem maiores */
+@media (max-width: 767px) {
+  .hero-mermaid { height: 52svh; }
+  .hero-mermaid.is-left { left: -18vw; }
+  .hero-mermaid.is-right { right: -18vw; }
+}
+@media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 46svh; } }
+/* céu da arte "Lote promocional": violeta no alto → lavanda → rosa → pêssego luminoso no meio/baixo,
+   com o brilho quente atrás da pérola. As estrelas continuam as mesmas (camada ::after). */
+.hero-sky-2027 {
+  background:
+    radial-gradient(ellipse 55% 30% at 62% 70%, rgb(255 238 214 / 0.95), rgb(255 222 196 / 0.55) 45%, transparent 75%),
+    radial-gradient(ellipse 40% 20% at 50% 84%, rgb(255 236 190 / 0.85), transparent 72%),
+    linear-gradient(180deg, #5f55c8 0%, #7468d4 12%, #8f80de 24%, #ab98e6 35%, #c9b0ea 45%, #e3c2e4 54%, #f5d0d6 63%, #fcdcc8 73%, #fee4c2 84%, #fde8cc 92%);
+}
+/* textos do meio sobre o céu claro: violeta e caramelo escuros, como na arte */
+.hero-tagline { color: #4a3b8c; text-shadow: none; }
+.hero-save, .hero-save span { color: #4a3b8c; text-shadow: none; }
+.hero-save svg { color: #b4843f; }
+.hero-countdown { --fg-faint: rgb(74 59 140 / 0.75); }
+.hero-countdown .font-display { color: #45358f; text-shadow: none; }
+@media (max-width: 767px) {
+  .hero-save, .hero-save span { color: #4a3b8c; }
+  .hero-countdown { --fg-faint: rgb(74 59 140 / 0.75); }
+  .hero-countdown .font-display { color: #45358f; }
+  /* sereias bem maiores, nas bordas, por trás dos textos */
+  .hero-mermaid { height: 62svh; z-index: 1; }
+  .hero-mermaid.is-left { left: -26vw; }
+  .hero-mermaid.is-right { right: -26vw; }
+}
+@media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 56svh; } }
+@media (max-width: 767px) { .hero-mermaid.is-left { left: -22vw; } .hero-mermaid.is-right { right: -22vw; } }
