@@ -106,7 +106,7 @@ export function PearlHorizon() {
         <div className="pearl w-full" />
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element -- faixa de mar da arte oficial, já otimizada */}
-      <img src="/2027/mar.webp" alt="" className="sea-strip" fetchPriority="high" />
+      <img src="/2027/agua.webp" alt="" className="sea-strip" fetchPriority="high" />
     </div>
   );
 }

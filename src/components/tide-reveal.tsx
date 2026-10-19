@@ -259,9 +259,15 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
             {/* água rasa: língua fina e transparente que avança além da espuma */}
             <path d="M0 30 C 180 70, 360 0, 540 34 S 900 70, 1080 30 S 1320 0, 1440 34 V 70 C 1300 98, 1180 64, 1020 86 S 700 104, 520 80 S 180 96, 0 74 Z" style={{ fill: "var(--wave-edge)" }} />
             <path d="M0 74 C 180 96, 340 64, 520 80 S 880 104, 1020 86 S 1300 98, 1440 70" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="2" strokeDasharray="2 7" strokeLinecap="round" />
-            <path d="M0 30 C 180 70, 360 0, 540 34 S 900 70, 1080 30 S 1320 0, 1440 34 V0 H0 Z" fill="var(--wave-body)" />
+            <path d="M0 30 C 180 70, 360 0, 540 34 S 900 70, 1080 30 S 1320 0, 1440 34 V0 H0 Z" fill="url(#agua-borda)" />
             <path d="M0 30 C 180 70, 360 0, 540 34 S 900 70, 1080 30 S 1320 0, 1440 34" fill="none" stroke="#fff" strokeOpacity=".85" strokeWidth="5" />
             <path d="M0 44 C 200 76, 380 14, 560 46 S 920 76, 1100 42 S 1330 14, 1440 46" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="3" />
+            <defs>
+              {/* mesma água da onda na borda (antes era uma faixa lisa) */}
+              <pattern id="agua-borda" patternUnits="userSpaceOnUse" width="1440" height="720">
+                <image href="/2027/agua-perto.webp" width="1440" height="720" preserveAspectRatio="none" />
+              </pattern>
+            </defs>
           </svg>
         </div>
       </div>

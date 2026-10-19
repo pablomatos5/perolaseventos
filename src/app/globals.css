@@ -2432,3 +2432,63 @@ main { overflow-x: clip; }
 .hero-2027 .wave-front path { fill-opacity: 0.22; }
 .hero-2027 .ocean-waves { margin-top: -3.5rem; }
 .beach-foam path:nth-child(3) { fill: rgb(138 118 222 / 0.75); }
+
+/* ───────── Água: ilustração única de mar (perspectiva + reflexo dourado do sol) ─────────
+   substitui as camadas de textura repetida. Movimento: brilhos deslizando (transform) e as ondas balançando. */
+.hero-2027 .ocean-waves::before, .beach-wave::before { display: none; }
+.hero-2027 .ocean-waves { background: url("/2027/agua.webp") 50% 8% / 2400px auto, #8a76de; }
+.beach::before { background: url("/2027/agua.webp") 50% 40% / 2400px auto, #6f5bd0; animation: none; background-blend-mode: normal; }
+.beach-wave {
+  background:
+    linear-gradient(180deg, transparent 70%, rgb(165 140 233 / 0.85) 100%),
+    url("/2027/agua.webp") 50% 100% / 2400px auto,
+    #6f5bd0;
+}
+.hero-2027 .ocean-waves::after, .beach-wave::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2400px;
+  inset-inline: auto;
+  background: url("/2027/agua-brilho.webp") 0 0 / 1200px 100% repeat-x;
+  -webkit-mask-image: none;
+  mask-image: none;
+  opacity: 0.9;
+  animation: brilho-agua 14s linear infinite;
+  pointer-events: none;
+}
+.beach-wave::after { background-size: 1200px 700px; background-position: 0 100%; background-repeat: repeat; }
+@keyframes brilho-agua { to { transform: translateX(-1200px); } }
+.hero-2027 .wave-front path { fill: #fff; fill-opacity: 0.05; }
+.hero-2027 .wave-mid path { fill: none; stroke: #fff; stroke-opacity: 0.35; stroke-width: 1.5; }
+.hero-2027 .wave-back path { fill: #fff; fill-opacity: 0.05; }
+.beach-foam path:nth-child(3) { fill: #a58ce9; }
+.pearl-horizon::after { background: linear-gradient(180deg, transparent, rgb(200 170 232 / 0.35)); }
+@media (prefers-reduced-motion: reduce) { .hero-2027 .ocean-waves::after, .beach-wave::after { animation: none; } }
+/* brilho cobre toda a largura enquanto desliza */
+.hero-2027 .ocean-waves::after, .beach-wave::after { width: calc(100% + 1200px); }
+/* mesma região da ilustração nas duas faixas (emenda quase invisível) */
+.hero-2027 .ocean-waves { background-position: 50% 42%, 0 0; }
+.beach::before { background-position: 50% 46%, 0 0; }
+/* maré recolhida menor: não cobre a concha aberta (faixa fixa 10%, onda descansa mais alto) */
+.beach::before { height: 9%; }
+.beach-wave { transform: translateY(-91%); }
+@keyframes lap { from { transform: translateY(-91%); } to { transform: translateY(-86%); } }
+/* a onda vai até o fim da areia: cobre toda a escrita (e os controles) na hora da troca */
+@keyframes swash {
+  0% { transform: translateY(-91%); }
+  35% { transform: translateY(0%); }
+  100% { transform: translateY(-91%); }
+}
+
+/* ───────── Um mar só (AguaContinua alinha as posições) ───────── */
+.sea-strip { object-fit: none; object-position: 50% 0; height: 64%; -webkit-mask-image: linear-gradient(180deg, transparent, #000 25%); mask-image: linear-gradient(180deg, transparent, #000 25%); }
+.hero-2027 .ocean-waves { background: url("/2027/agua.webp") 50% var(--agua-ondas, 0px) / 2400px 1200px repeat-y, #8a76de; margin-top: 0; -webkit-mask-image: none; mask-image: none; }
+.beach::before { height: 9%; background: url("/2027/agua.webp") 50% var(--agua-praia, -260px) / 2400px 1200px repeat-y, #6f5bd0; }
+.beach-wave { background: url("/2027/agua.webp") 50% var(--agua-onda, 0px) / 2400px 1200px repeat-y, #6f5bd0; }
+.pearl-horizon::after { display: none; }
+.beach-foam path:nth-child(3) { fill: url(#agua-borda); }
+/* onda longa (vai até o fim da areia): o corpo todo é água de perto (sem o horizonte no meio), presa na borda */
+.beach-wave { background: url("/2027/agua-perto.webp") 50% var(--agua-onda, 100%) / 2400px 1000px repeat-y, #6f5bd0; }
