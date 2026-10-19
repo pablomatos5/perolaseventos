@@ -17,13 +17,21 @@ export function Star4({ className = "" }: { className?: string }) {
  * o O é um aro fino com a estrela de 4 pontas dentro, "2027" entre fios e a frase da campanha.
  * Em dourado (o manual em IA usava marrom; o cliente pediu dourado). Tudo em texto/SVG: nítido em qualquer tela.
  */
-// aro do O que nasce da perna do R: cauda por baixo (do pé do R até o fundo do O) e a elipse dando a volta
-// pela direita e por cima até o alto à esquerda (abertura em cima, à esquerda)
+// aro do O que nasce da perna do R (como na arte): a perna desce na diagonal e entra no círculo pela parte de
+// baixo à esquerda, tangente; o traço segue por baixo, sobe pela direita, passa por cima e termina à esquerda,
+// deixando só a abertura por onde a perna entra. Círculo redondo e fino, como a serifa.
 const O_RING = (() => {
-  let d = "M-14 96C6 101 32 99 50 95";
-  for (let a = 90; a >= -150; a -= 6) {
-    const t = (a * Math.PI) / 180;
-    d += `L${(50 + 41 * Math.cos(t)).toFixed(2)} ${(50 + 45 * Math.sin(t)).toFixed(2)}`;
+  const R = 46;
+  const pt = (deg: number) => {
+    const t = (deg * Math.PI) / 180;
+    return [50 + R * Math.cos(t), 52 + R * Math.sin(t)];
+  };
+  const [jx, jy] = pt(112); // encontro com a perna do R
+  // a cauda sai do pé do R (na linha de base, à esquerda do O) e entra tangente no círculo
+  let d = `M-13 99.5C2 101.5 18 101 ${jx.toFixed(2)} ${jy.toFixed(2)}`;
+  for (let a = 108; a >= -184; a -= 4) {
+    const [x, y] = pt(a);
+    d += `L${x.toFixed(2)} ${y.toFixed(2)}`;
   }
   return d;
 })();
@@ -52,7 +60,7 @@ export function PerolasLogo({ year, className = "" }: { year: string; className?
           </defs>
           {/* a perna do R continua por baixo e vira o aro do O (aberto no alto à esquerda, como na arte),
               com a estrela de 4 pontas dentro */}
-          <path className="pl-o-ring" d={O_RING} fill="none" stroke="url(#pl-o-ring)" strokeWidth="5" strokeLinecap="round" />
+          <path className="pl-o-ring" d={O_RING} fill="none" stroke="url(#pl-o-ring)" strokeWidth="3.4" strokeLinecap="round" />
           <path d="M50 20C51.3 40 54 46 70 50 54 54 51.3 60 50 80 48.7 60 46 54 30 50 46 46 48.7 40 50 20Z" fill="url(#pl-o-gold)" />
         </svg>
         <span className="pl-gold" aria-hidden>

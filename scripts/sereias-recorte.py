@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from scipy.ndimage import binary_fill_holes, binary_opening, gaussian_filter, label
 
 src, out = Path(sys.argv[1]), Path(sys.argv[2])
 
@@ -17,7 +18,14 @@ for n in ("se", "sd"):
     rgb = np.asarray(Image.open(src / f"sereia-{n}-inteira.png").convert("RGB"))
     m = np.asarray(Image.open(src / f"mask-{n}.png").convert("L")).astype(float) / 255
     h = m.shape[0]
-    m = np.clip((m - 0.08) / 0.92, 0, 1)  # tira a névoa fraca em volta (halo do fundo antigo)
+    # máscara sólida: tudo que é sereia/pedra/concha fica opaco (o rembg deixava partes translúcidas em lugares
+    # diferentes em cada sereia); os buracos internos são preenchidos e só a borda ganha um esfumado curto
+    solid = binary_fill_holes(binary_opening(m > 0.3, iterations=2))
+    lb, n = label(solid)
+    if n > 1:
+        sz = np.bincount(lb.ravel()); sz[0] = 0
+        solid = lb == sz.argmax()
+    m = np.clip(gaussian_filter(solid.astype(float), 1.6) * 1.15, 0, 1)
     y = np.linspace(0, 1, h)[:, None]
     base = np.clip((1 - y) / 0.025, 0, 1)  # só um fio na base, onde a pedra encontra a água
     a = m * base
