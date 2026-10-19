@@ -2671,3 +2671,18 @@ main { overflow-x: clip; }
   .pearl-horizon { height: 30svh; margin-top: 0; }
   .hero-mermaid { height: 34svh; }
 }
+/* sem véu escuro atrás do logotipo (pedido do cliente) */
+.pl .brand-logo::before, .pl::before { display: none; }
+/* céu mais azulado atrás do logotipo (destaque do dourado), sem clarão claro atrás da escrita;
+   o pôr do sol continua embaixo, atrás da pérola */
+.hero-sky-2027 {
+  background:
+    radial-gradient(ellipse 62% 30% at 50% 84%, rgb(255 244 228 / 0.95), rgb(255 201 163 / 0.6) 45%, transparent 75%),
+    linear-gradient(180deg, #2c2a8f 0%, #3a3cb0 14%, #4a4fc6 28%, #6f6bd8 40%, #a68fe8 50%, #e2a7d6 60%, #f7a8c7 68%, #ffc9a3 80%, #ffe3b2 90%);
+}
+/* celular: data e contagem ficam sobre o céu azul; texto claro para leitura */
+@media (max-width: 767px) {
+  .hero-save, .hero-save span { color: #fbeedd; }
+  .hero-countdown { --fg-faint: rgb(251 238 221 / 0.8); }
+  .hero-countdown .font-display { color: #fff6ea; }
+}
