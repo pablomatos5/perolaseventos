@@ -142,7 +142,7 @@ async function buildEngine(): Promise<Engine> {
         hinge.rotation.x = -(open * OPEN_DEG * Math.PI) / 180 - Math.abs(wob);
         shell.rotation.z = wob * 0.5;
         // ao abrir, gira um pouco (de 3/4 para quase de frente): mostra a espessura das faixas e do leque
-        shell.rotation.y = -0.55 + 0.37 * ease(clamp((t - 0.8) / 1.8));
+        shell.rotation.y = -0.4 + 0.3 * ease(clamp((t - 0.8) / 1.8));
         // pérola sobe e vira para a frente (1,7–2,7 s)
         const k = ease(clamp((t - 1.7) / 1));
         if (pearl) {
