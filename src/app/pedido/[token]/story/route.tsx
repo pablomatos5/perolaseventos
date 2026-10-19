@@ -5,7 +5,8 @@ import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { verifyOrderToken } from "@/lib/tokens";
 
-// "Presença confirmada" em formato de story (1080×1920), na identidade do flyer oficial 2027.
+// "Presença confirmada" em formato de story (1080×1920) e feed (1080×1350), no visual atual do site:
+// céu de pôr do sol da capa, logotipo oficial com o 2K27 na concha, sereias recortadas e a assinatura concha + @.
 // Só para pedido pago. Sem QR nem dados do ingresso: é para postar.
 
 const asset = (...p: string[]) => readFile(join(process.cwd(), "assets", ...p));
@@ -24,6 +25,8 @@ const load = () =>
       sereiaEsq: await dataUrl("sereia-esq.png", "image/png"),
       sereiaDir: await dataUrl("sereia-dir.png", "image/png"),
       mar: await dataUrl("mar.jpg", "image/jpeg"),
+      assinatura: await dataUrl("assinatura.png", "image/png"),
+      sol: await dataUrl("sol.png", "image/png"),
     },
   }))());
 
@@ -63,7 +66,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
           flexDirection: "column",
           alignItems: "center",
           position: "relative",
-          background: "linear-gradient(180deg, #1c1550 0%, #3b2a8f 18%, #6a4ecf 38%, #b98ae6 56%, #f2a8c7 70%, #ffc9a3 80%, #ffd9b0 84%)",
+          background: "linear-gradient(180deg, #1c1a5c 0%, #2c2380 14%, #4a2c8c 28%, #7c3a90 41%, #b44d8c 52%, #e2667a 61%, #f8845f 69%, #ffa45a 75%)",
           fontFamily: "Montserrat",
         }}
       >
@@ -85,7 +88,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
 
         {/* logotipo oficial + 2K27 (assets/story/logo.png) */}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
-        <img alt="" src={img.logo} width={feed ? 560 : 680} height={Math.round(((feed ? 560 : 680) * 578) / 900)} style={{ marginTop: 50 * k }} />
+        <img alt="" src={img.logo} width={feed ? 560 : 700} height={Math.round(((feed ? 560 : 700) * 576) / 900)} style={{ marginTop: 50 * k }} />
 
         {/* presença confirmada */}
         <div style={{ marginTop: 40 * k, display: "flex", fontFamily: "CormorantItalic", fontSize: feed ? 56 : 64, color: "#fff", textShadow: "0 2px 18px rgba(60,30,110,0.5)" }}>
@@ -106,32 +109,35 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
         >
           CONFIRMADA
         </div>
-        <div style={{ marginTop: 18, display: "flex", fontSize: 26, letterSpacing: 6, color: "#3a2a7a" }}>
+        <div style={{ marginTop: 18, display: "flex", fontSize: 26, letterSpacing: 6, color: "#fff3e2", textShadow: "0 2px 10px rgba(80,20,70,0.5)" }}>
           {n > 1 ? `${n} INGRESSOS GARANTIDOS` : "INGRESSO GARANTIDO"}
         </div>
 
         {/* data e local */}
         <div style={{ marginTop: 56 * k, display: "flex", alignItems: "center", gap: 28 }}>
-          <div style={{ width: 120, height: 2, background: "linear-gradient(90deg, transparent, #b47c2c)" }} />
-          <div style={{ display: "flex", fontFamily: "Cinzel", fontSize: 64, color: "#8a5c26", letterSpacing: 2 }}>{dmy}</div>
-          <div style={{ width: 120, height: 2, background: "linear-gradient(90deg, #b47c2c, transparent)" }} />
+          <div style={{ width: 120, height: 2, background: "linear-gradient(90deg, transparent, #ffe0a0)" }} />
+          <div style={{ display: "flex", fontFamily: "Cinzel", fontSize: 64, color: "#fff6e6", letterSpacing: 2, textShadow: "0 2px 14px rgba(90,20,60,0.55)" }}>{dmy}</div>
+          <div style={{ width: 120, height: 2, background: "linear-gradient(90deg, #ffe0a0, transparent)" }} />
         </div>
-        <div style={{ marginTop: 6, display: "flex", fontFamily: "Cinzel", fontSize: 44, color: "#8a5c26", letterSpacing: 4 }}>{order.event.venue.toUpperCase()}</div>
+        <div style={{ marginTop: 6, display: "flex", fontFamily: "Cinzel", fontSize: 44, color: "#fff6e6", letterSpacing: 4, textShadow: "0 2px 12px rgba(90,20,60,0.55)" }}>{order.event.venue.toUpperCase()}</div>
 
-        {/* mar e sereias */}
+        {/* sol se pondo no horizonte, atrás do mar (brilho pronto em PNG: o gerador não desenha bem radial com transparência) */}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
-        <img alt="" src={img.mar} width={1080} height={feed ? 260 : 420} style={{ position: "absolute", left: 0, bottom: 0, objectFit: "cover" }} />
-        {/* borda de cima do mar se dissolve no céu */}
-        <div style={{ position: "absolute", left: 0, right: 0, bottom: feed ? 170 : 300, height: feed ? 110 : 140, display: "flex", background: "linear-gradient(180deg, rgba(255,217,176,1), rgba(255,217,176,0))" }} />
+        <img alt="" src={img.sol} width={feed ? 700 : 900} height={feed ? 455 : 585} style={{ position: "absolute", left: feed ? 190 : 90, bottom: feed ? 60 : 130 }} />
+        {/* mar do pôr do sol (mesma arte da capa do site) */}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
-        <img alt="" src={img.sereiaEsq} height={feed ? 560 : 780} style={{ position: "absolute", left: feed ? -70 : -120, bottom: feed ? 110 : 230 }} />
+        <img alt="" src={img.mar} width={1080} height={feed ? 240 : 420} style={{ position: "absolute", left: 0, bottom: 0, objectFit: "cover", objectPosition: "50% 0%" }} />
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
-        <img alt="" src={img.sereiaDir} height={feed ? 560 : 780} style={{ position: "absolute", right: feed ? -70 : -120, bottom: feed ? 110 : 230 }} />
+        <img alt="" src={img.sereiaEsq} width={feed ? 290 : 400} height={feed ? 606 : 836} style={{ position: "absolute", left: feed ? -60 : -60, bottom: feed ? -10 : 80 }} />
+        {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
+        <img alt="" src={img.sereiaDir} width={feed ? 290 : 400} height={feed ? 606 : 836} style={{ position: "absolute", right: feed ? -60 : -60, bottom: feed ? -10 : 80 }} />
 
         {/* rodapé */}
         <div style={{ position: "absolute", bottom: feed ? 60 : 96, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", color: "#fff" }}>
           <div style={{ display: "flex", fontFamily: "CormorantItalic", fontSize: 50, textShadow: "0 2px 6px rgba(40,20,90,0.85), 0 2px 22px rgba(40,20,90,0.9)" }}>Te vejo na virada</div>
-          <div style={{ marginTop: 14, display: "flex", fontSize: 28, letterSpacing: 6, textShadow: "0 2px 6px rgba(40,20,90,0.85), 0 2px 18px rgba(40,20,90,0.9)" }}>@PEROLASEVENTOS</div>
+          {/* assinatura do kit: concha Pérolas + @perolaseventos */}
+          {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
+          <img alt="" src={img.assinatura} width={420} height={72} style={{ marginTop: 16 }} />
         </div>
       </div>
     ),
