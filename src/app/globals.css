@@ -2229,9 +2229,54 @@ main { overflow-x: clip; }
 .ingressos-sand .text-fg-muted { color: rgb(70 45 20 / 0.85); }
 @media (max-width: 767px) { .sand-shell-wrap { opacity: 0.8; } }
 
-}
 /* celular: 2027 e raios mais firmes (tela pequena apaga detalhes finos) */
 @media (max-width: 767px) {
   .pl-year { font-size: calc(var(--pl) * 0.38); font-weight: 600; }
   .pearl-sunrays line { stroke-width: 3; }
+}
+
+/* ───────── Mar vivo: ondas constantes e brilho correndo na água (só transform/opacity) ───────── */
+.hero-2027 .ocean-waves { height: clamp(6rem, 13vw, 9rem); overflow: hidden; }
+.hero-2027 .wave-back path { fill: #fff; fill-opacity: 0.16; }
+.hero-2027 .wave-mid path { fill: #fff; fill-opacity: 0.12; stroke: #fff; stroke-opacity: 0.35; stroke-width: 2; }
+.hero-2027 .wave-back { animation-duration: 14s; }
+.hero-2027 .wave-mid { animation-duration: 9s; }
+.hero-2027 .wave-front { animation-duration: 6s; }
+.wave-layer { will-change: transform; }
+/* subida e descida das camadas de onda (balanço contínuo) */
+.hero-2027 .wave-layer { animation-name: wave-drift, wave-bob; animation-duration: inherit; }
+.hero-2027 .wave-back { animation: wave-drift 14s linear infinite, wave-bob 4.2s ease-in-out infinite alternate; }
+.hero-2027 .wave-mid { animation: wave-drift 9s linear infinite reverse, wave-bob 3.4s ease-in-out -1s infinite alternate; }
+.hero-2027 .wave-front { animation: wave-drift 6s linear infinite, wave-bob 2.8s ease-in-out -2s infinite alternate; }
+@keyframes wave-bob { from { translate: 0 6px; } to { translate: 0 -6px; } }
+/* faixas de brilho do sol correndo na superfície */
+.hero-2027 .ocean-waves::after {
+  content: "";
+  position: absolute;
+  inset: 0 -50% 0 -50%;
+  background:
+    repeating-linear-gradient(100deg, transparent 0 60px, rgb(255 240 210 / 0.35) 60px 62px, transparent 62px 140px, rgb(255 255 255 / 0.22) 140px 141px, transparent 141px 230px);
+  -webkit-mask-image: radial-gradient(ellipse 35% 100% at 50% 20%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 35% 100% at 50% 20%, #000, transparent 75%);
+  animation: glint-run 7s linear infinite;
+  pointer-events: none;
+}
+@keyframes glint-run { to { transform: translateX(230px); } }
+/* praia: a onda nunca para de ir e vir (antes só lambia leve) */
+.tide-stage .beach-wave { animation: lap 2.8s ease-in-out infinite alternate; }
+@keyframes lap { from { transform: translateY(-84%); } to { transform: translateY(-74%); } }
+
+/* ───────── Respingo maior quando a pérola cai ───────── */
+.splash { z-index: 3; top: 18%; }
+.splash .ring { left: -5rem; top: -1.1rem; width: 10rem; height: 2.2rem; border-width: 2px; }
+.splash .flash { left: -6rem; top: -6rem; width: 12rem; height: 12rem; }
+.splash .drop { width: 8px; height: 8px; left: -4px; top: -4px; }
+.ocean-waves.is-splash .splash .drop { animation-duration: 1.1s; }
+@keyframes drop {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  45% { opacity: 1; transform: translate(calc(var(--dx) * 1.6), calc(var(--dy) * 2.2)) scale(1); }
+  100% { opacity: 0; transform: translate(calc(var(--dx) * 2.4), 10px) scale(0.6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-2027 .wave-layer, .hero-2027 .ocean-waves::after, .tide-stage .beach-wave { animation: none; }
 }
