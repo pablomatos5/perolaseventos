@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
 import { Suspense } from "react";
 import { logoutAction } from "../actions";
@@ -20,7 +21,7 @@ export default function PainelLayout({ children }: LayoutProps<"/admin">) {
     <div className="min-h-svh">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4">
-          <span className="font-display text-2xl italic">Pérolas</span>
+          <BrandLogo kind="wordmark" tone="ameixa" sizes="7rem" className="page-brand page-brand-sm" />
           <nav className="flex flex-1 flex-wrap gap-x-5 gap-y-1 text-sm text-fg-muted">
             {NAV.map((n) => (
               <Link key={n.href} href={n.href} className="hover:text-accent">

@@ -4,6 +4,7 @@ import { TideReveal, type TideStep } from "@/components/tide-reveal";
 import { Countdown } from "@/components/countdown";
 import { Lineup, PartyDetails } from "@/components/party-sections";
 import { InstagramIcon } from "@/components/attraction-cards";
+import { BrandLogo } from "@/components/brand-logo";
 import { HeroMermaids, LightSwirls, PearlHorizon, PerolasLogo, Star4 } from "@/components/hero-2027";
 import { OceanWaves, Sparkles } from "@/components/shell-opening";
 import { PearlDrop } from "@/components/pearl-drop";
@@ -95,7 +96,7 @@ async function EventPage() {
         <HeroMermaids />
 
         <header className="relative z-10 flex items-center justify-between px-5 py-5 md:px-12">
-          <span className="hero-brand">Pérolas</span>
+          <BrandLogo kind="wordmark" tone="creme" sizes="7rem" className="hero-brand" />
           <div className="flex items-center gap-3">
             <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="hero-ig" aria-label="Instagram da Pérolas (@perolaseventos)">
               <InstagramIcon className="size-5" />

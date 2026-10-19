@@ -1,3 +1,5 @@
+import { BrandLogo } from "@/components/brand-logo";
+
 // Topo do site na identidade 2027 da Pérolas (artes oficiais da campanha "Um novo ciclo"):
 // céu violeta → lavanda → rosa → pêssego, redemoinhos de luz dourada, a sereia deles sobre as pedras
 // (recorte da arte "31 dezembro", em /public/2027) e a pérola sobre o mar, que cai na água ao rolar
@@ -12,60 +14,12 @@ export function Star4({ className = "" }: { className?: string }) {
   );
 }
 
-/**
- * Logo "RÉVEILLON PÉROLAS 2027" do manual de marca aprovado pela diretoria: serifa fina e elegante,
- * o O é um aro fino com a estrela de 4 pontas dentro, "2027" entre fios e a frase da campanha.
- * Em dourado (o manual em IA usava marrom; o cliente pediu dourado). Tudo em texto/SVG: nítido em qualquer tela.
- */
-// aro do O que nasce da perna do R (como na arte): a perna desce na diagonal e entra no círculo pela parte de
-// baixo à esquerda, tangente; o traço segue por baixo, sobe pela direita, passa por cima e termina à esquerda,
-// deixando só a abertura por onde a perna entra. Círculo redondo e fino, como a serifa.
-const O_RING = (() => {
-  const R = 46;
-  const pt = (deg: number) => {
-    const t = (deg * Math.PI) / 180;
-    return [50 + R * Math.cos(t), 52 + R * Math.sin(t)];
-  };
-  const [jx, jy] = pt(112); // encontro com a perna do R
-  // a cauda sai do pé do R (na linha de base, à esquerda do O) e entra tangente no círculo
-  let d = `M-13 99.5C2 101.5 18 101 ${jx.toFixed(2)} ${jy.toFixed(2)}`;
-  for (let a = 108; a >= -184; a -= 4) {
-    const [x, y] = pt(a);
-    d += `L${x.toFixed(2)} ${y.toFixed(2)}`;
-  }
-  return d;
-})();
-
+/** Logotipo oficial (imagem, ver brand-logo.tsx) com a linha do ano embaixo, fora da margem livre do logo. */
 export function PerolasLogo({ year, className = "" }: { year: string; className?: string }) {
   return (
     <div className={`pl ${className}`}>
-      <span className="pl-kicker pl-gold">Réveillon</span>
-      <h1 className="pl-name" aria-label={`Réveillon Pérolas ${year}`}>
-        <span className="pl-gold" aria-hidden>
-          PÉR
-        </span>
-        <svg className="pl-o" viewBox="0 0 100 100" aria-hidden>
-          <defs>
-            <linearGradient id="pl-o-gold" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#fbe7b4" />
-              <stop offset="0.45" stopColor="#e2b45c" />
-              <stop offset="0.6" stopColor="#f6d98e" />
-              <stop offset="1" stopColor="#a8742a" />
-            </linearGradient>
-            <linearGradient id="pl-o-ring" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="100">
-              <stop offset="0" stopColor="#fbe7b4" />
-              <stop offset="0.5" stopColor="#e9bd68" />
-              <stop offset="1" stopColor="#f3cf86" />
-            </linearGradient>
-          </defs>
-          {/* a perna do R continua por baixo e vira o aro do O (aberto no alto à esquerda, como na arte),
-              com a estrela de 4 pontas dentro */}
-          <path className="pl-o-ring" d={O_RING} fill="none" stroke="url(#pl-o-ring)" strokeWidth="3.4" strokeLinecap="round" />
-          <path d="M50 20C51.3 40 54 46 70 50 54 54 51.3 60 50 80 48.7 60 46 54 30 50 46 46 48.7 40 50 20Z" fill="url(#pl-o-gold)" />
-        </svg>
-        <span className="pl-gold" aria-hidden>
-          LAS
-        </span>
+      <h1 className="pl-name">
+        <BrandLogo kind="reveillon" tone="dourado" priority sizes="(max-width: 767px) 88vw, 40rem" />
       </h1>
       <div className="pl-year">
         <i aria-hidden />

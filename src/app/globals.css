@@ -2600,3 +2600,38 @@ main { overflow-x: clip; }
   .hero-mermaid.is-left { left: -4.5vw; }
   .hero-mermaid.is-right { right: -4.5vw; }
 }
+
+/* ───────── Logotipo oficial (imagem, brand-logo.tsx) ─────────
+   Sem distorcer (height: auto), sem contorno nem sombra. Margem livre = altura do "R" = 0,189 × largura. */
+.brand-logo { display: block; }
+.brand-logo img { display: block; width: 100%; height: auto; }
+/* capa: largura fixa por tela e margem livre em cima e embaixo; o halo de fundo fica atrás (não toca o logo) */
+.pl { --lw: clamp(15rem, min(32vw, 46svh), 31rem); }
+.pl-name { margin: 0; line-height: 0; }
+.pl .brand-logo { width: var(--lw); margin-block: calc(var(--lw) * 0.189 * 0.5) calc(var(--lw) * 0.189); }
+.pl-year { margin-top: 0; }
+@media (max-width: 767px) { .pl { --lw: min(80vw, 22rem); } }
+/* cabeçalhos: só PÉROLAS; margem livre garantida pelo padding do cabeçalho */
+.hero-brand { width: 6.5rem; text-shadow: none; }
+.page-brand { width: 8rem; margin: 1.5rem 0; }
+.page-brand-sm { width: 6.5rem; margin: 0.25rem 1.25rem 0.25rem 0; }
+/* fundo atrás do logo: véu violeta suave centrado só no desenho (realça o dourado; não toca o logo) */
+.pl::before { display: none; }
+.pl .brand-logo { position: relative; isolation: isolate; }
+.pl .brand-logo::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -45% -12%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgb(52 30 128 / 0.5), rgb(52 30 128 / 0.22) 55%, transparent 78%);
+  pointer-events: none;
+}
+/* logo maior e mais baixo na capa (margem livre de um "R" inteiro em cima) */
+.pl { --lw: clamp(17rem, min(42vw, 60svh), 40rem); }
+.pl .brand-logo { margin-top: calc(var(--lw) * 0.189 + 1.5svh); }
+@media (max-width: 767px) { .pl { --lw: min(88vw, 24rem); } .pl .brand-logo { margin-top: calc(var(--lw) * 0.189); } }
+@media (min-width: 768px) {
+  .pl { --lw: clamp(17rem, min(42vw, 56svh), 40rem); }
+  .hero-copy .hero-tagline { margin-top: 0.6rem; }
+  .hero-copy > .mt-5 { margin-top: 0.85rem; }
+}

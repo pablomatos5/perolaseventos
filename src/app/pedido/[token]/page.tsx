@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -59,7 +60,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
 
   return (
     <main className="mx-auto w-full max-w-3xl px-5 py-12 md:py-20">
-      <Link href="/" className="font-display text-2xl italic">Pérolas</Link>
+      <Link href="/" className="inline-block" aria-label="Início"><BrandLogo kind="wordmark" tone="ameixa" sizes="8rem" className="page-brand" /></Link>
       <div className="mt-10">
         <span className="eyebrow rule">Pedido {order.code}</span>
         <h1 className="display mt-4 text-[clamp(2.2rem,6vw,3.6rem)]!">

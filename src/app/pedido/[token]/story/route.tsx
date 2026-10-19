@@ -83,9 +83,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
           UMA NOVA ERA
         </div>
 
-        {/* logo do site (concha + PÉROLAS 2K27) */}
+        {/* logotipo oficial + 2K27 (assets/story/logo.png) */}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
-        <img alt="" src={img.logo} width={feed ? 760 : 900} height={Math.round(((feed ? 760 : 900) * 371) / 900)} style={{ marginTop: 60 * k }} />
+        <img alt="" src={img.logo} width={feed ? 560 : 680} height={Math.round(((feed ? 560 : 680) * 578) / 900)} style={{ marginTop: 50 * k }} />
 
         {/* presença confirmada */}
         <div style={{ marginTop: 40 * k, display: "flex", fontFamily: "CormorantItalic", fontSize: feed ? 56 : 64, color: "#fff", textShadow: "0 2px 18px rgba(60,30,110,0.5)" }}>
