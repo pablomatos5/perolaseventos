@@ -3050,3 +3050,11 @@ html[data-edition="2k27"] { background: #070719; }
 }
 @media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 56svh; } }
 @media (max-width: 767px) { .hero-mermaid.is-left { left: -22vw; } .hero-mermaid.is-right { right: -22vw; } }
+/* celular: sereias grandes, mas mais ao centro (menos cortadas na borda) */
+@media (max-width: 767px) { .hero-mermaid.is-left { left: -8vw; } .hero-mermaid.is-right { right: -8vw; } }
+@media (max-width: 767px) {
+  .hero-mermaid { height: 54svh; z-index: 4; }
+  .hero-mermaid.is-left { left: -13vw; }
+  .hero-mermaid.is-right { right: -13vw; }
+}
+@media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 48svh; } }
