@@ -2229,43 +2229,6 @@ main { overflow-x: clip; }
 .ingressos-sand .text-fg-muted { color: rgb(70 45 20 / 0.85); }
 @media (max-width: 767px) { .sand-shell-wrap { opacity: 0.8; } }
 
-/* ───────── Concha do logotipo (linhas onduladas) no carrossel da areia ───────── */
-.wavy-shell { position: relative; display: block; width: min(clamp(15rem, 80vw, 25rem), 46svh); margin-bottom: 0.4rem; text-shadow: none; }
-.wavy-shell > * { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.wavy-shell::before {
-  content: "";
-  position: absolute;
-  inset: auto 8% -3% 8%;
-  height: 18%;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(80 50 20 / 0.38), transparent);
-}
-.wavy-shell-top { transform-origin: 50% 71.5%; filter: drop-shadow(0 0 0.5rem rgb(255 236 200 / 0.8)); }
-.wavy-shell-bottom { z-index: 2; filter: drop-shadow(0 0.3rem 0.4rem rgb(110 70 30 / 0.3)); }
-.wavy-pearl {
-  z-index: 1;
-  inset: auto !important;
-  left: 33% !important;
-  top: 33% !important;
-  width: 34% !important;
-  height: auto !important;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  padding: 3%;
-  background: conic-gradient(from 200deg, #fff, #f6dca6, #fff6e2, #e2b45c, #fff, #f3d48e, #fff);
-  box-shadow: 0 0 1.4rem 0.3rem rgb(255 236 200 / 0.85), 0 0.5rem 1rem -0.3rem rgb(70 40 10 / 0.45);
-}
-.wavy-pearl img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 55% 35%; display: block; }
-/* abertura: chega fechada (leque deitado sobre a tigela), abre pela dobradiça e a pérola sobe */
-.tide-writing.is-active .wavy-shell { animation: shell-arrive 0.6s var(--ease) both; }
-.tide-writing.is-active .wavy-shell-top { animation: wavy-open 1.5s cubic-bezier(0.3, 0, 0.2, 1.15) 0.7s both; }
-.tide-writing.is-active .wavy-pearl { animation: wavy-pearl-up 0.9s var(--ease) 1.6s both; }
-@keyframes shell-arrive { from { scale: 0.85; opacity: 0; } }
-@keyframes wavy-open { from { transform: perspective(500px) rotateX(-82deg); } to { transform: perspective(500px) rotateX(0deg); } }
-@keyframes wavy-pearl-up { from { translate: 0 40%; scale: 0.4; opacity: 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .tide-writing.is-active .wavy-shell, .tide-writing.is-active .wavy-shell-top, .tide-writing.is-active .wavy-pearl { animation: none; }
 }
 /* celular: 2027 e raios mais firmes (tela pequena apaga detalhes finos) */
 @media (max-width: 767px) {
