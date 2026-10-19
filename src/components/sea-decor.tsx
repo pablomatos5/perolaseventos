@@ -155,7 +155,7 @@ const TREASURES = [
 ] as const;
 
 /** Estrela-do-mar coral com pontinhos em relevo. */
-function SandStarfish() {
+export function SandStarfish() {
   let d = "";
   for (let i = 0; i < 5; i++) {
     const a = i * 72;
@@ -168,7 +168,8 @@ function SandStarfish() {
   const dots = Array.from({ length: 5 }, (_, i) =>
     [14, 24, 34].map((k) => {
       const a = (i * 72 * Math.PI) / 180;
-      return [50 + k * Math.sin(a), 52 - k * Math.cos(a)];
+      // arredondado: servidor e navegador geram o mesmo número (sem erro de hidratação)
+      return [Math.round((50 + k * Math.sin(a)) * 10) / 10, Math.round((52 - k * Math.cos(a)) * 10) / 10];
     }),
   ).flat();
   return (
@@ -190,7 +191,7 @@ function SandStarfish() {
 }
 
 /** Caranguejinho vermelho-coral visto de cima. */
-function Crab() {
+export function Crab() {
   return (
     <svg viewBox="0 0 120 90">
       <defs>

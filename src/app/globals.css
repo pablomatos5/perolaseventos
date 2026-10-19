@@ -2709,3 +2709,7 @@ main { overflow-x: clip; }
 .pl-mark .pl-year { margin: 0; position: relative; z-index: 1; translate: 0 6%; text-shadow: 0 1px 8px rgb(40 24 110 / 0.7); }
 @media (min-width: 768px) { .pl-mark .pl-shell { width: calc(var(--lw) * 0.32); margin: 0; } }
 @media (max-width: 767px) { .pl-mark .pl-shell { width: calc(var(--lw) * 0.38); margin: 0; } }
+
+/* enfeites na areia da maré (atrás do texto, sob a onda) */
+.beach-deco { z-index: 1; }
+@media (max-width: 767px) { .beach .no-cel { display: none; } .beach-deco { scale: 0.85; } }
