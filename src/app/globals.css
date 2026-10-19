@@ -2595,3 +2595,8 @@ main { overflow-x: clip; }
   .hero-mermaid.is-left { left: 0; }
   .hero-mermaid.is-right { right: 0; }
 }
+/* computador: sereias mais para a extremidade (pode cortar um pouco da mão) */
+@media (min-width: 768px) {
+  .hero-mermaid.is-left { left: -4.5vw; }
+  .hero-mermaid.is-right { right: -4.5vw; }
+}
