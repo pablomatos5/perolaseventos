@@ -2310,3 +2310,38 @@ main { overflow-x: clip; }
 /* sereias da seção de ingressos: esculturas de areia (sombra no chão, sem transparência fantasma) */
 .ingressos-sand .side-mermaid { opacity: 1; filter: drop-shadow(0 1.2rem 1rem rgb(110 70 30 / 0.35)); }
 @media (max-width: 1535px) { .ingressos-sand.with-mermaid > .side-mermaid { opacity: 0.85; } }
+
+/* topo: céu estrelado como o das artes (poeira de estrelas fina + estrelas maiores), mais denso em cima */
+.hero-sky-2027::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1px 1px at 12px 18px, rgb(255 255 255 / 0.95), transparent),
+    radial-gradient(1px 1px at 47px 71px, rgb(255 244 220 / 0.9), transparent),
+    radial-gradient(1.2px 1.2px at 83px 33px, rgb(255 255 255), transparent),
+    radial-gradient(0.8px 0.8px at 101px 92px, rgb(255 255 255 / 0.8), transparent),
+    radial-gradient(1px 1px at 9px 104px, rgb(255 236 200 / 0.9), transparent),
+    radial-gradient(0.8px 0.8px at 66px 6px, rgb(255 255 255 / 0.85), transparent),
+    radial-gradient(1.6px 1.6px at 140px 120px, rgb(255 255 255), transparent),
+    radial-gradient(1.1px 1.1px at 190px 40px, rgb(255 246 230), transparent),
+    radial-gradient(2px 2px at 230px 150px, rgb(255 255 255 / 0.95), transparent),
+    radial-gradient(0.9px 0.9px at 260px 80px, rgb(255 255 255 / 0.85), transparent);
+  background-size: 71px 71px, 71px 71px, 71px 71px, 71px 71px, 71px 71px, 71px 71px, 173px 131px, 173px 131px, 173px 131px, 173px 131px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.75) 35%, transparent 62%);
+  mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.75) 35%, transparent 62%);
+  pointer-events: none;
+  animation: star-twinkle 6s ease-in-out infinite alternate;
+}
+/* brilho difuso de nebulosa nos cantos de cima (como atrás das sereias) */
+.hero-sky-2027::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 30% 22% at 12% 8%, rgb(255 210 240 / 0.28), transparent 70%),
+    radial-gradient(ellipse 28% 20% at 88% 12%, rgb(200 180 255 / 0.32), transparent 70%),
+    radial-gradient(ellipse 40% 14% at 50% 0%, rgb(255 255 255 / 0.14), transparent 70%);
+  pointer-events: none;
+}
+@media (max-width: 767px) { .hero-sky-2027::after { animation: none; } }
