@@ -42,7 +42,7 @@ let enginePromise: Promise<Engine> | null = null;
 let engineReady: Engine | null = null;
 
 async function buildEngine(): Promise<Engine> {
-  const [THREE, { RoomEnvironment }, { valve, valveRim, shellMaterials, photoPearl }] = await Promise.all([
+  const [THREE, { RoomEnvironment }, { valveRim, logoValveTop, logoValveBottom, photoPearl }] = await Promise.all([
     import("three"),
     import("three/examples/jsm/environments/RoomEnvironment.js"),
     import("@/lib/sea3d"),
@@ -70,12 +70,12 @@ async function buildEngine(): Promise<Engine> {
   camera.position.set(0, 1.25, 3.7);
   camera.lookAt(0, 0.5, 0.1);
 
-  const mats = shellMaterials(THREE);
+  // no estilo da concha oficial Pérolas: valva de cima em faixas onduladas, de baixo em leque com sulcos
   const shell = new THREE.Group();
-  const bottom = valve(THREE, -1, mats);
-  bottom.add(valveRim(THREE, { sign: -1 }));
-  const top = valve(THREE, 1, mats);
-  top.add(valveRim(THREE, { sign: 1 }));
+  const bottom = new THREE.Group();
+  bottom.add(logoValveBottom(THREE));
+  bottom.add(valveRim(THREE, { sign: -1, ribs: 16, spread: 160 }));
+  const top = logoValveTop(THREE);
   const hinge = new THREE.Group(); // gira em volta da dobradiça (eixo X na origem)
   hinge.add(top);
   shell.add(bottom, hinge);
