@@ -12,73 +12,36 @@ export function Star4({ className = "" }: { className?: string }) {
   );
 }
 
-/** Estrelinha de 4 pontas fina (brilho), usada em volta do logo. */
-function Sparkle({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <path d="M12 0C12.5 8 16 11.5 24 12 16 12.5 12.5 16 12 24 11.5 16 8 12.5 0 12 8 11.5 11.5 8 12 0Z" fill="currentColor" />
-    </svg>
-  );
-}
-
 /**
- * Logo "RÉVEILLON · PÉROLAS · 2K27" como na arte oficial da campanha 2027: romanas douradas (Cinzel),
- * a pérola no lugar do O dentro de um aro dourado com brilho, arabesco com uma perolinha embaixo.
- * Tudo em vetor/CSS: nítido em qualquer tela.
+ * Logo "RÉVEILLON PÉROLAS 2027" do manual de marca aprovado pela diretoria: serifa fina e elegante,
+ * o O é um aro fino com a estrela de 4 pontas dentro, "2027" entre fios e a frase da campanha.
+ * Em dourado (o manual em IA usava marrom; o cliente pediu dourado). Tudo em texto/SVG: nítido em qualquer tela.
  */
 export function PerolasLogo({ year, className = "" }: { year: string; className?: string }) {
   return (
     <div className={`pl ${className}`}>
-      {/* concha aberta do flyer oficial atrás do nome: leque atrás de RÉVEILLON/PÉROLAS, valva sob o arabesco */}
-      {/* eslint-disable-next-line @next/next/no-img-element -- arte da concha do flyer, já otimizada */}
-      <img src="/2027/concha-logo.webp" alt="" className="pl-shell" width={1000} height={722} fetchPriority="high" />
-      <div className="pl-kicker">
-        <i aria-hidden />
-        <span>Réveillon</span>
-        <i aria-hidden />
-      </div>
+      <span className="pl-kicker pl-gold">Réveillon</span>
       <h1 className="pl-name" aria-label={`Réveillon Pérolas ${year}`}>
-        <Sparkle className="pl-spark pl-spark-l" />
         <span className="pl-gold" aria-hidden>
           PÉR
         </span>
-        <span className="pl-o" aria-hidden>
-          <span className="pl-pearl" />
-          <Sparkle className="pl-spark pl-spark-o" />
-          <Sparkle className="pl-spark pl-spark-o2" />
-        </span>
+        <svg className="pl-o" viewBox="0 0 100 100" aria-hidden>
+          <defs>
+            <linearGradient id="pl-o-gold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fbe7b4" />
+              <stop offset="0.45" stopColor="#e2b45c" />
+              <stop offset="0.6" stopColor="#f6d98e" />
+              <stop offset="1" stopColor="#a8742a" />
+            </linearGradient>
+          </defs>
+          {/* aro do O, fino como a serifa, com a estrela de 4 pontas dentro */}
+          <ellipse cx="50" cy="50" rx="41" ry="45" fill="none" stroke="url(#pl-o-gold)" strokeWidth="5" />
+          <path d="M50 20C51.3 40 54 46 70 50 54 54 51.3 60 50 80 48.7 60 46 54 30 50 46 46 48.7 40 50 20Z" fill="url(#pl-o-gold)" />
+        </svg>
         <span className="pl-gold" aria-hidden>
           LAS
         </span>
       </h1>
-      <svg className="pl-flourish" viewBox="0 0 600 70" aria-hidden>
-        <defs>
-          <linearGradient id="pl-gold-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fbe3a4" />
-            <stop offset="0.45" stopColor="#e2b45c" />
-            <stop offset="1" stopColor="#a8742a" />
-          </linearGradient>
-          <radialGradient id="pl-mini-pearl" cx="0.38" cy="0.32" r="0.75">
-            <stop offset="0" stopColor="#ffffff" />
-            <stop offset="0.6" stopColor="#f6e6f3" />
-            <stop offset="1" stopColor="#d9b8d4" />
-          </radialGradient>
-        </defs>
-        <g fill="none" stroke="url(#pl-gold-g)" strokeLinecap="round" strokeLinejoin="round">
-          {/* traço principal: sai da perolinha, sobe suave e termina numa voluta enrolando para dentro */}
-          <path d="M286 40 C250 44 190 45 140 38 C110 34 92 26 88 16 C85 7 94 2 102 5 C110 8 108 18 100 18 C95 18 93 13 96 10" strokeWidth="3.6" />
-          <path d="M314 40 C350 44 410 45 460 38 C490 34 508 26 512 16 C515 7 506 2 498 5 C490 8 492 18 500 18 C505 18 507 13 504 10" strokeWidth="3.6" />
-          {/* segundo traço, fino, embaixo */}
-          <path d="M282 51 C250 56 205 56 170 50" strokeWidth="1.5" />
-          <path d="M318 51 C350 56 395 56 430 50" strokeWidth="1.5" />
-        </g>
-        {/* estrelinhas ao lado das volutas */}
-        <path d="M62 44C62.3 48 64 49.7 68 50 64 50.3 62.3 52 62 56 61.7 52 60 50.3 56 50 60 49.7 61.7 48 62 44Z" fill="#f2cf7a" />
-        <path d="M538 44C538.3 48 540 49.7 544 50 540 50.3 538.3 52 538 56 537.7 52 536 50.3 532 50 536 49.7 537.7 48 538 44Z" fill="#f2cf7a" />
-        <circle cx="300" cy="40" r="11" fill="none" stroke="url(#pl-gold-g)" strokeWidth="2.4" />
-        <circle cx="300" cy="40" r="7" fill="url(#pl-mini-pearl)" />
-        <circle cx="297.5" cy="37.5" r="2" fill="#fff" />
-      </svg>
       <div className="pl-year">
         <i aria-hidden />
         <span className="pl-gold">{year}</span>
@@ -112,11 +75,36 @@ export function LightSwirls() {
   );
 }
 
-/** Brilho do sol nascendo no horizonte, sobre o mar da arte oficial. */
+/** A pérola é o sol nascendo no horizonte (manual de marca): raios dourados atrás, reflexo no mar. Cai no rio ao rolar. */
 export function PearlHorizon() {
   return (
     <div className="pearl-horizon" aria-hidden>
-      <div className="pearl-rays" />
+      <svg className="pearl-sunrays" viewBox="-500 -500 1000 500" preserveAspectRatio="xMidYMax meet">
+        <defs>
+          <radialGradient id="ray-fade" cx="0" cy="0" r="500" gradientUnits="userSpaceOnUse">
+            <stop offset="0.06" stopColor="#fff6e2" stopOpacity="1" />
+            <stop offset="0.35" stopColor="#f6cf8a" stopOpacity="0.75" />
+            <stop offset="1" stopColor="#f6cf8a" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="ray-glow" cx="0" cy="0" r="260" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#fffaf0" stopOpacity="0.95" />
+            <stop offset="0.4" stopColor="#ffe2b8" stopOpacity="0.45" />
+            <stop offset="1" stopColor="#ffe2b8" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="0" cy="0" r="260" fill="url(#ray-glow)" />
+        <g stroke="url(#ray-fade)" strokeLinecap="round">
+          {Array.from({ length: 37 }, (_, i) => {
+            const a = Math.PI * (i / 36);
+            const long = i % 2 === 0;
+            const r = long ? 480 : 330;
+            return <line key={i} x1={0} y1={0} x2={(-Math.cos(a) * r).toFixed(1)} y2={(-Math.sin(a) * r).toFixed(1)} strokeWidth={long ? 1.6 : 1} />;
+          })}
+        </g>
+      </svg>
+      <div className="pearl-2027" data-pearl>
+        <div className="pearl w-full" />
+      </div>
       {/* eslint-disable-next-line @next/next/no-img-element -- faixa de mar da arte oficial, já otimizada */}
       <img src="/2027/mar.webp" alt="" className="sea-strip" fetchPriority="high" />
     </div>
@@ -131,9 +119,9 @@ export function HeroMermaids() {
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027 */}
-      <img src="/2027/sereia-esq.webp" alt="" className="hero-mermaid is-left" fetchPriority="high" />
+      <img src="/2027/sereia-se-inteira.webp" alt="" className="hero-mermaid is-left" fetchPriority="high" />
       {/* eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027 */}
-      <img src="/2027/sereia-dir.webp" alt="Sereias da campanha Réveillon Pérolas 2027" className="hero-mermaid is-right" fetchPriority="high" />
+      <img src="/2027/sereia-sd-inteira.webp" alt="Sereias da campanha Réveillon Pérolas 2027" className="hero-mermaid is-right" fetchPriority="high" />
     </>
   );
 }

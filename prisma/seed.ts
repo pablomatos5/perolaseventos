@@ -68,27 +68,13 @@ async function main() {
         create: [
           {
             name: "Pista Open Bar",
-            description: "Acesso à pista e 7 horas de open bar.",
+            description: "Acesso à festa e 7 horas de open bar.",
             sortOrder: 1,
             batches: {
               create: [
-                // 1º lote já esgotado, para a tela mostrar a virada de lote
-                { name: "1º lote", sortOrder: 1, priceCents: reais(150), quantity: 100, closedAt: new Date() },
-                { name: "2º lote", sortOrder: 2, priceCents: reais(180), quantity: 150 },
-                { name: "3º lote", sortOrder: 3, priceCents: reais(220), quantity: 150 },
-                { name: "Lote final", sortOrder: 4, priceCents: reais(260), quantity: 100 },
-              ],
-            },
-          },
-          {
-            name: "Camarote Pérola",
-            description: "Área exclusiva com vista para o rio, open bar premium e espaço para sentar.",
-            sortOrder: 2,
-            maxPerOrder: 6,
-            batches: {
-              create: [
-                { name: "1º lote", sortOrder: 1, priceCents: reais(350), quantity: 40 },
-                { name: "2º lote", sortOrder: 2, priceCents: reais(420), quantity: 40 },
+                // lote promocional: valor único (mesmo para homem e mulher). Próximos lotes entram quando a
+                // diretoria fechar os valores (1º lote previsto: ~R$ 185 masculino / ~R$ 175 feminino).
+                { name: "Lote promocional", sortOrder: 1, priceCents: reais(150), quantity: 200 },
               ],
             },
           },

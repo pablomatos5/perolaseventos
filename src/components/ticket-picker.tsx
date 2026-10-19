@@ -19,6 +19,7 @@ export type PickerType = {
   femaleCents: number;
   remaining: number;
   lowStock: boolean;
+  soldPct: number;
   next: { name: string; priceCents: number } | null;
 };
 
@@ -68,7 +69,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
   const items = types.map((t) => ({ ticketTypeId: t.id, ...get(t.id) })).filter((i) => i.masc + i.fem > 0);
 
   return (
-    <form ref={formRef} action={action} className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
+    <form ref={formRef} action={action} className="grid items-start gap-10 lg:grid-cols-[1.4fr_1fr]">
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="items" value={JSON.stringify(items)} />
 
@@ -95,6 +96,16 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
 
               {t.status === "open" ? (
                 <>
+                  {/* barra do lote: dá a noção de como as vendas estão andando */}
+                  <div className="lot-progress mt-5" role="img" aria-label={`${t.batchName}: ${t.soldPct}% vendido`}>
+                    <div className="flex items-baseline justify-between text-xs">
+                      <span className="font-semibold uppercase tracking-[0.18em] text-fg-muted">Vendas do lote</span>
+                      <span className="tabular-nums font-semibold text-accent">{t.soldPct}% vendido</span>
+                    </div>
+                    <div className="lot-bar mt-2">
+                      <i style={{ width: `${Math.max(4, t.soldPct)}%` }} />
+                    </div>
+                  </div>
                   {t.lowStock && (
                     <p className="mt-4 inline-block rounded-full bg-accent/15 px-3 py-1 text-xs font-medium text-accent">
                       Últimos ingressos do {t.batchName}

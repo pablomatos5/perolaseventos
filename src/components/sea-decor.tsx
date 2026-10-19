@@ -142,3 +142,27 @@ export function KorakiMark() {
     </span>
   );
 }
+
+// conchas e pérolas espalhadas pela areia da seção de ingressos: [x%, y%, tamanho rem, giro, tipo]
+const TREASURES = [
+  [4, 14, 2.6, -18, "s"], [93, 9, 2.2, 22, "s"], [8, 62, 1.9, 12, "s"], [91, 55, 2.8, -10, "s"], [48, 94, 2, 28, "s"],
+  [12, 30, 0.9, 0, "p"], [14, 32.5, 0.55, 0, "p"], [86, 34, 0.8, 0, "p"], [6, 84, 0.75, 0, "p"], [95, 80, 1, 0, "p"],
+  [30, 97, 0.6, 0, "p"], [70, 96, 0.85, 0, "p"], [2, 45, 0.6, 0, "p"],
+] as const;
+
+/** Conchinhas douradas e pérolas na areia (seção de ingressos). Decorativas, paradas: custo zero. */
+export function SandTreasures() {
+  return (
+    <div className="sand-treasures" aria-hidden>
+      {TREASURES.map(([x, y, size, rot, kind]) =>
+        kind === "s" ? (
+          <span key={`${x}-${y}`} className="sand-shell-wrap" style={{ left: `${x}%`, top: `${y}%`, width: `${size}rem`, rotate: `${rot}deg` }}>
+            <Scallop />
+          </span>
+        ) : (
+          <span key={`${x}-${y}`} className="sand-pearl-deco" style={{ left: `${x}%`, top: `${y}%`, width: `${size}rem` }} />
+        ),
+      )}
+    </div>
+  );
+}

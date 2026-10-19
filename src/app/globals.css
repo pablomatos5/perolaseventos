@@ -1559,119 +1559,51 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
 
 /* logo: serifa clássica dourada com a estrela de 4 pontas dentro do O */
 /* logo: caixa-alta fina e bem espaçada (moderna), com uma pérola de verdade no lugar do O */
-/* ───────── Logo PÉROLAS 2K27 (arte oficial 2027) ───────── */
-.pl { --pl: clamp(3rem, min(12vw, 12.5svh), 8.2rem); display: grid; justify-items: center; }
-.pl { position: relative; isolation: isolate; padding-top: calc(var(--pl) * 0.85); }
-.pl-shell {
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: 0;
-  width: calc(var(--pl) * 3.6);
-  height: auto;
-  translate: -50% 0;
-  filter: drop-shadow(0 0.4rem 1.4rem rgb(60 30 110 / 0.28));
-  pointer-events: none;
-}
-/* dourado metálico: claro em cima, dourado no meio, bronze embaixo, com brilho na linha do meio */
+/* ───────── Logo RÉVEILLON PÉROLAS 2027 (manual de marca aprovado) ─────────
+   serifa fina de alto contraste (Cormorant), O = aro com a estrela de 4 pontas, tudo em dourado */
+.pl { --pl: clamp(3.4rem, min(13vw, 14svh), 9rem); display: grid; justify-items: center; }
 .pl-gold {
-  background: linear-gradient(180deg, #fff1c4 0%, #f2cf7a 28%, #d9a54a 52%, #f6d98e 60%, #b47c2c 100%);
+  background: linear-gradient(180deg, #fff0c8 0%, #f0cd80 30%, #d6a24a 55%, #f4d58c 64%, #a8742a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0.02em 0 rgb(122 76 22 / 0.55)) drop-shadow(0 0.06em 0.12em rgb(60 30 90 / 0.25));
+  filter: drop-shadow(0 0.03em 0.02em rgb(110 70 20 / 0.45)) drop-shadow(0 0 0.35em rgb(255 236 200 / 0.55));
 }
 .pl-kicker {
-  display: flex;
-  align-items: center;
-  gap: 0.9em;
-  font-family: var(--font-cinzel), Georgia, serif;
+  font-family: var(--font-cormorant), Georgia, serif;
   font-weight: 500;
-  font-size: calc(var(--pl) * 0.2);
+  font-size: calc(var(--pl) * 0.21);
   letter-spacing: 0.42em;
-  color: #e9bf6a;
-  text-shadow: 0 1px 0 rgb(122 76 22 / 0.45);
+  margin-right: -0.42em;
+  text-transform: uppercase;
 }
-.pl-kicker span { margin-right: -0.42em; background: linear-gradient(180deg, #fbe3a4, #c9913c); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.pl-kicker i, .pl-year i {
-  position: relative;
-  width: calc(var(--pl) * 1.25);
-  height: 1.5px;
-  background: linear-gradient(90deg, transparent, #e2b45c 40%, #e2b45c);
-}
-.pl-kicker i:last-child, .pl-year i:last-child { background: linear-gradient(90deg, #e2b45c, #e2b45c 60%, transparent); }
-/* estrelinha na ponta de fora de cada fio do RÉVEILLON */
-.pl-kicker i::before {
-  content: "✦";
-  position: absolute;
-  top: 50%;
-  translate: 0 -52%;
-  left: -0.9em;
-  font-size: 0.55em;
-  letter-spacing: 0;
-  color: #f2cf7a;
-}
-.pl-kicker i:last-child::before { left: auto; right: -0.9em; }
 .pl-name {
-  position: relative;
   display: flex;
   align-items: center;
-  margin-top: calc(var(--pl) * 0.08);
-  font-family: var(--font-cinzel), Georgia, serif;
-  font-weight: 500;
+  margin-top: calc(var(--pl) * -0.02);
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 300;
   font-size: var(--pl);
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.035em;
 }
-.pl-o { position: relative; display: inline-grid; place-items: center; width: 0.86em; height: 0.86em; margin: 0 0.05em; }
-/* pérola realista (prata com reflexo esverdeado e rosado) dentro do aro dourado */
-.pl-o::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  padding: 0.035em;
-  background: conic-gradient(from 210deg, #b47c2c, #fbe3a4, #d9a54a, #fff1c4, #b47c2c, #e2b45c, #b47c2c);
-  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  filter: drop-shadow(0 0.02em 0 rgb(122 76 22 / 0.5));
-}
-.pl-pearl {
-  width: 78%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 26%, #ffffff 0 9%, rgb(255 255 255 / 0.85) 13%, transparent 30%),
-    radial-gradient(circle at 70% 78%, rgb(255 236 246 / 0.9), transparent 42%),
-    radial-gradient(circle at 60% 55%, rgb(150 168 150 / 0.55), transparent 55%),
-    radial-gradient(circle at 45% 42%, #fbfbf7 0%, #e3e5df 45%, #b9bdb3 78%, #8e938a 100%);
-  box-shadow:
-    0 0 0.35em 0.06em rgb(255 248 236 / 0.85),
-    inset -0.06em -0.08em 0.14em rgb(70 74 68 / 0.45),
-    inset 0.04em 0.05em 0.08em rgb(255 255 255 / 0.9);
-}
-.pl-spark { position: absolute; color: #f6d98e; filter: drop-shadow(0 0 0.08em rgb(255 240 200 / 0.9)); pointer-events: none; }
-.pl-spark-o { width: 0.34em; top: -0.06em; right: -0.08em; }
-.pl-spark-o2 { width: 0.13em; top: -0.18em; right: -0.22em; }
-.pl-spark-l { width: 0.16em; left: -0.32em; top: 50%; translate: 0 -50%; }
-.pl-flourish { width: calc(var(--pl) * 4); max-width: 92vw; margin-top: calc(var(--pl) * 0.04); filter: drop-shadow(0 1px 0 rgb(122 76 22 / 0.4)); }
+.pl-o { width: 0.66em; height: 0.74em; margin: 0 0.05em 0.02em; overflow: visible; filter: drop-shadow(0 0.03em 0.02em rgb(110 70 20 / 0.45)) drop-shadow(0 0 0.3em rgb(255 236 200 / 0.6)); }
 .pl-year {
   display: flex;
   align-items: center;
-  gap: 0.6em;
-  margin-top: calc(var(--pl) * 0.08);
-  font-family: var(--font-cinzel), Georgia, serif;
+  gap: 0.8em;
+  margin-top: calc(var(--pl) * 0.04);
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 400;
+  font-size: calc(var(--pl) * 0.3);
   font-weight: 500;
-  font-size: calc(var(--pl) * 0.48);
-  line-height: 1;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.32em;
 }
-.pl-year i { width: calc(var(--pl) * 1.6); opacity: 0.55; }
-@media (max-width: 767px) {
-  .pl { --pl: clamp(2.6rem, 14.5vw, 4.2rem); }
-  .pl-kicker i { width: calc(var(--pl) * 0.9); }
-}
-.hero-tagline { margin-top: 1.1rem; font-size: clamp(0.62rem, 1.3vw, 0.82rem); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: #5440a8; }
+.pl-year span { margin-right: -0.32em; }
+.pl-year i { width: calc(var(--pl) * 0.95); height: 1.5px; background: linear-gradient(90deg, transparent, #c99a4e); }
+.pl-year i:last-child { background: linear-gradient(90deg, #c99a4e, transparent); }
+@media (max-width: 767px) { .pl { --pl: clamp(2.8rem, 15.5vw, 4.4rem); } }
+.hero-tagline { margin-top: 1rem; font-size: clamp(0.64rem, 1.3vw, 0.84rem); font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #fff8ec; text-shadow: 0 1px 10px rgb(60 40 140 / 0.55); }
 .hero-countdown { --fg-faint: rgb(69 53 143 / 0.75); }
 .hero-countdown .font-display { color: #45358f; }
 /* o mar continua até as ondas (sem a faixa do céu entre eles) */
@@ -2102,3 +2034,241 @@ main { overflow-x: clip; }
   animation: rv-in 900ms var(--ease) both;
 }
 @media (min-width: 768px) { .story-confirm { grid-template-columns: 22rem 1fr; } }
+
+/* ───────── A pérola é o sol nascendo no horizonte (manual de marca) ───────── */
+.pearl-2027 {
+  position: absolute;
+  z-index: 2;
+  left: calc(50% - var(--pw) / 2);
+  bottom: 30%;
+  width: var(--pw);
+  will-change: translate, scale;
+  transition: opacity 0.35s ease-out, scale 0.35s ease-out, translate 0.35s ease-out;
+  animation: pearl-rise-sun 2.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.4s both;
+}
+@keyframes pearl-rise-sun { from { translate: 0 45%; opacity: 0; } }
+.pearl-2027.is-sunk { opacity: 0; }
+.pearl-2027 .pearl {
+  animation: none;
+  box-shadow: 0 0 0.6rem 0.2rem rgb(255 250 240 / 0.9), 0 0 3rem 1rem rgb(255 230 190 / 0.85), 0 0 9rem 3rem rgb(255 200 150 / 0.45), inset -10px -12px 26px rgb(150 100 140 / 0.3);
+}
+/* raios de sol finos (como o "sol de raios" do manual) */
+.pearl-horizon .pearl-rays {
+  z-index: 1;
+  bottom: 30%;
+  width: min(150vw, 86rem);
+  aspect-ratio: 2 / 1;
+  background:
+    radial-gradient(closest-side at 50% 100%, rgb(255 250 238) 0%, rgb(255 230 186 / 0.8) 16%, rgb(255 214 160 / 0.35) 40%, transparent 75%),
+    repeating-conic-gradient(from -90deg at 50% 100%, rgb(240 188 110 / 0.7) 0deg 1.2deg, transparent 1.2deg 4deg, rgb(255 240 210 / 0.55) 4deg 4.8deg, transparent 4.8deg 8deg);
+  -webkit-mask-image: radial-gradient(closest-side at 50% 100%, #000 18%, rgb(0 0 0 / 0.6) 50%, transparent 100%);
+  mask-image: radial-gradient(closest-side at 50% 100%, #000 18%, rgb(0 0 0 / 0.6) 50%, transparent 100%);
+}
+@keyframes rays-turn { to { filter: hue-rotate(0deg); } }
+.pearl-horizon { --pw: clamp(3.8rem, 8vw, 6rem); }
+@media (max-width: 767px) { .pearl-2027, .pearl-horizon .pearl-rays { bottom: 30%; } }
+@supports (animation-timeline: scroll()) {
+  [data-pearl].sd {
+    animation: pearl-fall linear both;
+    animation-duration: 1ms;
+    animation-duration: auto;
+    animation-timeline: scroll(root);
+    animation-range: 0px var(--fall-range, 400px);
+    transition: none;
+  }
+}
+@keyframes pearl-fall {
+  0% { translate: 0 0; scale: 1; opacity: 1; animation-timing-function: ease-in-out; }
+  88% { translate: 0 var(--fall, 0px); scale: 0.75; opacity: 1; animation-timing-function: ease-out; }
+  100% { translate: 0 calc(var(--fall, 0px) + 6px); scale: 0.3; opacity: 0; }
+}
+
+/* splash quando a pérola toca o mar */
+.splash {
+  position: absolute;
+  z-index: 1;
+  top: 32%;
+  left: var(--splash-x, 50%);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.splash .ring {
+  position: absolute;
+  left: -3rem;
+  top: -0.75rem;
+  width: 6rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1.5px solid rgb(255 255 255 / 0.85);
+  opacity: 0;
+}
+.splash .flash {
+  position: absolute;
+  left: -4rem;
+  top: -4rem;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--pearl-glow) / 0.9), transparent 65%);
+  opacity: 0;
+}
+.splash .drop {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgb(255 255 255 / 0.9);
+  opacity: 0;
+}
+.ocean-waves.is-splash .splash .ring { animation: ripple 1.6s ease-out forwards; }
+.ocean-waves.is-splash .splash .ring:nth-child(2) { animation-delay: 0.18s; }
+.ocean-waves.is-splash .splash .ring:nth-child(3) { animation-delay: 0.36s; }
+.ocean-waves.is-splash .splash .flash { animation: flash 0.9s ease-out forwards; }
+.ocean-waves.is-splash .splash .drop { animation: drop 0.85s cubic-bezier(0.2, 0.6, 0.4, 1) var(--dd, 0s) forwards; }
+@keyframes flash {
+  0% { opacity: 0; transform: scale(0.3); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+/* gota sobe e cai de volta (parábola aproximada com 3 quadros) */
+@keyframes drop {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  50% { opacity: 1; transform: translate(calc(var(--dx) * 0.6), var(--dy)) scale(0.9); }
+  100% { opacity: 0; transform: translate(var(--dx), 10px) scale(0.5); }
+}
+@keyframes ripple {
+  0% { opacity: 0.9; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(3.2); }
+}
+
+
+@media (prefers-reduced-motion: reduce) { .pearl-2027 { animation: none; } }
+
+/* ───────── Sereias inteiras (cauda, pedra e concha), apoiadas na linha do mar ───────── */
+.hero-mermaid { height: min(82svh, 46rem); bottom: clamp(3rem, 7vw, 5rem); z-index: 1; }
+@media (max-width: 767px) {
+  .hero-mermaid { height: 50svh; bottom: calc(3rem + 3svh); z-index: 4; }
+  .hero-mermaid.is-left { left: -24vw; }
+  .hero-mermaid.is-right { right: -24vw; }
+  .pearl-sunrays { width: 150vw; }
+}
+
+/* ───────── O rio: depois que a pérola cai, a água tem reflexos de luz (não é mais roxo liso) ───────── */
+.hero-2027 .ocean-waves, .beach::before, .beach-wave {
+  background-image:
+    radial-gradient(1.6px 1.6px at 40px 30px, rgb(255 246 228), transparent),
+    radial-gradient(1.2px 1.2px at 150px 90px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(2px 2px at 260px 50px, rgb(255 236 200), transparent),
+    radial-gradient(1.3px 1.3px at 320px 130px, rgb(255 255 255 / 0.85), transparent),
+    repeating-linear-gradient(180deg, transparent 0 11px, rgb(255 244 228 / 0.16) 11px 12px, transparent 12px 23px, rgb(255 255 255 / 0.08) 23px 24px),
+    linear-gradient(180deg, #7b67d6, #8c78e0 55%, #a58ce9);
+  background-size: 360px 170px, 360px 170px, 360px 170px, 360px 170px, 100% 100%, 100% 100%;
+}
+
+/* raios de sol em SVG saindo da pérola (o centro do SVG = centro da pérola, na linha do horizonte) */
+.pearl-sunrays {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: calc(30% + var(--pw) / 2);
+  width: min(130vw, 70rem);
+  translate: -50% 0;
+  pointer-events: none;
+  overflow: visible;
+  animation: fade-in 2s ease-out 0.8s both;
+}
+.pearl-horizon .pearl-rays { display: none; }
+
+/* barra de progresso do lote (ingressos) */
+.lot-bar { height: 0.6rem; border-radius: 999px; background: rgb(84 64 168 / 0.12); box-shadow: inset 0 1px 2px rgb(40 20 90 / 0.15); overflow: hidden; }
+.lot-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f3cf8c, #d9a54a 60%, #b47c2c);
+  box-shadow: 0 0 0.6rem rgb(240 196 119 / 0.7);
+  transition: width 1.2s var(--ease);
+}
+
+/* ───────── Ingressos na areia (caramelo), com conchas e pérolas ───────── */
+.ingressos-sand {
+  position: relative;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 25%, rgb(255 236 210 / 0.55), transparent 70%),
+    linear-gradient(180deg, transparent 0, #f1d2ae 8rem, #e9c193 45%, #dfb07e 100%);
+}
+/* grãos e ondulações só na parte de areia (o começo da seção se funde com o céu) */
+.ingressos-sand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgb(255 255 255 / 0.4) 0 1px, transparent 1.6px) 0 0 / 13px 13px,
+    radial-gradient(circle at 70% 60%, rgb(140 90 40 / 0.25) 0 1px, transparent 1.6px) 0 0 / 11px 11px,
+    repeating-radial-gradient(ellipse 140% 40px at 50% 0, transparent 0 22px, rgb(255 248 236 / 0.28) 22px 23px, transparent 23px 34px, rgb(140 90 40 / 0.12) 34px 35px, transparent 35px 46px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 2rem, #000 10rem);
+  mask-image: linear-gradient(180deg, transparent 2rem, #000 10rem);
+  pointer-events: none;
+}
+.sand-treasures { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.sand-shell-wrap { position: absolute; color: #b47c2c; filter: drop-shadow(0 3px 2px rgb(110 70 30 / 0.35)); }
+.sand-shell-wrap svg { width: 100%; height: auto; fill: rgb(255 240 220 / 0.85); }
+.sand-pearl-deco {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff 0 16%, #f6eeff 50%, #c9b4ef);
+  box-shadow: 0 3px 3px rgb(110 70 30 / 0.35), 0 0 10px rgb(255 255 255 / 0.8);
+}
+.ingressos-sand .eyebrow { color: #6e4515; }
+.ingressos-sand h2 { color: #3a2410; }
+.ingressos-sand .text-fg-muted { color: rgb(70 45 20 / 0.85); }
+@media (max-width: 767px) { .sand-shell-wrap { opacity: 0.8; } }
+
+/* ───────── Concha do logotipo (linhas onduladas) no carrossel da areia ───────── */
+.wavy-shell { position: relative; display: block; width: min(clamp(15rem, 80vw, 25rem), 46svh); margin-bottom: 0.4rem; text-shadow: none; }
+.wavy-shell > * { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.wavy-shell::before {
+  content: "";
+  position: absolute;
+  inset: auto 8% -3% 8%;
+  height: 18%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(80 50 20 / 0.38), transparent);
+}
+.wavy-shell-top { transform-origin: 50% 71.5%; filter: drop-shadow(0 0 0.5rem rgb(255 236 200 / 0.8)); }
+.wavy-shell-bottom { z-index: 2; filter: drop-shadow(0 0.3rem 0.4rem rgb(110 70 30 / 0.3)); }
+.wavy-pearl {
+  z-index: 1;
+  inset: auto !important;
+  left: 33% !important;
+  top: 33% !important;
+  width: 34% !important;
+  height: auto !important;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 3%;
+  background: conic-gradient(from 200deg, #fff, #f6dca6, #fff6e2, #e2b45c, #fff, #f3d48e, #fff);
+  box-shadow: 0 0 1.4rem 0.3rem rgb(255 236 200 / 0.85), 0 0.5rem 1rem -0.3rem rgb(70 40 10 / 0.45);
+}
+.wavy-pearl img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 55% 35%; display: block; }
+/* abertura: chega fechada (leque deitado sobre a tigela), abre pela dobradiça e a pérola sobe */
+.tide-writing.is-active .wavy-shell { animation: shell-arrive 0.6s var(--ease) both; }
+.tide-writing.is-active .wavy-shell-top { animation: wavy-open 1.5s cubic-bezier(0.3, 0, 0.2, 1.15) 0.7s both; }
+.tide-writing.is-active .wavy-pearl { animation: wavy-pearl-up 0.9s var(--ease) 1.6s both; }
+@keyframes shell-arrive { from { scale: 0.85; opacity: 0; } }
+@keyframes wavy-open { from { transform: perspective(500px) rotateX(-82deg); } to { transform: perspective(500px) rotateX(0deg); } }
+@keyframes wavy-pearl-up { from { translate: 0 40%; scale: 0.4; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .tide-writing.is-active .wavy-shell, .tide-writing.is-active .wavy-shell-top, .tide-writing.is-active .wavy-pearl { animation: none; }
+}
+/* celular: 2027 e raios mais firmes (tela pequena apaga detalhes finos) */
+@media (max-width: 767px) {
+  .pl-year { font-size: calc(var(--pl) * 0.38); font-weight: 600; }
+  .pearl-sunrays line { stroke-width: 3; }
+}

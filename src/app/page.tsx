@@ -6,6 +6,7 @@ import { Lineup, PartyDetails } from "@/components/party-sections";
 import { InstagramIcon } from "@/components/attraction-cards";
 import { HeroMermaids, LightSwirls, PearlHorizon, PerolasLogo, Star4 } from "@/components/hero-2027";
 import { OceanWaves, Sparkles } from "@/components/shell-opening";
+import { PearlDrop } from "@/components/pearl-drop";
 import { Campaign, Faq, Story, Ticker } from "@/components/story-sections";
 import { PastEditions } from "@/components/past-editions";
 import { StickyBuy } from "@/components/sticky-buy";
@@ -15,7 +16,7 @@ import { TicketPicker, type PickerType } from "@/components/ticket-picker";
 import { currentBatch } from "@/lib/batches";
 import { db } from "@/lib/db";
 import { femalePrice } from "@/lib/format";
-import { KorakiMark, Seabed, SideMermaid } from "@/components/sea-decor";
+import { KorakiMark, SandTreasures, Seabed, SideMermaid } from "@/components/sea-decor";
 
 export default function Home() {
   return (
@@ -58,6 +59,8 @@ async function EventPage() {
       femaleCents: open ? femalePrice(open.batch) : 0,
       remaining: open?.remaining ?? 0,
       lowStock: open ? open.remaining / open.batch.quantity <= 0.2 : false,
+      // barra do lote: % vendido (arredondado de 5 em 5, sem número exato de ingressos)
+      soldPct: open ? Math.min(100, Math.round(((1 - open.remaining / Math.max(1, open.batch.quantity)) * 100) / 5) * 5) : 0,
       next: open?.nextBatch ? { name: open.nextBatch.name, priceCents: open.nextBatch.priceCents } : null,
     });
   }
@@ -103,7 +106,7 @@ async function EventPage() {
         </header>
 
         <div className="hero-copy relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-5 pb-2 text-center">
-          <PerolasLogo year={event.edition.toUpperCase()} className="rv" />
+          <PerolasLogo year={event.edition.replace(/^2K/i, "20")} className="rv" />
           <p className="hero-tagline rv" style={{ animationDelay: "0.5s" }}>
             {campaign.tagline}
           </p>
@@ -133,7 +136,9 @@ async function EventPage() {
       <PartyDetails highlights={event.highlights} />
       <Lineup attractions={event.attractions} />
 
-      <section id="ingressos" className="with-mermaid scroll-mt-8">
+      <section id="ingressos" className="with-mermaid ingressos-sand scroll-mt-8">
+        {/* conchas e pérolas deixadas na areia */}
+        <SandTreasures />
         <SideMermaid side="left" />
         <SideMermaid side="right" />
         <div className="mx-auto w-full max-w-6xl px-5 py-20 md:px-8 md:py-28">
@@ -152,6 +157,7 @@ async function EventPage() {
       <Story />
       <Faq />
       <StickyBuy />
+      <PearlDrop />
 
       <footer className="cv-auto seabed-footer px-5 pt-6 text-center">
         <Seabed />
