@@ -3085,3 +3085,18 @@ html[data-edition="2k27"] { background: #070719; }
 /* botão dourado: o degradê cobre também a borda transparente (antes ele se repetia nela e as pontas pareciam cortadas) */
 .btn.solid { background-origin: border-box; background-repeat: no-repeat; }
 
+/* celular: RÉVEILLON PÉROLAS mais legível sobre o céu (sem véu escuro, a pedido do cliente): dourado um pouco mais
+   vivo, contorno fino violeta-escuro e brilho quente em volta das letras; estrelas somem atrás da escrita */
+@media (max-width: 767px) {
+  .pl .brand-logo img {
+    filter: brightness(1.08) contrast(1.12) saturate(1.1)
+      drop-shadow(0 0 0.6px rgb(40 22 96 / 0.95)) drop-shadow(0 1px 1.5px rgb(40 22 96 / 0.7))
+      drop-shadow(0 0 10px rgb(255 226 170 / 0.45));
+  }
+  .hero-sky-2027::after {
+    -webkit-mask-image: radial-gradient(ellipse 60% 13% at 50% 24%, transparent 35%, #000 100%), linear-gradient(180deg, #000 0%, #000 30%, rgb(0 0 0 / 0.55) 48%, transparent 66%);
+    -webkit-mask-composite: source-in;
+    mask-image: radial-gradient(ellipse 60% 13% at 50% 24%, transparent 35%, #000 100%), linear-gradient(180deg, #000 0%, #000 30%, rgb(0 0 0 / 0.55) 48%, transparent 66%);
+    mask-composite: intersect;
+  }
+}
