@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { activeEvent, batchReport, kpis } from "@/lib/admin-data";
 import { formatBRL, formatDateTime } from "@/lib/format";
 import { closeBatchAction, reopenBatchAction, togglePauseAction } from "../actions";
-import { QuantityForm } from "../forms";
+import { QuantityForm, SplitPixForm } from "../forms";
 
 const STATE_STYLE: Record<string, string> = {
   "à venda": "bg-ok/15 text-ok",
@@ -28,6 +28,7 @@ export default async function AdminHome() {
     { label: "Cortesias", value: k.courtesies },
     { label: "Check-ins", value: k.checkins },
     { label: "Pagamentos em aberto agora", value: k.pending },
+    { label: "Pix 2x aguardando a 2ª parcela", value: k.partial },
   ];
 
   return (
@@ -52,6 +53,10 @@ export default async function AdminHome() {
           </div>
         ))}
       </dl>
+      <section className="grid gap-3">
+        <h2 className="font-display text-2xl">Pix em 2x</h2>
+        <SplitPixForm eventId={event.id} enabled={event.splitPixEnabled} days={event.splitPixDays} />
+      </section>
       {k.late > 0 && (
         <p className="rounded-xl bg-accent/15 px-4 py-3 text-sm text-accent">
           {k.late} pedido(s) pagos depois da reserva expirar: ingressos emitidos mesmo assim, confira se o lote não estourou.

@@ -1,3 +1,4 @@
+import { holdingOrder } from "@/lib/batches";
 import { currentBatch } from "@/lib/batches";
 import { db } from "@/lib/db";
 
@@ -33,7 +34,7 @@ export async function batchReport(eventId: string) {
     db.ticket.groupBy({ by: ["batchId"], where: { ...inEvent, status: "VALID" }, _count: { _all: true }, _sum: { priceCents: true } }),
     db.ticket.groupBy({
       by: ["batchId"],
-      where: { ...inEvent, status: "RESERVED", order: { status: "PENDING", expiresAt: { gt: now } } },
+      where: { ...inEvent, status: "RESERVED", order: holdingOrder(now) },
       _count: { _all: true },
     }),
     db.ticket.groupBy({ by: ["batchId"], where: { ...inEvent, status: "VALID", usedAt: { not: null } }, _count: { _all: true } }),
@@ -77,14 +78,15 @@ export async function batchReport(eventId: string) {
 
 export async function kpis(eventId: string) {
   const now = new Date();
-  const [paid, courtesies, checkins, pending, revenue, late] = await Promise.all([
+  const [paid, courtesies, checkins, pending, revenue, late, partial] = await Promise.all([
     db.ticket.count({ where: { status: "VALID", priceCents: { gt: 0 }, order: { eventId } } }),
     db.ticket.count({ where: { status: "VALID", priceCents: 0, order: { eventId } } }),
     db.ticket.count({ where: { status: "VALID", usedAt: { not: null }, order: { eventId } } }),
     db.order.count({ where: { eventId, status: "PENDING", expiresAt: { gt: now } } }),
     db.order.aggregate({ where: { eventId, status: "PAID" }, _sum: { totalCents: true, feeCents: true } }),
     db.order.count({ where: { eventId, status: "PAID", paidLate: true } }),
+    db.order.count({ where: { eventId, status: "PARTIAL", expiresAt: { gt: now } } }),
   ]);
   const feeCents = revenue._sum.feeCents ?? 0;
-  return { paid, courtesies, checkins, pending, revenueCents: (revenue._sum.totalCents ?? 0) - feeCents, feeCents, late };
+  return { paid, courtesies, checkins, pending, partial, revenueCents: (revenue._sum.totalCents ?? 0) - feeCents, feeCents, late };
 }

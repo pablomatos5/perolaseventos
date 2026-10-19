@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import { formatBRL, formatDateTime, genderLabel } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
 import { reconcilePayment } from "@/lib/mercadopago";
-import { RESERVATION_MINUTES } from "@/lib/orders";
+import { firstInstallmentCents, RESERVATION_MINUTES, secondInstallmentDue, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { ticketLinkToken, ticketToken, verifyOrderToken } from "@/lib/tokens";
 import { headers } from "next/headers";
@@ -53,6 +53,14 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
   if (!order) notFound();
 
   const expired = order.status === "EXPIRED" || (order.status === "PENDING" && order.expiresAt < new Date());
+  // Pix em 2x: 1ª parcela paga; vencida = prazo da 2ª passou sem pagamento
+  const partial = order.status === "PARTIAL";
+  const partialOverdue = partial && order.expiresAt < new Date();
+  const remainingCents = order.totalCents - order.firstPaidCents;
+  const canSplit = order.status === "PENDING" && !expired && splitPixAvailable(order.event);
+  const splitDue = canSplit ? secondInstallmentDue(order.event) : null;
+  const firstCents = firstInstallmentCents(order.totalCents);
+  const dayMonth = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Belem" });
   // endereço pelo qual a página foi aberta (domínio em produção, IP da rede em testes no celular)
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
@@ -66,7 +74,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
       <div>
         <span className="eyebrow rule">Pedido {order.code}</span>
         <h1 className="display mt-4 text-[clamp(2.2rem,6vw,3.6rem)]!">
-          {order.status === "PAID" ? <>Te vemos na <em>virada</em></> : expired ? <>Reserva <em>expirada</em></> : <>Falta só o <em>pagamento</em></>}
+          {order.status === "PAID" ? <>Te vemos na <em>virada</em></> : partialOverdue ? <>Prazo da 2ª parcela <em>venceu</em></> : partial ? <>Falta a <em>2ª parcela</em></> : expired ? <>Reserva <em>expirada</em></> : <>Falta só o <em>pagamento</em></>}
         </h1>
         <p className="mt-3 text-fg-muted">
           {order.event.name} {order.event.edition} · {formatDateTime(order.event.startsAt)} · {order.event.venue}
@@ -106,21 +114,74 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
               O pagamento não foi aprovado. Tente outro cartão ou pague com Pix.
             </p>
           )}
-          {mpProvider && (
-            <>
-              <form action={payAction.bind(null, token)} className="mt-6">
-                <button className="btn solid w-full">Pagar com Pix ou cartão</button>
-              </form>
-              <p className="mt-3 text-center text-xs text-fg-faint">
-                Pagamento processado pelo Mercado Pago. Cartão em até 12x. Esta página atualiza sozinha quando o Pix cair.
+          {(mpProvider || isSimulated(mode)) && (
+            <div className="pay-options mt-6">
+              <span className="eyebrow">Como você quer pagar?</span>
+              {(
+                [
+                  { kind: "pix", title: "Pix à vista", price: formatBRL(order.totalCents), note: "Aprovação na hora: os ingressos saem logo depois." },
+                  { kind: "card", title: "Cartão de crédito ou débito", price: formatBRL(order.totalCents), note: "Crédito em até 12x (juros do cartão) ou débito." },
+                  ...(canSplit && splitDue
+                    ? [{
+                        kind: "pix2x-1" as const,
+                        title: "Pix em 2x",
+                        price: `2 × ${formatBRL(firstCents)}`,
+                        note: `1ª agora e 2ª até ${dayMonth(splitDue)}. O ingresso fica reservado e é liberado depois da 2ª parcela.`,
+                      }]
+                    : []),
+                ] as const
+              ).map((o) => (
+                <form key={o.kind} action={(isSimulated(mode) ? simulatePaymentAction : payAction).bind(null, token, o.kind)}>
+                  <button className={`pay-option ${o.kind === "pix" ? "is-main" : ""}`}>
+                    <span className="pay-option-title">{o.title}</span>
+                    <span className="pay-option-price">{o.price}</span>
+                    <span className="pay-option-note">{o.note}</span>
+                  </button>
+                </form>
+              ))}
+              <p className="text-center text-xs text-fg-faint">
+                {isSimulated(mode)
+                  ? mode === "demo" ? "Demonstração: o pagamento é simulado." : "Desenvolvimento: o pagamento é simulado."
+                  : "Pagamento processado pelo Mercado Pago. Esta página atualiza sozinha quando o Pix cair."}
               </p>
-              <AutoRefresh seconds={5} />
-            </>
+              {mpProvider && <AutoRefresh seconds={5} />}
+            </div>
           )}
-          {isSimulated(mode) && (
-            <form action={simulatePaymentAction.bind(null, token)} className="mt-6">
-              <button className="btn solid w-full">{mode === "demo" ? "Simular pagamento (demonstração)" : "Simular pagamento aprovado (dev)"}</button>
-            </form>
+        </section>
+      )}
+
+      {partial && (
+        <section className="glass-card mt-10 p-6 md:p-8">
+          <span className="eyebrow">Pix em 2x</span>
+          <div className="installments mt-4">
+            <div className="installment is-paid">
+              <span>1ª parcela</span>
+              <strong>{formatBRL(order.firstPaidCents)}</strong>
+              <em>paga{order.firstPaidAt ? ` em ${dayMonth(order.firstPaidAt)}` : ""} ✓</em>
+            </div>
+            <div className="installment">
+              <span>2ª parcela</span>
+              <strong>{formatBRL(remainingCents)}</strong>
+              <em>{partialOverdue ? `venceu em ${dayMonth(order.expiresAt)}` : `até ${order.expiresAt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Belem" })}`}</em>
+            </div>
+          </div>
+          {partialOverdue ? (
+            <p className="mt-5 text-sm text-fg-muted">
+              O prazo acabou sem a 2ª parcela e os ingressos voltaram para a venda. Fale com a Pérolas pelo Instagram <strong className="text-fg">@perolaseventos</strong> sobre a parcela já paga.
+            </p>
+          ) : (
+            <>
+              <p className="mt-5 text-sm text-fg-muted">
+                {order.tickets.length > 1 ? `Seus ${order.tickets.length} ingressos estão reservados` : "Seu ingresso está reservado"} até o prazo.
+                O QR e o PDF são liberados <strong className="text-fg">assim que a 2ª parcela for paga</strong>.
+              </p>
+              {(mpProvider || isSimulated(mode)) && (
+                <form action={(isSimulated(mode) ? simulatePaymentAction : payAction).bind(null, token, "pix2x-2")} className="mt-6">
+                  <button className="btn solid w-full">{isSimulated(mode) ? "Simular 2ª parcela (Pix)" : `Pagar 2ª parcela no Pix · ${formatBRL(remainingCents)}`}</button>
+                </form>
+              )}
+              {mpProvider && <AutoRefresh seconds={8} />}
+            </>
           )}
         </section>
       )}

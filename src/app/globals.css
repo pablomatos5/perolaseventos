@@ -2970,3 +2970,30 @@ html[data-edition="2k27"] { background: #070719; }
 }
 .pagina-noite .eyebrow { color: #f0cf8c; }
 .pagina-noite .glass-card .eyebrow { color: #a26f32; }
+
+/* ───────── Formas de pagamento (Pix, cartão, Pix em 2x) e parcelas ───────── */
+.pay-options { display: grid; gap: 0.75rem; }
+.pay-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 1rem;
+  width: 100%;
+  padding: 1rem 1.15rem;
+  text-align: left;
+  border-radius: 1rem;
+  border: 1px solid rgb(162 111 50 / 0.35);
+  background: rgb(255 255 255 / 0.7);
+  color: #2e2466;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.pay-option:hover { border-color: #c9944a; box-shadow: 0 10px 24px -14px rgb(162 111 50 / 0.7); transform: translateY(-1px); }
+.pay-option.is-main { background: linear-gradient(135deg, #fff1d4, #f6d9a5); border-color: #d9a860; }
+.pay-option-title { font-weight: 600; font-size: 0.95rem; }
+.pay-option-price { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.45rem; line-height: 1; color: #7d5424; }
+.pay-option-note { grid-column: 1 / -1; font-size: 0.78rem; color: rgb(40 30 96 / 0.75); }
+.installments { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.installment { display: grid; gap: 0.15rem; padding: 0.9rem 1rem; border-radius: 0.9rem; border: 1px dashed rgb(162 111 50 / 0.45); color: #2e2466; }
+.installment span { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #a26f32; }
+.installment strong { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.6rem; font-weight: 500; }
+.installment em { font-style: normal; font-size: 0.8rem; color: rgb(40 30 96 / 0.75); }
+.installment.is-paid { border-style: solid; background: rgb(212 236 214 / 0.55); border-color: rgb(80 150 100 / 0.45); }

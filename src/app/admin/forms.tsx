@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { createCourtesyAction, createDeviceAction, loginAction, updateQuantityAction, type FormState } from "./actions";
+import { createCourtesyAction, createDeviceAction, loginAction, updateQuantityAction, updateSplitPixAction, type FormState } from "./actions";
 
 function Feedback({ state }: { state: FormState }) {
   if (!state) return null;
@@ -129,5 +129,30 @@ export function ConfirmButton({ message, children, className }: { message: strin
     >
       {children}
     </button>
+  );
+}
+
+/** Pix em 2x: ligar/desligar e prazo (dias depois da 1ª parcela) para a 2ª. */
+export function SplitPixForm({ eventId, enabled, days }: { eventId: string; enabled: boolean; days: number }) {
+  const [state, action, pending] = useActionState(updateSplitPixAction.bind(null, eventId), undefined);
+  return (
+    <form action={action} className="glass-card grid gap-4 p-6 md:grid-cols-[auto_auto_1fr] md:items-end md:p-8">
+      <label className="flex items-center gap-3 text-sm">
+        <input type="checkbox" name="enabled" defaultChecked={enabled} className="size-5 accent-[var(--accent)]" />
+        Oferecer Pix em 2x
+      </label>
+      <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint">
+        Prazo da 2ª parcela (dias)
+        <input name="days" type="number" min={1} max={90} defaultValue={days} className="w-28 rounded-lg border border-line bg-bg/60 px-3 py-2 text-base normal-case tracking-normal text-fg" />
+      </label>
+      <div className="flex flex-wrap items-center gap-4">
+        <button className="btn solid" disabled={pending}>Salvar</button>
+        {state?.ok && <span className="text-sm text-ok">{state.ok}</span>}
+        {state?.error && <span className="text-sm text-danger">{state.error}</span>}
+      </div>
+      <p className="text-xs text-fg-faint md:col-span-3">
+        O prazo conta a partir do pagamento da 1ª parcela e nunca passa de 2 dias antes da festa. Os ingressos ficam reservados até o prazo e só são entregues depois da 2ª parcela; sem a 2ª, voltam para a venda.
+      </p>
+    </form>
   );
 }

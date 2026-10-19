@@ -102,10 +102,17 @@ export async function markOrderPaid(orderId: string, paymentRef: string) {
     if (!order) return false;
 
     const updated = await tx.order.updateMany({
-      where: { id: orderId, status: { in: ["PENDING", "EXPIRED"] } },
+      where: { id: orderId, status: { in: ["PENDING", "EXPIRED", "PARTIAL"] } },
       // Pix que cai depois da reserva expirar: o cliente pagou, então o ingresso sai mesmo assim
       // e fica marcado para conferência no painel.
-      data: { status: "PAID", paidAt: now, paymentRef, paidLate: order.expiresAt < now },
+      // Pagamento à vista num pedido que tinha escolhido Pix 2x (sem parcela paga) vira à vista.
+      data: {
+        status: "PAID",
+        paidAt: now,
+        paymentRef,
+        paidLate: order.expiresAt < now,
+        ...(order.status !== "PARTIAL" && { paymentPlan: "FULL" as const }),
+      },
     });
     if (updated.count === 0) return false;
 
@@ -176,7 +183,54 @@ export async function createCourtesy(input: {
 /** Estorno ou chargeback: o pedido sai de PAID e os QR codes deixam de passar na portaria. */
 export async function refundOrder(orderId: string) {
   await db.$transaction([
-    db.order.updateMany({ where: { id: orderId, status: "PAID" }, data: { status: "REFUNDED" } }),
+    db.order.updateMany({ where: { id: orderId, status: { in: ["PAID", "PARTIAL"] } }, data: { status: "REFUNDED" } }),
     db.ticket.updateMany({ where: { orderId }, data: { status: "CANCELED" } }),
   ]);
+}
+
+// ───────── Pix em 2x ─────────
+
+/** 1ª parcela do Pix em 2x: metade do total, arredondada para cima (a 2ª é o que falta). */
+export const firstInstallmentCents = (totalCents: number) => Math.ceil(totalCents / 2);
+
+const DAY = 86_400_000;
+/** Fim do dia (23h59 em Belém, UTC−3) da data `d`. */
+const endOfDayBelem = (d: Date) => {
+  const local = new Date(d.getTime() - 3 * 3_600_000);
+  return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate(), 23 + 3, 59, 59));
+};
+
+/**
+ * Prazo da 2ª parcela para quem paga a 1ª em `paidAt`: `splitPixDays` dias depois (até 23h59),
+ * mas nunca depois de 2 dias antes da festa. Null = já não dá tempo de parcelar.
+ */
+export function secondInstallmentDue(event: { startsAt: Date; splitPixDays: number }, paidAt = new Date()) {
+  const limit = endOfDayBelem(new Date(event.startsAt.getTime() - 2 * DAY));
+  const due = endOfDayBelem(new Date(paidAt.getTime() + Math.max(1, event.splitPixDays) * DAY));
+  const d = due < limit ? due : limit;
+  return d.getTime() - paidAt.getTime() >= DAY ? d : null; // pelo menos 1 dia para pagar a 2ª
+}
+
+/** O evento oferece Pix em 2x agora? */
+export const splitPixAvailable = (event: { startsAt: Date; splitPixDays: number; splitPixEnabled: boolean }) =>
+  event.splitPixEnabled && secondInstallmentDue(event) !== null;
+
+/**
+ * 1ª parcela do Pix em 2x confirmada: o pedido passa a PARTIAL e a reserva vai até o prazo da 2ª.
+ * Os ingressos continuam RESERVED (sem QR válido, sem entrega). Idempotente como markOrderPaid.
+ * Retorna true se esta chamada foi a que confirmou a parcela.
+ */
+export async function markFirstInstallmentPaid(orderId: string, paymentRef: string, paidCents: number) {
+  const now = new Date();
+  return db.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId }, include: { event: true } });
+    if (!order || order.status !== "PENDING" && order.status !== "EXPIRED") return false;
+    // se a parcela cair quando já não dá mais tempo, o prazo vira o limite (2 dias antes da festa) ou amanhã
+    const due = secondInstallmentDue(order.event, now) ?? new Date(now.getTime() + DAY);
+    const updated = await tx.order.updateMany({
+      where: { id: orderId, status: { in: ["PENDING", "EXPIRED"] } },
+      data: { status: "PARTIAL", paymentPlan: "PIX_2X", firstPaidCents: paidCents, firstPaidAt: now, firstPaymentRef: paymentRef, expiresAt: due },
+    });
+    return updated.count > 0;
+  }, TX);
 }

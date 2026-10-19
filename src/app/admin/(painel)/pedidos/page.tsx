@@ -10,6 +10,7 @@ import { ConfirmButton } from "../../forms";
 
 const STATUS: Record<string, string> = {
   PENDING: "aguardando pagamento",
+  PARTIAL: "Pix 2x · 1ª parcela paga",
   PAID: "pago",
   EXPIRED: "expirado",
   CANCELED: "cancelado",
@@ -87,6 +88,8 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                   <span className={`rounded-full px-2 py-0.5 text-xs ${o.status === "PAID" ? "bg-ok/15 text-ok" : "bg-surface text-fg-muted"}`}>
                     {STATUS[o.status]}
                     {o.paidLate && " · pago após expirar"}
+                    {o.status === "PARTIAL" && ` (${formatBRL(o.firstPaidCents)}) · 2ª ${o.expiresAt < new Date() ? "vencida em" : "até"} ${formatDateTime(o.expiresAt)}`}
+                    {o.status === "PAID" && o.paymentPlan === "PIX_2X" && " · Pix 2x"}
                   </span>
                 </div>
                 <div className="text-fg-muted">

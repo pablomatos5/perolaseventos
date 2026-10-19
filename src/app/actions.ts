@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { deliverTickets } from "@/lib/delivery";
-import { createCheckout } from "@/lib/mercadopago";
-import { createReservation, markOrderPaid, SaleError } from "@/lib/orders";
+import { deliverTickets, notifyFirstInstallment } from "@/lib/delivery";
+import { createCheckout, type CheckoutKind } from "@/lib/mercadopago";
+import { createReservation, firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, SaleError, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { allow, clientIp } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
@@ -90,17 +90,25 @@ export async function reserveAction(_prev: ReserveState, form: FormData): Promis
   redirect(`/pedido/${orderToken(orderId)}`);
 }
 
-/** Leva o cliente ao Checkout Pro do Mercado Pago (Pix ou cartão) para um pedido ainda reservado. */
-export async function payAction(token: string) {
+const KINDS = new Set<CheckoutKind>(["pix", "card", "pix2x-1", "pix2x-2"]);
+
+/** O pedido aceita esta forma de pagamento agora? (à vista e 1ª parcela: reserva pendente; 2ª: 1ª paga e no prazo) */
+async function canPay(orderId: string, kind: CheckoutKind) {
+  const order = await db.order.findUniqueOrThrow({ where: { id: orderId }, include: { event: true } });
+  const inTime = order.expiresAt > new Date();
+  if (kind === "pix2x-2") return order.status === "PARTIAL" && inTime;
+  if (order.status !== "PENDING" || !inTime) return false;
+  return kind !== "pix2x-1" || splitPixAvailable(order.event);
+}
+
+/** Leva o cliente ao Checkout Pro do Mercado Pago na forma escolhida (Pix, cartão ou parcela do Pix em 2x). */
+export async function payAction(token: string, kind: CheckoutKind = "pix") {
   const orderId = verifyOrderToken(token);
   if (!orderId) throw new Error("Pedido inválido");
-  const order = await db.order.findUniqueOrThrow({ where: { id: orderId } });
-  if (order.status !== "PENDING" || order.expiresAt < new Date() || paymentMode() !== "mercadopago") {
-    redirect(`/pedido/${token}`);
-  }
+  if (!KINDS.has(kind) || paymentMode() !== "mercadopago" || !(await canPay(orderId, kind))) redirect(`/pedido/${token}`);
   let checkoutUrl: string;
   try {
-    checkoutUrl = await createCheckout(orderId);
+    checkoutUrl = await createCheckout(orderId, kind);
   } catch (e) {
     console.error("[mercadopago] não foi possível criar o checkout:", e);
     redirect(`/pedido/${token}?erro=pagamento`);
@@ -109,12 +117,17 @@ export async function payAction(token: string) {
 }
 
 /** Só funciona com PAYMENT_PROVIDER=mock fora de produção. Em produção, quem confirma é o webhook. */
-export async function simulatePaymentAction(token: string) {
+export async function simulatePaymentAction(token: string, kind: CheckoutKind = "pix") {
   if (!isSimulated()) throw new Error("Simulação desligada");
   const orderId = verifyOrderToken(token);
   if (!orderId) throw new Error("Pedido inválido");
+  if (!KINDS.has(kind) || !(await canPay(orderId, kind))) redirect(`/pedido/${token}`);
   const order = await db.order.findUniqueOrThrow({ where: { id: orderId } });
-  if (await markOrderPaid(orderId, `mock_${order.code}`)) await deliverTickets(orderId);
+  if (kind === "pix2x-1") {
+    if (await markFirstInstallmentPaid(orderId, `mock_${order.code}_p1`, firstInstallmentCents(order.totalCents))) await notifyFirstInstallment(orderId);
+  } else if (await markOrderPaid(orderId, `mock_${order.code}${kind === "pix2x-2" ? "_p2" : ""}`)) {
+    await deliverTickets(orderId);
+  }
   redirect(`/pedido/${token}`);
 }
 

@@ -8,12 +8,15 @@ export type BatchState =
   | { state: "soldout" }
   | { state: "paused" };
 
+/** Reserva que ainda segura a vaga: pagamento pendente ou Pix em 2x com a 1ª parcela paga, dentro do prazo. */
+export const holdingOrder = (now: Date) => ({ status: { in: ["PENDING", "PARTIAL"] as ("PENDING" | "PARTIAL")[] }, expiresAt: { gt: now } });
+
 /** Ingressos que ocupam vaga no lote: pagos + reservas ainda dentro do prazo. */
 export function occupiedCount(tx: Tx, batchId: string, now: Date) {
   return tx.ticket.count({
     where: {
       batchId,
-      OR: [{ status: "VALID" }, { status: "RESERVED", order: { status: "PENDING", expiresAt: { gt: now } } }],
+      OR: [{ status: "VALID" }, { status: "RESERVED", order: holdingOrder(now) }],
     },
   });
 }

@@ -55,6 +55,27 @@ export async function deliverTickets(orderId: string) {
   await record(order.id, "EMAIL", () => sendEmail(order.email, subject, text, pdf));
 }
 
+/**
+ * Pix em 2x: aviso de que a 1ª parcela entrou. Sem ingresso (ele só sai depois da 2ª):
+ * só o valor que falta, o prazo e o link do pedido para pagar.
+ */
+export async function notifyFirstInstallment(orderId: string) {
+  const order = await db.order.findUniqueOrThrow({ where: { id: orderId }, include: { event: true, _count: { select: { tickets: true } } } });
+  const fmt = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const due = order.expiresAt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Belem" });
+  const text = [
+    `Olá, ${order.buyerName}!`,
+    ``,
+    `Recebemos a 1ª parcela (${fmt(order.firstPaidCents)}) do seu pedido ${order.code} no Pix em 2x: ${order._count.tickets} ingresso(s) para ${order.event.name} ${order.event.edition}.`,
+    ``,
+    `Falta a 2ª parcela: ${fmt(order.totalCents - order.firstPaidCents)}, até ${due}.`,
+    `Seus ingressos ficam reservados até lá e são liberados (QR e PDF) assim que a 2ª parcela for paga.`,
+    ``,
+    `Para pagar a 2ª parcela: ${orderLink(order.id)}`,
+  ].join("\n");
+  await record(order.id, "EMAIL", () => sendEmail(order.email, `1ª parcela recebida · ${order.event.name} ${order.event.edition}`, text));
+}
+
 async function record(orderId: string, channel: "EMAIL", send: () => Promise<string>) {
   try {
     const detail = await send();

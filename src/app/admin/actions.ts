@@ -1,5 +1,6 @@
 "use server";
 
+import { holdingOrder } from "@/lib/batches";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import QRCode from "qrcode";
@@ -70,13 +71,27 @@ export async function updateQuantityAction(batchId: string, _prev: FormState, fo
   if (!Number.isInteger(qty) || qty < 0 || qty > 100_000) return { error: "Quantidade inválida." };
   const now = new Date();
   const taken = await db.ticket.count({
-    where: { batchId, OR: [{ status: "VALID" }, { status: "RESERVED", order: { status: "PENDING", expiresAt: { gt: now } } }] },
+    where: { batchId, OR: [{ status: "VALID" }, { status: "RESERVED", order: holdingOrder(now) }] },
   });
   if (qty < taken) return { error: `Mínimo ${taken}: já vendidos/reservados.` };
   const b = await db.batch.update({ where: { id: batchId }, data: { quantity: qty }, include: { ticketType: true } });
   await audit("painel", "mudou a quantidade do lote", `${b.ticketType.name} · ${b.name}: ${qty}`);
   revalidatePath("/admin");
   return { ok: "Quantidade atualizada." };
+}
+
+// ───────── Pix em 2x ─────────
+
+/** Liga/desliga o Pix em 2x e define em quantos dias (depois da 1ª parcela) vence a 2ª. */
+export async function updateSplitPixAction(eventId: string, _prev: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const days = Number(form.get("days"));
+  if (!Number.isInteger(days) || days < 1 || days > 90) return { error: "Prazo de 1 a 90 dias." };
+  const enabled = form.get("enabled") === "on";
+  await db.event.update({ where: { id: eventId }, data: { splitPixEnabled: enabled, splitPixDays: days } });
+  await audit("painel", enabled ? "ligou o Pix em 2x" : "desligou o Pix em 2x", `prazo da 2ª parcela: ${days} dia(s)`);
+  revalidatePath("/admin");
+  return { ok: enabled ? `Pix em 2x ligado · 2ª parcela em até ${days} dia(s).` : "Pix em 2x desligado." };
 }
 
 // ───────── cortesias ─────────

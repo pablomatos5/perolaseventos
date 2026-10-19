@@ -17,6 +17,10 @@ model Event {
   city        String
   description String
   published   Boolean      @default(false)
+  /// Pix em 2x: liga a opção no pedido e define o prazo (dias depois da 1ª parcela) para pagar a 2ª.
+  /// O prazo nunca passa de 2 dias antes da festa.
+  splitPixEnabled Boolean   @default(false)
+  splitPixDays    Int       @default(15)
   createdAt   DateTime     @default(now())
   ticketTypes TicketType[]
   orders      Order[]
@@ -87,10 +91,16 @@ model Batch {
 
 enum OrderStatus {
   PENDING // reservado, aguardando pagamento
+  PARTIAL // Pix em 2x: 1ª parcela paga; ingressos reservados até `expiresAt` (prazo da 2ª), sem entrega
   PAID
   EXPIRED
   CANCELED
   REFUNDED
+}
+
+enum PaymentPlan {
+  FULL // à vista (Pix ou cartão)
+  PIX_2X // Pix em duas parcelas: o ingresso só sai depois da 2ª
 }
 
 model Order {
@@ -110,6 +120,10 @@ model Order {
   paidAt        DateTime?
   paymentRef    String? // id da cobrança no gateway
   paidLate      Boolean     @default(false) // pagamento chegou depois da reserva expirar
+  paymentPlan     PaymentPlan @default(FULL)
+  firstPaidCents  Int         @default(0) // Pix em 2x: valor da 1ª parcela já paga
+  firstPaidAt     DateTime?
+  firstPaymentRef String? // id da 1ª parcela no gateway (a 2ª fica em paymentRef)
   createdAt     DateTime    @default(now())
   tickets       Ticket[]
   deliveries    Delivery[]
