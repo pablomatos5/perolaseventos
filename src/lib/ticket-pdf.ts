@@ -56,6 +56,7 @@ let fontBytes: Promise<Record<string, Uint8Array>> | null = null;
 let bgBytes: Promise<Uint8Array> | null = null;
 let topBytes: Promise<Uint8Array> | null = null;
 let logoBytes: Promise<Uint8Array> | null = null;
+let shellBytes: Promise<Uint8Array> | null = null;
 function loadFonts() {
   const files = {
     display: "CormorantGaramond-LightItalic.ttf",
@@ -98,13 +99,20 @@ export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tic
   const art = await doc.embedJpg(await (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg"))));
   // logo do site (concha do flyer + PÉROLAS 2K27), renderizado do próprio site em alta resolução
   const logo = await doc.embedPng(await (logoBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "logo-2027.png"))));
-  opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, art, logo, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total));
+  // concha Pérolas (identidade 2027): selo, marca d'água e assinatura — assets/pdf/concha-dourada.png
+  // (gerada da arte oficial por scripts/concha-dourada.py)
+  const shell = await doc.embedPng(await (shellBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "concha-dourada.png"))));
+  opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, art, logo, shell, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total));
   return doc.save();
 }
 
 type Fonts = Record<"display" | "serif" | "serifItalic" | "sans" | "sansMedium" | "sansBold", PDFFont>;
 
-function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number) {
+function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: PDFImage, shell: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number) {
+  const conch = (cx: number, cy: number, w: number, opacity = 1) => {
+    const h = (w * shell.height) / shell.width;
+    p.drawImage(shell, { x: cx - w / 2, y: cy - h / 2, width: w, height: h, opacity });
+  };
   // ── fundo: céu da campanha 2027 (violeta no alto → pêssego embaixo) ──
   p.drawImage(glow, { x: 0, y: 0, width: W, height: H });
   // ── topo: sereias e mar das artes oficiais ──
@@ -128,17 +136,17 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   p.drawLine({ start: { x: W / 2 + dw / 2 + 12, y: H - 239 }, end: { x: W / 2 + dw / 2 + 52, y: H - 239 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
   center(p, ev.venue.toUpperCase(), H - 276, F.serif, 17, C.cream, 2.2);
 
-  // ── moldura dourada fina com cantos de concha ──
+  // ── moldura dourada fina com a concha Pérolas nos quatro cantos ──
   const fm = 12;
   roundRect(p, fm, fm, W - 2 * fm, H - 2 * fm, 18, C.white, 0, C.gold, 0.9);
-  for (const [cx, cy, r] of [[fm + 4, fm + 4, 0], [W - fm - 4, fm + 4, 90], [W - fm - 4, H - fm - 4, 180], [fm + 4, H - fm - 4, 270]] as const) {
-    drawShell(p, cx, cy, 13, r, C.gold);
-  }
+  for (const [cx, cy] of [[fm + 13, fm + 12], [W - fm - 13, fm + 12], [W - fm - 13, H - fm - 12], [fm + 13, H - fm - 12]] as const) conch(cx, cy, 24, 0.95);
 
   // ── painel de informações ──
-  const top = H - 362;
+  const top = H - 340;
   const panelH = 196;
   roundRect(p, M, top - panelH, W - 2 * M, panelH, 14, C.white, 0.62, C.brown, 0.4);
+  // marca d'água: a concha grande e bem clara atrás das informações
+  conch(W / 2, top - panelH / 2, 250, 0.18);
   const colL = M + 18;
   const colR = W / 2 + 8;
   const cell = (x: number, y: number, label: string, value: string, sub?: string) => {
@@ -159,19 +167,21 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   center(p, fit(t.holder, F.serifItalic, 25, W - 2 * M), hy - 28, F.serifItalic, 25, C.deep);
 
   // ── picote do canhoto ──
-  const cutY = hy - 46;
+  const cutY = hy - 60;
   for (let x = M; x < W - M; x += 9) p.drawLine({ start: { x, y: cutY }, end: { x: x + 4.5, y: cutY }, thickness: 0.8, color: C.brown, opacity: 0.6 });
   // meia-lua de picote nas duas laterais (canhoto)
   p.drawCircle({ x: 0, y: cutY, size: 14, color: hex("#efe2f6") });
   p.drawCircle({ x: W, y: cutY, size: 14, color: hex("#efe2f6") });
   p.drawCircle({ x: 0, y: cutY, size: 14, borderColor: C.gold, borderWidth: 0.8, opacity: 0 });
   p.drawCircle({ x: W, y: cutY, size: 14, borderColor: C.gold, borderWidth: 0.8, opacity: 0 });
-  drawShell(p, W / 2, cutY - 6, 9, 0, C.brown);
+  // selo da concha no picote
+  p.drawCircle({ x: W / 2, y: cutY, size: 17, color: hex("#fff6ea"), borderColor: C.goldInk, borderWidth: 0.9 });
+  conch(W / 2, cutY + 0.5, 25);
 
   // ── QR em vetor sobre branco (a matriz já inclui a margem de 4 módulos exigida) ──
-  const qrSize = 184;
+  const qrSize = 170;
   const qrX = (W - qrSize) / 2;
-  const qrY = cutY - 30 - qrSize;
+  const qrY = cutY - 34 - qrSize;
   roundRect(p, qrX - 14, qrY - 14, qrSize + 28, qrSize + 28, 18, C.white, 1, C.gold, 1);
   // QR personalizado (mesmo desenho da página, src/lib/qr.ts): pontinhos, olhos arredondados e a pérola
   const shape = qrShape(ticketToken(t.id, t.qrVersion));
@@ -201,10 +211,7 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   center(p, `Nº ${t.id.slice(-10).toUpperCase()}${t.qrVersion ? ` · v${t.qrVersion}` : ""}`, qrY - 44, F.sans, 7.5, C.soft, 1);
 
   // ── regras ──
-  const rules = [
-    "Apresente este QR na entrada, na tela do celular ou impresso.",
-    "Vale uma entrada: depois de lido, o mesmo QR não passa de novo. Não compartilhe nem poste.",
-  ];
+  const rules = ["Apresente este QR na entrada (celular ou impresso). Vale uma entrada: depois de lido, não passa de novo. Não compartilhe nem poste."];
   let ry = qrY - 64;
   for (const r of rules) {
     for (const line of wrap(r, F.sans, 7.6, W - 2 * M - 10)) {
@@ -213,7 +220,14 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
     }
     ry -= 3;
   }
-  center(p, "perolaseventos.store  ·  @perolaseventos", 30, F.sansBold, 7.5, C.brown, 1.5);
+  // assinatura: concha Pérolas + @perolaseventos
+  const sig = "@perolaseventos";
+  const sigSize = 11;
+  const sigW = F.sansBold.widthOfTextAtSize(sig, sigSize) + (sig.length - 1) * 1.2;
+  const sigX = (W - (sigW + 30)) / 2;
+  conch(sigX + 11, 44, 24);
+  text(p, sig, sigX + 30, 40, F.sansBold, sigSize, C.brown, 1.2);
+  center(p, "perolaseventos.store", 26, F.sans, 7, C.soft, 1.5);
 
   // ── modo demonstração: marca d'água, para ninguém confundir com ingresso de verdade ──
   if (isDemo()) {
@@ -277,25 +291,6 @@ function wrap(s: string, font: PDFFont, size: number, max: number) {
 function roundRect(p: PDFPage, x: number, y: number, w: number, h: number, r: number, fill: RGB, fillOpacity: number, border?: RGB, borderOpacity = 1) {
   const d = `M ${r} 0 H ${w - r} Q ${w} 0 ${w} ${r} V ${h - r} Q ${w} ${h} ${w - r} ${h} H ${r} Q 0 ${h} 0 ${h - r} V ${r} Q 0 0 ${r} 0 Z`;
   p.drawSvgPath(d, { x, y: y + h, color: fill, opacity: fillOpacity, borderColor: border, borderWidth: border ? 0.8 : 0, borderOpacity });
-}
-
-/** Conchinha vieira (leque com nervuras) só em traço, centrada em (cx, cy), girada `rot` graus. */
-function drawShell(p: PDFPage, cx: number, cy: number, r: number, rot: number, color: RGB) {
-  const k = r / 12;
-  const a = (rot * Math.PI) / 180;
-  const pts = (x: number, y: number) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
-  let d = "";
-  const fan: number[][] = [];
-  for (let i = 0; i <= 8; i++) {
-    const t = Math.PI * (0.12 + 0.76 * (i / 8));
-    fan.push(pts(Math.cos(t) * 12, Math.sin(t) * 12));
-  }
-  d += `M${pts(0, 0).join(" ")}`;
-  fan.forEach(([x, y], i) => (d += i === 0 ? ` L${x} ${y}` : ` Q${pts(Math.cos(Math.PI * (0.12 + 0.76 * ((i - 0.5) / 8))) * 13.5, Math.sin(Math.PI * (0.12 + 0.76 * ((i - 0.5) / 8))) * 13.5).join(" ")} ${x} ${y}`));
-  d += " Z";
-  for (const [x, y] of fan.slice(1, -1)) d += ` M${pts(0, 0).join(" ")} L${x * 0.92} ${y * 0.92}`;
-  // pdf-lib desenha o y para baixo no caminho SVG: espelha
-  p.drawSvgPath(d, { x: cx, y: cy, scale: k, borderColor: color, borderWidth: 1 / k, borderOpacity: 0.9, color, opacity: 0.12 });
 }
 
 /** Estrela de 4 pontas da marca 2027 (mesmo desenho do site), centrada em (cx, cy) com raio r. */
