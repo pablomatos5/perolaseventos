@@ -2910,3 +2910,17 @@ main > footer {
     radial-gradient(ellipse 13% 160% at 50% 0%, rgb(255 200 130 / 0.55), rgb(255 170 110 / 0.2) 55%, transparent 85%),
     linear-gradient(180deg, rgb(240 120 110 / 0.38), rgb(200 100 140 / 0.12));
 }
+/* assinatura Koraki legível no rodapé noturno: ícone e nome em dourado claro, recorte escuro */
+.koraki-mark { color: #f3d49b; --koraki-cut: #120f36; text-shadow: 0 1px 6px rgb(5 5 20 / 0.7); z-index: 3; }
+.koraki-mark svg { filter: drop-shadow(0 1px 4px rgb(5 5 20 / 0.6)); }
+.koraki-mark:hover { color: #ffe3b2; }
+/* celular: horizonte na altura do centro da pérola (o sol se pondo no mar) e reflexo sem borda reta */
+@media (max-width: 767px) {
+  .hero-2027 { --strip-h: 46%; }
+  .sea-strip { height: var(--strip-h); }
+  .pearl-horizon::after { height: var(--strip-h); }
+}
+.pearl-horizon::after {
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%);
+  mask-image: linear-gradient(180deg, transparent, #000 22%);
+}
