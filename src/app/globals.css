@@ -2702,3 +2702,10 @@ main { overflow-x: clip; }
 @media (max-width: 767px) { .sand-treasures .no-cel { display: none; } }
 /* a regra geral da seção com sereias (.with-mermaid > *) deixava a camada dos enfeites com altura zero */
 .with-mermaid > .sand-treasures { position: absolute; inset: 0; z-index: 0; }
+/* 2K27 dentro da concha: concha maior e suave atrás, ano centrado sobre ela */
+.pl-mark { position: relative; display: grid; place-items: center; }
+.pl-mark .pl-shell, .pl-mark .pl-year { grid-area: 1 / 1; }
+.pl-mark .pl-shell { width: calc(var(--lw) * 0.36); margin: 0; opacity: 0.5; }
+.pl-mark .pl-year { margin: 0; position: relative; z-index: 1; translate: 0 6%; text-shadow: 0 1px 8px rgb(40 24 110 / 0.7); }
+@media (min-width: 768px) { .pl-mark .pl-shell { width: calc(var(--lw) * 0.32); margin: 0; } }
+@media (max-width: 767px) { .pl-mark .pl-shell { width: calc(var(--lw) * 0.38); margin: 0; } }

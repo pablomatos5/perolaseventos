@@ -21,16 +21,18 @@ export function PerolasLogo({ year, className = "" }: { year: string; className?
       <h1 className="pl-name">
         <BrandLogo kind="reveillon" tone="dourado" priority sizes="(max-width: 767px) 94vw, 46rem" />
       </h1>
-      {/* concha Pérolas (identidade 2027) preenchendo o espaço entre o logotipo e o ano */}
-      <picture className="pl-shell">
-        <source type="image/webp" srcSet="/2027/logo/concha-dourada.webp" />
-        {/* eslint-disable-next-line @next/next/no-img-element -- arte oficial com fallback PNG */}
-        <img src="/2027/logo/concha-dourada.png" width={600} height={495} alt="" />
-      </picture>
-      <div className="pl-year">
-        <i aria-hidden />
-        <span className="pl-gold">{year}</span>
-        <i aria-hidden />
+      {/* 2K27 dentro da concha Pérolas (identidade 2027), preenchendo o espaço abaixo do logotipo */}
+      <div className="pl-mark">
+        <picture className="pl-shell">
+          <source type="image/webp" srcSet="/2027/logo/concha-dourada.webp" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- arte oficial com fallback PNG */}
+          <img src="/2027/logo/concha-dourada.png" width={600} height={495} alt="" />
+        </picture>
+        <div className="pl-year">
+          <i aria-hidden />
+          <span className="pl-gold">{year}</span>
+          <i aria-hidden />
+        </div>
       </div>
     </div>
   );
