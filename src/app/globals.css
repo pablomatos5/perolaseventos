@@ -2307,3 +2307,6 @@ main { overflow-x: clip; }
   opacity: 0.75;
   mix-blend-mode: multiply;
 }
+/* sereias da seção de ingressos: esculturas de areia (sombra no chão, sem transparência fantasma) */
+.ingressos-sand .side-mermaid { opacity: 1; filter: drop-shadow(0 1.2rem 1rem rgb(110 70 30 / 0.35)); }
+@media (max-width: 1535px) { .ingressos-sand.with-mermaid > .side-mermaid { opacity: 0.85; } }
