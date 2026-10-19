@@ -2648,3 +2648,8 @@ main { overflow-x: clip; }
 }
 /* computador: contagem um pouco menor para o logo maior caber com a pérola na primeira tela */
 @media (min-width: 768px) { .hero-countdown { zoom: 0.82; } .pl-year { margin-top: -0.6rem; } }
+/* véu do logo proporcional ao novo tamanho: passa das pontas do P e do S e cobre a base das letras */
+.pl .brand-logo::before {
+  inset: -60% -26% -70%;
+  background: radial-gradient(ellipse 50% 50% at 50% 48%, rgb(44 24 112 / 0.7) 0%, rgb(44 24 112 / 0.55) 35%, rgb(44 24 112 / 0.22) 62%, transparent 82%);
+}
