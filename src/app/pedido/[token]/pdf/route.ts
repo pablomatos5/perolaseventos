@@ -5,7 +5,7 @@ import { verifyOrderToken } from "@/lib/tokens";
 import { genderLabel } from "@/lib/format";
 
 /** Todos os ingressos válidos do pedido num PDF (uma página por ingresso). */
-export async function GET(_req: Request, ctx: { params: Promise<{ token: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ token: string }> }) {
   await connection();
   const orderId = verifyOrderToken(decodeURIComponent((await ctx.params).token));
   if (!orderId) return new Response("Pedido inválido", { status: 404 });
@@ -17,7 +17,10 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
   if (!order || order.status !== "PAID") return new Response("Pedido sem ingressos emitidos", { status: 404 });
 
   const valid = order.tickets.filter((t) => t.status === "VALID");
+  // ?tema=noite: versão noturna do mesmo ingresso
+  const theme = new URL(req.url).searchParams.get("tema") === "noite" ? "noite" : "dia";
   const bytes = await ticketsPdf({
+    theme,
     event: order.event,
     orderCode: order.code,
     tickets: valid.map((t) => ({

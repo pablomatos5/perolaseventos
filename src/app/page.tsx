@@ -4,7 +4,6 @@ import { TideReveal, type TideStep } from "@/components/tide-reveal";
 import { Countdown } from "@/components/countdown";
 import { Lineup, PartyDetails } from "@/components/party-sections";
 import { InstagramIcon } from "@/components/attraction-cards";
-import { BrandLogo } from "@/components/brand-logo";
 import { HeroMermaids, LightSwirls, PearlHorizon, PerolasLogo, Star4 } from "@/components/hero-2027";
 import { OceanWaves, Sparkles } from "@/components/shell-opening";
 import { PearlDrop } from "@/components/pearl-drop";
@@ -96,7 +95,14 @@ async function EventPage() {
         <HeroMermaids />
 
         <header className="relative z-10 flex items-center justify-between px-5 py-5 md:px-12">
-          <BrandLogo kind="wordmark" tone="creme" sizes="7rem" className="hero-brand" />
+          <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="hero-brand" aria-label="Instagram @perolaseventos">
+            {/* assinatura do kit: concha Pérolas + @perolaseventos */}
+            <picture>
+              <source type="image/webp" srcSet="/2027/logo/assinatura-creme-600.webp 600w, /2027/logo/assinatura-creme.webp 1758w" sizes="12rem" />
+              {/* eslint-disable-next-line @next/next/no-img-element -- arte oficial com fallback PNG */}
+              <img src="/2027/logo/assinatura-creme.png" width={1758} height={303} alt="@perolaseventos" fetchPriority="high" />
+            </picture>
+          </a>
           <div className="flex items-center gap-3">
             <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="hero-ig" aria-label="Instagram da Pérolas (@perolaseventos)">
               <InstagramIcon className="size-5" />

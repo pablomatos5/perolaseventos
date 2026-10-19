@@ -27,7 +27,7 @@ const H = 980;
 const M = 30; // margem
 
 // paleta 2K27 (globals.css [data-edition="2k27"])
-const C = {
+const DAY = {
   bg: hex("#0c0719"),
   bgAlt: hex("#1b1236"),
   sea: hex("#5a43b8"),
@@ -45,7 +45,26 @@ const C = {
   soft: hex("#4f4488"),
   brown: hex("#8c6230"),
   cream: hex("#ffe3b2"),
+  // painel, meia-lua do picote e selo
+  panel: rgb(1, 1, 1),
+  panelOpacity: 0.62,
+  notch: hex("#efe2f6"),
+  seal: hex("#fff6ea"),
 };
+/** Tema noturno: céu azul-noite, textos em creme e dourado. O QR continua escuro sobre branco (leitura na portaria). */
+const NIGHT: typeof DAY = {
+  ...DAY,
+  deep: hex("#fbeedd"),
+  soft: hex("#c9bfe6"),
+  violet: hex("#e9c27e"),
+  brown: hex("#e2b469"),
+  goldInk: hex("#e2b469"),
+  panel: hex("#1d1650"),
+  panelOpacity: 0.72,
+  notch: hex("#06051a"),
+  seal: hex("#1d1650"),
+};
+export type TicketTheme = "dia" | "noite";
 function hex(h: string): RGB {
   const n = parseInt(h.slice(1), 16);
   return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
@@ -57,6 +76,8 @@ let bgBytes: Promise<Uint8Array> | null = null;
 let topBytes: Promise<Uint8Array> | null = null;
 let logoBytes: Promise<Uint8Array> | null = null;
 let shellBytes: Promise<Uint8Array> | null = null;
+const nightBytes: Record<string, Promise<Uint8Array>> = {};
+const readAsset = (f: string) => (nightBytes[f] ??= readFile(path.join(process.cwd(), "assets", "pdf", f)));
 function loadFonts() {
   const files = {
     display: "CormorantGaramond-LightItalic.ttf",
@@ -76,7 +97,8 @@ const weekday = (d: Date) => d.toLocaleDateString("pt-BR", { weekday: "long", ti
 const hour = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ }).replace(":00", "h").replace(":", "h");
 
 /** Gera o PDF com um ingresso por página. */
-export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tickets: PdfTicket[]; totalInOrder?: number; startIndex?: number }) {
+export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tickets: PdfTicket[]; totalInOrder?: number; startIndex?: number; theme?: TicketTheme }) {
+  const night = opts.theme === "noite";
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   doc.setTitle(`Ingressos · ${opts.event.name} ${opts.event.edition}`);
@@ -94,21 +116,21 @@ export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tic
   };
   const total = opts.totalInOrder ?? opts.tickets.length;
   // fundo: degradê das artes 2027 (assets/pdf/fundo-2027.png esticado, sem faixas)
-  const glow = await doc.embedPng(await (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png"))));
+  const glow = await doc.embedPng(await (night ? readAsset("fundo-noite.png") : (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png")))));
   // topo: as sereias e o mar das artes oficiais (assets/pdf/topo-ingresso.jpg, ~40 KB, uma vez por PDF)
-  const art = await doc.embedJpg(await (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg"))));
+  const art = await doc.embedJpg(await (night ? readAsset("topo-noite.jpg") : (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg")))));
   // logotipo oficial (arte aprovada, public/2027/logo) + linha 2K27, exportado do próprio site com a margem livre
   const logo = await doc.embedPng(await (logoBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "logo-2027.png"))));
   // concha Pérolas (identidade 2027): selo, marca d'água e assinatura — assets/pdf/concha-dourada.png
   // (gerada da arte oficial por scripts/concha-dourada.py)
   const shell = await doc.embedPng(await (shellBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "concha-dourada.png"))));
-  opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, art, logo, shell, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total));
+  opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, art, logo, shell, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total, night ? NIGHT : DAY));
   return doc.save();
 }
 
 type Fonts = Record<"display" | "serif" | "serifItalic" | "sans" | "sansMedium" | "sansBold", PDFFont>;
 
-function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: PDFImage, shell: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number) {
+function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: PDFImage, shell: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number, C: typeof DAY) {
   const conch = (cx: number, cy: number, w: number, opacity = 1) => {
     const h = (w * shell.height) / shell.width;
     p.drawImage(shell, { x: cx - w / 2, y: cy - h / 2, width: w, height: h, opacity });
@@ -144,7 +166,7 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   // ── painel de informações ──
   const top = H - 340;
   const panelH = 196;
-  roundRect(p, M, top - panelH, W - 2 * M, panelH, 14, C.white, 0.62, C.brown, 0.4);
+  roundRect(p, M, top - panelH, W - 2 * M, panelH, 14, C.panel, C.panelOpacity, C.brown, 0.4);
   // marca d'água: a concha grande e bem clara atrás das informações
   conch(W / 2, top - panelH / 2, 250, 0.18);
   const colL = M + 18;
@@ -170,12 +192,12 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   const cutY = hy - 60;
   for (let x = M; x < W - M; x += 9) p.drawLine({ start: { x, y: cutY }, end: { x: x + 4.5, y: cutY }, thickness: 0.8, color: C.brown, opacity: 0.6 });
   // meia-lua de picote nas duas laterais (canhoto)
-  p.drawCircle({ x: 0, y: cutY, size: 14, color: hex("#efe2f6") });
-  p.drawCircle({ x: W, y: cutY, size: 14, color: hex("#efe2f6") });
+  p.drawCircle({ x: 0, y: cutY, size: 14, color: C.notch });
+  p.drawCircle({ x: W, y: cutY, size: 14, color: C.notch });
   p.drawCircle({ x: 0, y: cutY, size: 14, borderColor: C.gold, borderWidth: 0.8, opacity: 0 });
   p.drawCircle({ x: W, y: cutY, size: 14, borderColor: C.gold, borderWidth: 0.8, opacity: 0 });
   // selo da concha no picote
-  p.drawCircle({ x: W / 2, y: cutY, size: 17, color: hex("#fff6ea"), borderColor: C.goldInk, borderWidth: 0.9 });
+  p.drawCircle({ x: W / 2, y: cutY, size: 17, color: C.seal, borderColor: C.goldInk, borderWidth: 0.9 });
   conch(W / 2, cutY + 0.5, 25);
 
   // ── QR em vetor sobre branco (a matriz já inclui a margem de 4 módulos exigida) ──
