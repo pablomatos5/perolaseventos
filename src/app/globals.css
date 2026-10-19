@@ -3058,3 +3058,30 @@ html[data-edition="2k27"] { background: #070719; }
   .hero-mermaid.is-right { right: -13vw; }
 }
 @media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 48svh; } }
+/* celular: sereias um pouco maiores (pedido do usuário, 19/10) */
+@media (max-width: 767px) {
+  .hero-mermaid { height: 61svh; }
+  .hero-mermaid.is-left { left: -15vw; }
+  .hero-mermaid.is-right { right: -15vw; }
+}
+@media (max-width: 767px) and (max-height: 700px) { .hero-mermaid { height: 54svh; } }
+/* concha 2D da areia (aparelhos sem 3D): abre e mostra a pérola com o artista mais rápido (pedido 19/10) */
+.tide-writing.is-active .sand-shell { animation-duration: 1.45s; }
+.tide-writing.is-active .sand-shell-back, .tide-writing.is-active .sand-shell-lid { animation-duration: 1.45s; }
+.tide-writing.is-active .sand-pearl { animation: pearl-rise 0.6s var(--ease) 0.95s both, pearl-float 7s ease-in-out 1.55s infinite; }
+.lite .tide-writing.is-active .sand-pearl { animation: pearl-rise 0.6s var(--ease) 0.95s both; }
+/* maré mais movimentada (pedido 19/10): a onda vai e volta mais longe e mais rápido, a espuma balança e o brilho
+   corre na água também no celular — tudo só com transform (placa de vídeo). Aparelho fraco (.lite) segue calmo. */
+@keyframes lap { from { transform: translateY(-93%); } to { transform: translateY(-83%); } }
+.tide-stage .beach-wave { animation: lap 2.4s ease-in-out infinite alternate; }
+.beach-foam { animation: foam-sway 3.2s ease-in-out infinite alternate; will-change: transform; }
+@keyframes foam-sway { from { transform: translateX(-3%); } to { transform: translateX(5%); } }
+@media (max-width: 767px) {
+  .tide-stage .beach-wave { animation-duration: 2.8s; }
+  .beach-foam { animation: foam-sway 3.6s ease-in-out infinite alternate; }
+  .beach-wave::after { animation: brilho-agua 18s linear infinite; will-change: transform; }
+}
+@media (prefers-reduced-motion: reduce) { .tide-stage .beach-wave, .beach-foam, .beach-wave::after { animation: none; } }
+/* botão dourado: o degradê cobre também a borda transparente (antes ele se repetia nela e as pontas pareciam cortadas) */
+.btn.solid { background-origin: border-box; background-repeat: no-repeat; }
+

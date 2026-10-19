@@ -14,7 +14,8 @@ import { ShellPearl } from "./shell-pearl";
 // WebGL: sempre a concha 2D (shell-pearl.tsx).
 
 const OPEN_DEG = 76; // valva de cima fica de frente para a câmera (que olha um pouco de cima), como a logo
-const DURATION = 3.0; // s
+const DURATION = 3.0; // s (no tempo da animação; o relógio real corre SPEED vezes mais rápido)
+const SPEED = 1.8; // pérola com o artista pronta em ~1,5 s (antes ~2,7 s)
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 const easeBack = (t: number) => {
@@ -155,10 +156,10 @@ async function buildEngine(): Promise<Engine> {
         renderer.render(scene, camera);
       };
       const frame = (now: number) => {
-        const t = (now - t0) / 1000;
+        const t = ((now - t0) / 1000) * SPEED;
         draw(t);
         // continua até a pérola aparecer mesmo se a foto chegou atrasada
-        if (t < DURATION || (!pearl && t < DURATION + 3)) raf = requestAnimationFrame(frame);
+        if (t < DURATION || (!pearl && t < DURATION + 3 * SPEED)) raf = requestAnimationFrame(frame);
         else if (pearl) draw(DURATION);
       };
       raf = requestAnimationFrame(frame);
