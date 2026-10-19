@@ -2635,3 +2635,16 @@ main { overflow-x: clip; }
   .hero-copy .hero-tagline { margin-top: 0.6rem; }
   .hero-copy > .mt-5 { margin-top: 0.85rem; }
 }
+/* logo maior; véu violeta mais forte atrás (leitura do RÉVEILLON, que é fino e pequeno) */
+.pl { --lw: clamp(18rem, min(50vw, 64svh), 46rem); }
+@media (max-width: 767px) { .pl { --lw: min(94vw, 26rem); } }
+.pl .brand-logo::before {
+  inset: -38% -10% -30%;
+  background: radial-gradient(ellipse 52% 50% at 50% 42%, rgb(44 24 112 / 0.72), rgb(44 24 112 / 0.38) 50%, transparent 78%);
+}
+@media (min-width: 768px) {
+  .pl .brand-logo { margin-top: calc(var(--lw) * 0.189 * 0.85); }
+  .hero-copy { padding-top: 0; }
+}
+/* computador: contagem um pouco menor para o logo maior caber com a pérola na primeira tela */
+@media (min-width: 768px) { .hero-countdown { zoom: 0.82; } .pl-year { margin-top: -0.6rem; } }

@@ -19,7 +19,7 @@ export function PerolasLogo({ year, className = "" }: { year: string; className?
   return (
     <div className={`pl ${className}`}>
       <h1 className="pl-name">
-        <BrandLogo kind="reveillon" tone="dourado" priority sizes="(max-width: 767px) 88vw, 40rem" />
+        <BrandLogo kind="reveillon" tone="dourado" priority sizes="(max-width: 767px) 94vw, 46rem" />
       </h1>
       <div className="pl-year">
         <i aria-hidden />
