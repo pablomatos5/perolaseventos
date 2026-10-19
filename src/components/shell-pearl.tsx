@@ -63,11 +63,19 @@ const bottomBody = (() => {
   const rOut = INNER + (BANDS - 1) * bandStep + bandStep * 0.76;
   return `M ${arcB(rOut, B_START, B_END).join(" L ")} L ${HINGE.x} ${HINGE.y} Z`;
 })();
-const bottomBands = Array.from({ length: BANDS }, (_, k) => {
+// só o aro ondulado (a faixa de fora): a de baixo é a base da MESMA concha, não uma segunda concha
+const bottomBands = [BANDS - 1].map((k) => {
   const r0 = INNER + k * bandStep;
   const r1 = r0 + bandStep * 0.76;
   const cut = (1 - k / (BANDS - 1)) * 6;
   return `M ${arcB(r1, B_START + cut, B_END - cut).join(" L ")} L ${arcB(r0, B_END - cut, B_START + cut).join(" L ")} Z`;
+});
+// raios finos no fundo da tigela (os sulcos da logo), da dobradiça até o aro
+const bottomRays = Array.from({ length: 13 }, (_, i) => {
+  const deg = B_START + 14 + ((B_END - B_START - 28) * i) / 12;
+  const a = (deg * Math.PI) / 180;
+  const r1 = INNER + (BANDS - 1) * bandStep - 2;
+  return `M ${f(HINGE.x + 14 * Math.cos(a))} ${f(HINGE.y + 14 * Math.sin(a) * SQ)} L ${f(HINGE.x + r1 * Math.cos(a))} ${f(HINGE.y + r1 * Math.sin(a) * SQ)}`;
 });
 
 export function ShellPearl({ src }: { src: string }) {
@@ -117,6 +125,9 @@ export function ShellPearl({ src }: { src: string }) {
 
       <svg className="sand-shell-front" viewBox={`0 0 ${W} ${H}`} aria-hidden>
         <path d={bottomBody} fill="#c98e68" stroke={`url(#${ink})`} strokeWidth={2.2} strokeLinejoin="round" />
+        {bottomRays.map((d) => (
+          <path key={d} d={d} stroke="#f3d3a6" strokeWidth={2.4} strokeLinecap="round" fill="none" />
+        ))}
         {bottomBands.map((d) => (
           <path key={d} d={d} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={1.2} strokeLinejoin="round" />
         ))}

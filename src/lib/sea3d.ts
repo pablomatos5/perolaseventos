@@ -196,7 +196,7 @@ function logoGold(THREE: Three) {
  * separadas por vãos, em dourado champanhe. Mesmo sistema de eixos da valveGeometry (dobradiça na origem,
  * ponta para +Z, cúpula para cima quando fechada).
  */
-export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inner?: number; spread?: number; depth?: number; lobes?: number; sign?: 1 | -1; bodyInner?: number } = {}) {
+export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inner?: number; spread?: number; depth?: number; lobes?: number; sign?: 1 | -1; bodyInner?: number; onlyRim?: boolean; rays?: number } = {}) {
   const R = o.R ?? 1;
   const sg = o.sign ?? 1; // +1 valva de cima (cúpula), -1 valva de baixo (tigela)
   const N = o.bands ?? 8;
@@ -212,7 +212,7 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
   const group = new THREE.Group();
   // ondulação igual em todas as faixas (paralelas, como na logo), mais forte para fora
   const off = (r: number, phi: number) => 0.05 * Math.pow(r / R, 0.9) * Math.cos(L * Math.PI * (phi / p));
-  for (let k = 0; k < N; k++) {
+  for (let k = o.onlyRim ? N - 1 : 0; k < N; k++) {
     const r0 = inner + k * step;
     const r1 = r0 + bandW;
     const pk = p * (0.9 + 0.1 * (k / (N - 1))); // as de dentro terminam um pouco antes (pontas em degrau)
@@ -243,6 +243,37 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
     g.computeVertexNormals();
     group.add(new THREE.Mesh(g, mat));
   }
+  // raios finos (os sulcos da logo) do fundo da tigela até o aro
+  if (o.rays) {
+    const rIn = 0.1;
+    const rOut = inner + (N - 1) * step - 0.01;
+    for (let k = 0; k < o.rays; k++) {
+      const phi = -p * 0.86 + (2 * p * 0.86 * k) / (o.rays - 1);
+      const w = 0.012;
+      const shape = new THREE.Shape();
+      const ax = Math.cos(phi) * w;
+      const ay = -Math.sin(phi) * w;
+      const e = rOut + off(rOut, phi);
+      shape.moveTo(rIn * Math.sin(phi) - ax, rIn * Math.cos(phi) - ay);
+      shape.lineTo(e * Math.sin(phi) - ax * 1.8, e * Math.cos(phi) - ay * 1.8);
+      shape.lineTo(e * Math.sin(phi) + ax * 1.8, e * Math.cos(phi) + ay * 1.8);
+      shape.lineTo(rIn * Math.sin(phi) + ax, rIn * Math.cos(phi) + ay);
+      shape.closePath();
+      const g = new THREE.ExtrudeGeometry(shape, { depth: 0.025, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.006, bevelSegments: 2 });
+      const a = g.attributes.position as T.BufferAttribute;
+      for (let i = 0; i < a.count; i++) {
+        const x = a.getX(i);
+        const y = a.getY(i);
+        const r = Math.hypot(x, y);
+        const ph = Math.atan2(x, y);
+        const side = Math.pow(Math.max(0, Math.cos(Math.min(Math.abs(ph) / p, 1) * (Math.PI / 2) * 0.92)), 0.6);
+        const cup = D * Math.pow(Math.sin(Math.PI * Math.min(r / R, 0.999)), 0.85) * side;
+        a.setXYZ(i, x, sg * cup + a.getZ(i) - 0.012, y);
+      }
+      g.computeVertexNormals();
+      group.add(new THREE.Mesh(g, mat));
+    }
+  }
   // corpo único atrás das faixas (do lado de fora da concha: fica atrás quando ela abre)
   {
     const rOut = inner + (N - 1) * step + bandW;
@@ -270,7 +301,8 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
   return group;
 }
 
-/** Valva de baixo: as mesmas faixas onduladas e o mesmo contorno da de cima (as duas metades casam), em tigela. */
+/** Valva de baixo: mesmo contorno ondulado e mesmo ouro da de cima (as metades casam), em tigela. */
 export function logoValveBottom(THREE: Three) {
-  return logoValveTop(THREE, { sign: -1, depth: 0.18, bodyInner: 0.02 });
+  // mesmo contorno e material da de cima, mas é a base da MESMA concha: só o aro ondulado + raios finos no fundo
+  return logoValveTop(THREE, { sign: -1, depth: 0.2, bodyInner: 0.02, onlyRim: true, rays: 15 });
 }
