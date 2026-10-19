@@ -2787,8 +2787,8 @@ main { overflow-x: clip; }
 /* ───────── Anoitecer: o site começa no pôr do sol (capa) e escurece até a noite fechada no fim ─────────
    Um degradê só, do tamanho da página (camada atrás do céu estrelado fixo, pintada uma vez).
    As paradas acompanham as seções: praia ~10–17%, ingressos ~55–68%, rodapé ~88%. */
-main { position: relative; }
-main::before {
+main.pagina-inicio { position: relative; }
+main.pagina-inicio::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -2813,9 +2813,10 @@ html[data-edition="2k27"] { background: #070719; }
   60%, 100% { opacity: 1; }
 }
 /* textos sobre o céu da noite: claros e dourados */
-main > section:not(.hero-2027):not(.tide):not(.ingressos-sand),
-main > div:not(.starfield),
-main > footer {
+.pagina-inicio > section:not(.hero-2027):not(.tide):not(.ingressos-sand),
+.pagina-inicio > div:not(.starfield),
+.pagina-inicio > footer,
+.pagina-noite {
   --fg: #f7f1ff;
   --fg-muted: rgb(238 230 255 / 0.86);
   --fg-faint: rgb(238 230 255 / 0.66);
@@ -2924,3 +2925,48 @@ main > footer {
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%);
   mask-image: linear-gradient(180deg, transparent, #000 22%);
 }
+
+/* ───────── Páginas do pedido e do ingresso: a noite estrelada do fim da home ───────── */
+.pagina-noite { position: relative; min-height: 100svh; }
+.pagina-noite::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url("/2027/estrelas.webp") 0 0 / 512px 512px,
+    radial-gradient(ellipse 70% 26% at 50% 0%, rgb(255 170 120 / 0.38), rgb(220 110 150 / 0.16) 50%, transparent 80%),
+    linear-gradient(180deg, #2c2380 0%, #221c62 22%, #151240 55%, #0a0a26 85%, #070719 100%);
+}
+.pagina-noite .page-logo { display: block; width: min(16rem, 64vw); margin: 0.5rem auto calc(min(16rem, 64vw) * 0.189); }
+.pagina-noite .page-logo .brand-logo { width: 100%; }
+.pagina-noite h1, .pagina-noite h2 { color: #fbf3e6; }
+.pagina-noite .display em { color: #f0cf8c; }
+/* cards claros (creme) com borda dourada sobre a noite */
+.pagina-noite .glass-card {
+  background: linear-gradient(160deg, #fffaf3, #f5ecfb);
+  border: 1px solid rgb(236 197 131 / 0.6);
+  box-shadow: 0 22px 50px -26px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.04);
+}
+.pagina-noite .glass-card h2 { color: #2e2466; }
+.pagina-noite .story-confirm-img { box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(236 197 131 / 0.4); }
+/* estrelas mais discretas (camada própria, mais transparente) e rótulos dourados claros */
+.pagina-noite::before {
+  background:
+    radial-gradient(ellipse 70% 26% at 50% 0%, rgb(255 170 120 / 0.38), rgb(220 110 150 / 0.16) 50%, transparent 80%),
+    linear-gradient(180deg, #2c2380 0%, #221c62 22%, #151240 55%, #0a0a26 85%, #070719 100%);
+}
+.pagina-noite::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/2027/estrelas.webp") 0 0 / 512px 512px;
+  opacity: 0.4;
+  -webkit-mask-image: linear-gradient(180deg, #000, rgb(0 0 0 / 0.5) 70%, rgb(0 0 0 / 0.3));
+  mask-image: linear-gradient(180deg, #000, rgb(0 0 0 / 0.5) 70%, rgb(0 0 0 / 0.3));
+}
+.pagina-noite .eyebrow { color: #f0cf8c; }
+.pagina-noite .glass-card .eyebrow { color: #a26f32; }

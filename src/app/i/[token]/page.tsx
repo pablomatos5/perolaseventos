@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -32,11 +33,11 @@ async function SingleTicket({ params }: { params: Promise<{ token: string }> }) 
   const stale = t.qrVersion !== parsed.version;
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 py-12">
-      <Link href="/" className="font-display text-2xl italic">
-        Pérolas
+    <main className="pagina-noite mx-auto w-full max-w-md px-5 py-10">
+      <Link href="/" className="page-logo" aria-label="Início">
+        <BrandLogo kind="reveillon" tone="dourado" sizes="16rem" priority />
       </Link>
-      <span className="eyebrow rule mt-10 flex">
+      <span className="eyebrow rule flex">
         {event.name} {event.edition}
       </span>
       {stale || t.status !== "VALID" ? (

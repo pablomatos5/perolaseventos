@@ -85,7 +85,7 @@ async function EventPage() {
   ];
 
   return (
-    <main>
+    <main className="pagina-inicio">
       <Starfield />
       {/* Hero e praia formam uma cena só: céu → concha → mar (OceanWaves) → maré de atrações na areia (TideReveal). */}
       <section className="hero-2027 relative flex min-h-svh flex-col overflow-hidden">

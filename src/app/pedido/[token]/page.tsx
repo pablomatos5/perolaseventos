@@ -59,9 +59,11 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
   const origin = `${h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || /^\d/.test(host) ? "http" : "https")}://${host}`;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-5 py-12 md:py-20">
-      <Link href="/" className="inline-block" aria-label="Início"><BrandLogo kind="wordmark" tone="ameixa" sizes="8rem" className="page-brand" /></Link>
-      <div className="mt-10">
+    <main className="pagina-noite mx-auto w-full max-w-3xl px-5 py-10 md:py-14">
+      <Link href="/" className="page-logo" aria-label="Início">
+        <BrandLogo kind="reveillon" tone="dourado" sizes="16rem" priority />
+      </Link>
+      <div>
         <span className="eyebrow rule">Pedido {order.code}</span>
         <h1 className="display mt-4 text-[clamp(2.2rem,6vw,3.6rem)]!">
           {order.status === "PAID" ? <>Te vemos na <em>virada</em></> : expired ? <>Reserva <em>expirada</em></> : <>Falta só o <em>pagamento</em></>}
