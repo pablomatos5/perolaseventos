@@ -64,11 +64,18 @@ export function PerkTrail({ items }: { items: TrailItem[] }) {
     measure();
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
+    // celular: a barra de endereço aparece/some na rolagem e dispara "resize" só de altura; ignora
+    let lastW = innerWidth;
+    const onWidth = () => {
+      if (innerWidth === lastW) return;
+      lastW = innerWidth;
+      onResize();
+    };
+    window.addEventListener("resize", onWidth);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", onWidth);
     };
   }, []);
 

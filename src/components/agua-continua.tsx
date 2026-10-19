@@ -39,10 +39,17 @@ export function AguaContinua() {
       }
     };
     measure();
-    addEventListener("resize", measure);
+    // celular: a barra de endereço aparece/some na rolagem e dispara "resize" só de altura; ignora
+    let lastW = innerWidth;
+    const onWidth = () => {
+      if (innerWidth === lastW) return;
+      lastW = innerWidth;
+      measure();
+    };
+    addEventListener("resize", onWidth);
     const t = setTimeout(measure, 1500);
     return () => {
-      removeEventListener("resize", measure);
+      removeEventListener("resize", onWidth);
       clearTimeout(t);
     };
   }, []);

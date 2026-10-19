@@ -1415,7 +1415,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
   transform: translate3d(-50%, 0, 0);
   will-change: transform;
 }
-.trail ol { position: relative; display: grid; gap: clamp(3.5rem, 11vh, 6rem); list-style: none; margin: 0; padding: 1.5rem 0 2rem; }
+.trail ol { position: relative; display: grid; gap: clamp(3.5rem, 11svh, 6rem); list-style: none; margin: 0; padding: 1.5rem 0 2rem; }
 .trail-item { display: grid; grid-template-columns: var(--icon) 1fr; align-items: start; column-gap: 1.25rem; }
 .trail-icon {
   position: relative;
@@ -1472,7 +1472,7 @@ a.sponsor-tile:focus-visible .sponsor-art { outline: 2px solid var(--accent); ou
     animation-duration: 1ms;
     animation-duration: auto;
     animation-timeline: --trail;
-    animation-range: cover 38vh cover calc(100% - 62vh);
+    animation-range: cover 38svh cover calc(100% - 62svh);
   }
   .trail.sd .trail-pearl { animation-name: trail-pearl; }
   .trail.sd .trail-fill { animation-name: trail-fill; }
@@ -1716,16 +1716,16 @@ main { overflow-x: clip; }
 @keyframes bubble-rise {
   0% { transform: translate3d(0, 0, 0); opacity: 0; }
   10% { opacity: 0.9; }
-  50% { transform: translate3d(8px, -45vh, 0); }
+  50% { transform: translate3d(8px, -45svh, 0); }
   90% { opacity: 0.7; }
-  100% { transform: translate3d(-6px, -90vh, 0); opacity: 0; }
+  100% { transform: translate3d(-6px, -90svh, 0); opacity: 0; }
 }
 /* sereias das artes nas duas laterais de uma seção, grandes e bem esfumadas (máscara redonda) */
 .side-mermaid {
   position: absolute;
   z-index: 0;
   top: 50%;
-  height: min(94vh, 54rem);
+  height: min(94svh, 54rem);
   width: auto;
   translate: 0 -50%;
   opacity: 0.9;
@@ -2526,3 +2526,45 @@ main { overflow-x: clip; }
 
 /* concha da areia um pouco maior */
 .sand-shell { width: min(clamp(17rem, 94vw, 30rem), 56svh); }
+
+/* celular: o topo inteiro cabe na primeira tela, com as duas sereias à vista (antes ficavam abaixo da dobra
+   e um quarto delas para fora da tela) */
+@media (max-width: 767px) {
+  .hero-copy { padding-top: 0.5svh; }
+  .hero-copy > .mt-5 { margin-top: 0.9rem; }
+  .hero-2027 .ocean-waves { height: 4.5rem; }
+  .pearl-horizon { height: 36svh; margin-top: 0.25rem; }
+  .hero-mermaid { height: 40svh; bottom: calc(4.5rem - 0.5svh); }
+  .hero-mermaid.is-left { left: -9vw; }
+  .hero-mermaid.is-right { right: -9vw; }
+}
+
+/* sereias integradas ao mar: a base da pedra se dissolve na água e o reflexo aparece logo abaixo
+   (antes terminavam num corte reto acima da água e pareciam recortes soltos) */
+.hero-mermaid {
+  -webkit-mask-image: linear-gradient(0deg, transparent 0%, rgb(0 0 0 / 0.55) 7%, #000 17%);
+  mask-image: linear-gradient(0deg, transparent 0%, rgb(0 0 0 / 0.55) 7%, #000 17%);
+  -webkit-box-reflect: below -0.35rem linear-gradient(transparent 62%, rgb(0 0 0 / 0.22));
+  bottom: clamp(1.75rem, 5vw, 3.75rem);
+}
+@media (max-width: 767px) {
+  .hero-mermaid { bottom: calc(4.5rem - 3svh); }
+}
+
+/* celular/tablet: as sereias de areia aparecem no alto da seção de ingressos, uma de cada lado, como
+   esculturas na areia emoldurando o título (antes ficavam escondidas abaixo de 1024 px) */
+@media (max-width: 1023px) {
+  .ingressos-sand.with-mermaid > .side-mermaid {
+    display: block;
+    top: 5.5rem;
+    translate: none;
+    height: clamp(14rem, 62vw, 22rem);
+    opacity: 1;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 82%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 14%, #000 82%, transparent);
+  }
+  .ingressos-sand .side-mermaid.is-left { left: -3vw; }
+  .ingressos-sand .side-mermaid.is-right { right: -3vw; }
+  /* o título desce para baixo das esculturas */
+  .ingressos-sand.with-mermaid > div:last-of-type { padding-top: calc(5.5rem + clamp(14rem, 62vw, 22rem) - 0.5rem); }
+}
