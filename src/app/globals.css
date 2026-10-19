@@ -2552,21 +2552,21 @@ main { overflow-x: clip; }
   .hero-mermaid { bottom: calc(4.5rem - 3svh); }
 }
 
-/* celular/tablet: uma sereia de areia só, centralizada, como escultura de fundo atrás dos formulários
-   de compra (as duas nas laterais ficavam apertadas) */
+/* celular/tablet: sereia de areia uma só, centralizada, como escultura de fundo atrás dos formulários
+   (no computador continuam as duas, uma em cada extremidade) */
 @media (max-width: 1023px) {
   .ingressos-sand.with-mermaid > .side-mermaid.is-right { display: none; }
   .ingressos-sand.with-mermaid > .side-mermaid.is-left {
     display: block;
-    top: 9rem;
+    top: 8rem;
     left: 50%;
     right: auto;
     translate: -50% 0;
-    height: min(150vw, 44rem);
+    height: min(185vw, 52rem);
     opacity: 0.55;
     filter: none;
-    -webkit-mask-image: linear-gradient(180deg, transparent, #000 12%, #000 75%, transparent);
-    mask-image: linear-gradient(180deg, transparent, #000 12%, #000 75%, transparent);
+    -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+    mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
   }
 }
 
