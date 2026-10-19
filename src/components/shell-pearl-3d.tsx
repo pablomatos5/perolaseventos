@@ -13,7 +13,7 @@ import { ShellPearl } from "./shell-pearl";
 // Desenha só durante a abertura (~3 s) e para. Aparelho fraco (html.lite), movimento reduzido ou sem
 // WebGL: sempre a concha 2D (shell-pearl.tsx).
 
-const OPEN_DEG = 80; // valva de cima fica de frente para a câmera (que olha um pouco de cima), como a logo
+const OPEN_DEG = 76; // valva de cima fica de frente para a câmera (que olha um pouco de cima), como a logo
 const DURATION = 3.0; // s
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -42,7 +42,7 @@ let enginePromise: Promise<Engine> | null = null;
 let engineReady: Engine | null = null;
 
 async function buildEngine(): Promise<Engine> {
-  const [THREE, { RoomEnvironment }, { valveRim, logoValveTop, logoValveBottom, photoPearl }] = await Promise.all([
+  const [THREE, { RoomEnvironment }, { logoValveTop, logoValveBottom, photoPearl }] = await Promise.all([
     import("three"),
     import("three/examples/jsm/environments/RoomEnvironment.js"),
     import("@/lib/sea3d"),
@@ -70,14 +70,11 @@ async function buildEngine(): Promise<Engine> {
   camera.position.set(0, 1.25, 3.7);
   camera.lookAt(0, 0.5, 0.1);
 
-  // no estilo da concha oficial Pérolas: valva de cima em faixas onduladas, de baixo em leque com sulcos
+  // no estilo da concha oficial Pérolas: valva de cima em faixas onduladas, de baixo em leque de raios (mesmo metal)
   const shell = new THREE.Group();
   const bottom = new THREE.Group();
   bottom.add(logoValveBottom(THREE));
-  bottom.add(valveRim(THREE, { sign: -1, ribs: 16, spread: 160, scallop: 0 }));
-  // como na logo: os sulcos do leque de baixo convergem para baixo (ponta virada para a frente)
-  bottom.rotation.y = Math.PI;
-  bottom.position.z = 0.95;
+  // borda recortada (gomos) virada para quem vê, raios convergindo para a dobradiça atrás da pérola
   const top = logoValveTop(THREE);
   const hinge = new THREE.Group(); // gira em volta da dobradiça (eixo X na origem)
   hinge.add(top);
@@ -144,6 +141,8 @@ async function buildEngine(): Promise<Engine> {
         const open = easeBack(clamp((t - 1) / 1.2));
         hinge.rotation.x = -(open * OPEN_DEG * Math.PI) / 180 - Math.abs(wob);
         shell.rotation.z = wob * 0.5;
+        // ao abrir, gira um pouco (de 3/4 para quase de frente): mostra a espessura das faixas e do leque
+        shell.rotation.y = -0.55 + 0.37 * ease(clamp((t - 0.8) / 1.8));
         // pérola sobe e vira para a frente (1,7–2,7 s)
         const k = ease(clamp((t - 1.7) / 1));
         if (pearl) {

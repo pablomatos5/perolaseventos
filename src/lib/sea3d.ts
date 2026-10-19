@@ -159,8 +159,22 @@ export function valveRim(THREE: Three, o: { R?: number; ribs?: number; spread?: 
     const r = R * (1 + sc * wave);
     pts.push(new THREE.Vector3(r * Math.sin(phi), o.sign * sc * wave, r * Math.cos(phi)));
   }
-  const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 260, 0.014, 8, false);
+  const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 260, o.scallop === 0 ? 0.026 : 0.014, 10, false);
   return new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({ color: 0xe0b06a, metalness: 0.8, roughness: 0.25, clearcoat: 1 }));
+}
+
+/** Dourado champanhe das peças no estilo da logo (faixas de cima e raios de baixo). */
+function logoGold(THREE: Three) {
+  return new THREE.MeshPhysicalMaterial({
+    color: 0xf5d8ac,
+    metalness: 0.78,
+    roughness: 0.24,
+    clearcoat: 0.7,
+    clearcoatRoughness: 0.2,
+    sheen: 0.5,
+    sheenColor: new THREE.Color(0xffd9e6),
+    side: THREE.DoubleSide,
+  });
 }
 
 /**
@@ -173,22 +187,13 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
   const N = o.bands ?? 8;
   const inner = o.inner ?? 0.3;
   const p = ((o.spread ?? 196) / 2) * (Math.PI / 180);
-  const D = o.depth ?? 0.06;
+  const D = o.depth ?? 0.13;
   const L = o.lobes ?? 5;
   const step = (R - inner) / N;
-  const bandW = step * 0.68; // o resto é vão
-  const thick = 0.034;
+  const bandW = step * 0.58; // o resto é vão (o chanfro engorda a faixa)
+  const thick = 0.07; // faixas grossas: relevo de metal com volume
   const S = 160;
-  const mat = new THREE.MeshPhysicalMaterial({
-    color: 0xf7dfbd,
-    metalness: 0.45,
-    roughness: 0.3,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.2,
-    sheen: 0.5,
-    sheenColor: new THREE.Color(0xffd9e6),
-    side: THREE.DoubleSide,
-  });
+  const mat = logoGold(THREE);
   const group = new THREE.Group();
   // ondulação igual em todas as faixas (paralelas, como na logo), mais forte para fora
   const off = (r: number, phi: number) => 0.05 * Math.pow(r / R, 0.9) * Math.cos(L * Math.PI * (phi / p));
@@ -208,7 +213,7 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
       const r = r0 + off(r0, phi);
       shape.lineTo(r * Math.sin(phi), r * Math.cos(phi));
     }
-    const g = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 2, curveSegments: 4 });
+    const g = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: true, bevelThickness: 0.022, bevelSize: 0.012, bevelSegments: 4, curveSegments: 4 });
     const a = g.attributes.position as T.BufferAttribute;
     for (let i = 0; i < a.count; i++) {
       const x = a.getX(i);
@@ -226,24 +231,50 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
   return group;
 }
 
-/** Valva de baixo no estilo da logo: leque champanhe liso com sulcos finos que irradiam da dobradiça. */
-export function logoValveBottom(THREE: Three, o: { R?: number; grooves?: number; spread?: number } = {}) {
-  const g = valveGeometry(THREE, { R: o.R ?? 1, depth: 0.12, ribs: o.grooves ?? 16, ribAmp: 0, scallop: 0, spread: o.spread ?? 160, sign: -1 });
-  // cores: champanhe nas faixas, rosado nos sulcos
-  const pos = g.attributes.position as T.BufferAttribute;
-  const col = g.attributes.color as T.BufferAttribute;
-  const crest = new THREE.Color(0xeec18c);
-  const groove = new THREE.Color(0xc4836a);
-  const tmp = new THREE.Color();
-  const phiMax = ((o.spread ?? 160) / 2) * (Math.PI / 180);
-  const ribs = o.grooves ?? 16;
-  for (let i = 0; i < pos.count; i++) {
-    const phi = Math.atan2(pos.getX(i), pos.getZ(i));
-    const v = (phi + phiMax) / (2 * phiMax);
-    const c = 0.5 + 0.5 * Math.cos(v * ribs * 2 * Math.PI);
-    tmp.copy(groove).lerp(crest, Math.pow(1 - c, 0.25)); // sulco estreito, faixa larga
-    col.setXYZ(i, tmp.r, tmp.g, tmp.b);
+/**
+ * Valva de baixo no estilo da logo: leque em lente feito de raios de metal separados por vãos finos,
+ * com o mesmo volume e dourado das faixas de cima. Mesmo sistema de eixos (dobradiça na origem, ponta para +Z,
+ * tigela para baixo).
+ */
+export function logoValveBottom(THREE: Three, o: { R?: number; rays?: number; spread?: number; depth?: number } = {}) {
+  const R = o.R ?? 1;
+  const N = o.rays ?? 15;
+  const p = ((o.spread ?? 164) / 2) * (Math.PI / 180);
+  const D = o.depth ?? 0.26;
+  const thick = 0.07;
+  const mat = logoGold(THREE);
+  const group = new THREE.Group();
+  const slot = (2 * p) / N;
+  const gap = slot * 0.1;
+  const edge = (phi: number) => R * (0.9 + 0.1 * Math.cos((phi / p) * (Math.PI / 2))); // borda em lente
+  const r0 = 0.07;
+  for (let k = 0; k < N; k++) {
+    const a0 = -p + k * slot + gap / 2;
+    const a1 = a0 + slot - gap;
+    const shape = new THREE.Shape();
+    shape.moveTo(r0 * Math.sin(a0), r0 * Math.cos(a0));
+    for (let j = 0; j <= 16; j++) {
+      const phi = a0 + ((a1 - a0) * j) / 16;
+      const r = edge(phi) * (1 + 0.075 * Math.sin((Math.PI * j) / 16)); // cada raio termina num gomo: borda recortada de concha
+      shape.lineTo(r * Math.sin(phi), r * Math.cos(phi));
+    }
+    shape.lineTo(r0 * Math.sin(a1), r0 * Math.cos(a1));
+    shape.closePath();
+    const g = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: true, bevelThickness: 0.022, bevelSize: 0.008, bevelSegments: 4, curveSegments: 4 });
+    // afina os raios ao longo do comprimento para a tigela curvar sem quebrar
+    const a = g.attributes.position as T.BufferAttribute;
+    for (let i = 0; i < a.count; i++) {
+      const x = a.getX(i);
+      const y = a.getY(i);
+      const z = a.getZ(i);
+      const r = Math.hypot(x, y);
+      const phi = Math.atan2(x, y);
+      const side = Math.pow(Math.max(0, Math.cos(Math.min(Math.abs(phi) / p, 1) * (Math.PI / 2) * 0.92)), 0.6);
+      const cup = D * Math.pow(Math.sin(Math.PI * Math.min(r / R, 0.999) * 0.5 + 0.0001), 0.85) * side;
+      a.setXYZ(i, x, -cup + z - thick / 2, y);
+    }
+    g.computeVertexNormals();
+    group.add(new THREE.Mesh(g, mat));
   }
-  const champ = new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, metalness: 0.45, roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.2, side: THREE.DoubleSide });
-  return new THREE.Mesh(g, champ);
+  return group;
 }
