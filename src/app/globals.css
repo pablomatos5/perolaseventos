@@ -2783,3 +2783,69 @@ main { overflow-x: clip; }
 }
 /* seção de ingressos com o esfumado da borda numa camada própria (a máscara não é refeita a cada rolagem) */
 .ingressos-sand { will-change: transform; }
+
+/* ───────── Anoitecer: o site começa no pôr do sol (capa) e escurece até a noite fechada no fim ─────────
+   Um degradê só, do tamanho da página (camada atrás do céu estrelado fixo, pintada uma vez).
+   As paradas acompanham as seções: praia ~10–17%, ingressos ~55–68%, rodapé ~88%. */
+main { position: relative; }
+main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2; /* abaixo do céu estrelado fixo (z -1) */
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    #f7b9c4 0%, #f6b4c3 14%,
+    #d9a2cf 17%, #a985d3 21%, #7c63c7 26%,
+    #4e3fa6 34%, #332a82 44%, #221c62 54%,
+    #171449 66%, #0f0e34 78%, #0a0a26 90%, #070719 100%);
+}
+html[data-edition="2k27"] { background: #070719; }
+[data-edition="2k27"] body { background: transparent; }
+/* o céu fixo agora só leva as estrelas; elas surgem conforme anoitece */
+.starfield { background: none; }
+@supports (animation-timeline: scroll()) {
+  .starfield { animation: estrelas-surgem linear both; animation-timeline: scroll(root); }
+}
+@keyframes estrelas-surgem {
+  0%, 12% { opacity: 0.15; }
+  35% { opacity: 0.6; }
+  60%, 100% { opacity: 1; }
+}
+/* textos sobre o céu da noite: claros e dourados */
+main > section:not(.hero-2027):not(.tide):not(.ingressos-sand),
+main > div:not(.starfield),
+main > footer {
+  --fg: #f7f1ff;
+  --fg-muted: rgb(238 230 255 / 0.86);
+  --fg-faint: rgb(238 230 255 / 0.66);
+  --accent: #ecc583;
+  --accent-2: #f3d49b;
+  --accent-ink: #f0cf8c;
+  --line: rgb(236 197 131 / 0.35);
+  --line-soft: rgb(238 230 255 / 0.16);
+  color: var(--fg);
+}
+/* cards claros continuam com o texto escuro de antes */
+.glass-card, .attraction-card, .story-card, .card-body {
+  --fg: #2e2466;
+  --fg-muted: rgb(40 30 96 / 0.86);
+  --fg-faint: rgb(40 30 96 / 0.66);
+  --accent: #a26f32;
+  --accent-2: #d9a860;
+  --accent-ink: #7d5424;
+  --line: rgb(140 98 48 / 0.3);
+  color: var(--fg);
+}
+/* anoitecer: a areia dos ingressos já está sob a luz da lua (azulada e mais escura embaixo) */
+.ingressos-sand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgb(40 34 110 / 0.18), rgb(22 20 72 / 0.42));
+}
+/* fundo do mar do rodapé à noite (mesma arte, mais escura e azulada) */
+.seabed-scene { filter: brightness(0.55) saturate(0.85) hue-rotate(-12deg); }
+.koraki-mark { color: rgb(238 230 255 / 0.7); }
