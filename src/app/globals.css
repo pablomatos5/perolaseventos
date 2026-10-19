@@ -3116,3 +3116,11 @@ html[data-edition="2k27"] { background: #070719; }
 }
 /* pérola da atração na concha 2D: sem o reflexo branco por cima da foto (fica só a sombra que dá volume) */
 .sand-pearl::after { background: none; box-shadow: inset -0.5rem -0.7rem 1.2rem rgb(40 20 60 / 0.3); }
+/* computador: realce do logotipo mais suave (no tamanho grande o mesmo efeito do celular ficava forte demais) */
+@media (min-width: 768px) {
+  .pl .brand-logo img {
+    filter: brightness(1.03) contrast(1.04) saturate(1.04)
+      drop-shadow(0 0 0.5px rgb(40 22 96 / 0.55)) drop-shadow(0 1px 1.5px rgb(40 22 96 / 0.35))
+      drop-shadow(0 0 12px rgb(255 226 170 / 0.3));
+  }
+}
