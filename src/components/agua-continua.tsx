@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 
 /**
- * Um mar só: todas as faixas de água (horizonte do topo, ondas do topo, faixa da praia e a onda que vai e vem)
- * usam a mesma ilustração (/2027/agua.webp) e este script alinha a posição vertical de cada uma pela distância
- * até a linha do horizonte, para a água continuar de uma faixa para a outra sem emenda.
+ * Um mar só: todas as faixas de água (horizonte do topo, ondas do topo, faixa da praia, a onda que vai e vem e a
+ * borda dela) usam a mesma textura (/2027/agua-perto.webp, ladrilho de 1000 px que se repete na vertical).
+ * Este script ancora o ladrilho no topo do horizonte, para a água continuar de uma faixa para a outra sem emenda.
  */
 export function AguaContinua() {
   useEffect(() => {
@@ -15,33 +15,27 @@ export function AguaContinua() {
     const wave = document.querySelector<HTMLElement>(".beach-wave");
     if (!strip || !waves || !beach || !wave) return;
     const measure = () => {
-      const y0 = strip.getBoundingClientRect().top + scrollY;
-      const wTop = waves.getBoundingClientRect().top + scrollY;
-      const heroWater = waves.getBoundingClientRect().bottom + scrollY - y0;
-      document.documentElement.style.setProperty("--agua-ondas", `${-(wTop - y0)}px`);
-      // praia: a faixa fixa continua de onde o topo parou; a onda (deslocada -91% em repouso) segue a faixa
-      const stripH = beach.clientHeight * 0.09;
-      beach.style.setProperty("--agua-praia", `${-heroWater}px`);
-      // onda: água de perto (linhas 260–760 da ilustração, espelhadas); a borda em repouso continua o mar do topo
-      wave.style.setProperty("--agua-onda", `${wave.clientHeight * 0.91 - (heroWater - 260)}px`);
-      beach.style.setProperty("--agua-faixa", `${stripH}px`);
-      // borda da onda (SVG esticado): mesma água de perto, continuando o corpo da onda sem degrau
+      const top = (el: Element) => el.getBoundingClientRect().top + scrollY;
+      const y0 = top(strip);
+      const beachTop = top(beach);
+      const waveTop = beachTop - wave.clientHeight * 0.91; // onda em repouso (translateY(-91%))
+      document.documentElement.style.setProperty("--agua-ondas", `${y0 - top(waves)}px`);
+      beach.style.setProperty("--agua-praia", `${y0 - beachTop}px`);
+      wave.style.setProperty("--agua-onda", `${y0 - waveTop}px`);
+      // borda da onda (SVG esticado): o mesmo ladrilho, continuando o corpo da onda
       const foam = wave.querySelector<SVGSVGElement>(".beach-foam");
       const pat = foam?.querySelector("pattern");
       const img = pat?.querySelector("image");
       if (foam && pat && img) {
         const sx = foam.clientWidth / 1440;
         const sy = foam.clientHeight / 120;
-        const w = 2400 / sx;
-        const h = 1000 / sy;
-        const off = wave.clientHeight * 0.91 - (heroWater - 260) - wave.clientHeight; // topo do ladrilho, relativo ao fim da onda
-        const fl = (wave.clientWidth - foam.clientWidth) / 2; // svg é 110% da onda, centrado
-        for (const [k, v] of [["width", w], ["height", h]] as const) {
+        for (const [k, v] of [["width", 2400 / sx], ["height", 1000 / sy]] as const) {
           pat.setAttribute(k, String(v));
           img.setAttribute(k, String(v));
         }
+        const fl = (wave.clientWidth - foam.clientWidth) / 2; // svg tem 110% da largura da onda, centrado
         pat.setAttribute("x", String(((wave.clientWidth - 2400) / 2 - fl) / sx));
-        pat.setAttribute("y", String(off / sy));
+        pat.setAttribute("y", String((y0 - (waveTop + wave.clientHeight)) / sy));
       }
     };
     measure();

@@ -2492,3 +2492,8 @@ main { overflow-x: clip; }
 .beach-foam path:nth-child(3) { fill: url(#agua-borda); }
 /* onda longa (vai até o fim da areia): o corpo todo é água de perto (sem o horizonte no meio), presa na borda */
 .beach-wave { background: url("/2027/agua-perto.webp") 50% var(--agua-onda, 100%) / 2400px 1000px repeat-y, #6f5bd0; }
+/* a água toda com a mesma textura (água de perto), ancorada no horizonte pelo AguaContinua */
+.hero-2027 .ocean-waves { background: url("/2027/agua-perto.webp") 50% var(--agua-ondas, 0px) / 2400px 1000px repeat-y, #6f5bd0; }
+.beach::before { background: url("/2027/agua-perto.webp") 50% var(--agua-praia, 0px) / 2400px 1000px repeat-y, #6f5bd0; }
+.beach-wave { background: url("/2027/agua-perto.webp") 50% var(--agua-onda, 0px) / 2400px 1000px repeat-y, #6f5bd0; }
+.hero-2027 .ocean-waves .wave-layer { display: none; } /* camadas lavanda por cima clareavam a faixa do meio */
