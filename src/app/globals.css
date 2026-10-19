@@ -2345,3 +2345,90 @@ main { overflow-x: clip; }
   pointer-events: none;
 }
 @media (max-width: 767px) { .hero-sky-2027::after { animation: none; } }
+/* céu estrelado do topo: poeira de estrelas densa (como em volta da cabeça das sereias), brilho leve */
+.hero-sky-2027::after {
+  background: url("/2027/estrelas.webp") 0 0 / 512px 512px;
+  filter: drop-shadow(0 0 2px rgb(255 240 220 / 0.7));
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 30%, rgb(0 0 0 / 0.55) 48%, transparent 66%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 30%, rgb(0 0 0 / 0.55) 48%, transparent 66%);
+}
+/* letreiro mais visível sobre o céu estrelado: traço mais encorpado, contorno escuro fino e halo de fundo */
+.pl { position: relative; isolation: isolate; }
+.pl::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -12% -8%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgb(60 36 140 / 0.42), rgb(60 36 140 / 0.18) 55%, transparent 75%);
+  pointer-events: none;
+}
+.pl-name { font-weight: 500; }
+.pl-gold {
+  background: linear-gradient(180deg, #fff6d8 0%, #f6d991 28%, #e3ae55 52%, #fbe3a0 62%, #b98236 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0.02em 0 rgb(70 40 10 / 0.75)) drop-shadow(0 0.04em 0.06em rgb(40 20 80 / 0.6)) drop-shadow(0 0 0.4em rgb(255 230 180 / 0.55));
+}
+.pl-o { filter: drop-shadow(0 0.02em 0 rgb(70 40 10 / 0.75)) drop-shadow(0 0.04em 0.06em rgb(40 20 80 / 0.6)) drop-shadow(0 0 0.4em rgb(255 230 180 / 0.6)); }
+.pl-o ellipse { stroke-width: 6.5; }
+.pl-kicker { font-weight: 600; font-size: calc(var(--pl) * 0.24); }
+.pl-year { font-weight: 600; font-size: calc(var(--pl) * 0.36); letter-spacing: 0.24em; }
+.pl-year span { margin-right: -0.24em; }
+.pl-year i { height: 2px; }
+
+/* ───────── Água viva em toda a maré (substitui as faixas lisas com linhas paradas) ─────────
+   textura do mar da arte espelhada (emenda sem corte) correndo devagar + brilhos e ondulações em movimento.
+   Só transform nas camadas animadas (sem repintar a cada quadro). */
+.hero-2027 .ocean-waves, .beach::before, .beach-wave { background: linear-gradient(180deg, #8471dc, #937fe2 60%, #a58ce9); }
+.agua-viva, .hero-2027 .ocean-waves::before, .beach-wave::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 5016px;
+  background: url("/2027/mar-loop.webp") 0 50% / 2508px 100% repeat-x;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  animation: agua-corre 60s linear infinite;
+  pointer-events: none;
+}
+.beach-wave::before { opacity: 0.45; }
+@keyframes agua-corre { to { transform: translateX(-2508px); } }
+/* ondulações claras que sobem e descem */
+.beach-wave::after {
+  content: "";
+  position: absolute;
+  inset: 0 -40% 0 -40%;
+  background:
+    repeating-linear-gradient(176deg, transparent 0 26px, rgb(255 246 230 / 0.16) 26px 28px, transparent 28px 58px),
+    repeating-linear-gradient(184deg, transparent 0 40px, rgb(255 255 255 / 0.1) 40px 41px, transparent 41px 90px);
+  animation: ondulacao 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes ondulacao { from { transform: translate(-30px, -6px); } to { transform: translate(30px, 6px); } }
+/* faixa de mar fixa no topo da praia também corre */
+.beach::before { background: url("/2027/mar-loop.webp") 0 50% / 2508px 100% repeat-x, linear-gradient(180deg, #8471dc, #a58ce9); background-blend-mode: screen; animation: agua-corre-bg 60s linear infinite; }
+@keyframes agua-corre-bg { to { background-position: -2508px 50%, 0 0; } }
+.hero-2027 .ocean-waves::before { z-index: 0; }
+.hero-2027 .ocean-waves > svg { z-index: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-2027 .ocean-waves::before, .beach-wave::before, .beach-wave::after, .beach::before { animation: none; }
+}
+/* água contínua: mesma cor base e mesma mistura em todas as faixas (sem bandas leitosas) */
+.hero-2027 .ocean-waves, .beach-wave { background: #8a76de; }
+.hero-2027 .ocean-waves::before, .beach-wave::before { mix-blend-mode: soft-light; opacity: 1; }
+.beach::before { background: url("/2027/mar-loop.webp") 0 50% / 2508px 100% repeat-x, #8a76de; background-blend-mode: soft-light; }
+.hero-2027 .wave-front path { fill: #8a76de; fill-opacity: 0.55; }
+.hero-2027 .wave-mid path { fill-opacity: 0.08; stroke-opacity: 0.5; }
+.hero-2027 .wave-back path { fill-opacity: 0.1; }
+.beach-wave::after { opacity: 0.8; }
+/* mesma escala de textura em todas as faixas de água (continua de uma para a outra, sem emenda) */
+.hero-2027 .ocean-waves::before, .beach-wave::before { background-size: 2508px 180px; background-repeat: repeat; background-position: 0 0; }
+.beach::before { background-size: 2508px 180px, auto; background-repeat: repeat, no-repeat; }
+.beach-foam path:nth-child(3) { fill: #8a76de; }
+/* transições entre camadas sem faixa lisa: a água viva aparece por baixo */
+.pearl-horizon::after { background: linear-gradient(180deg, rgb(138 118 222 / 0) 0%, rgb(138 118 222 / 0.25) 45%, rgb(138 118 222 / 0.5) 100%); }
+.hero-2027 .wave-front path { fill-opacity: 0.22; }
+.hero-2027 .ocean-waves { margin-top: -3.5rem; }
+.beach-foam path:nth-child(3) { fill: rgb(138 118 222 / 0.75); }
