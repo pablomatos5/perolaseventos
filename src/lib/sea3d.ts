@@ -196,8 +196,9 @@ function logoGold(THREE: Three) {
  * separadas por vãos, em dourado champanhe. Mesmo sistema de eixos da valveGeometry (dobradiça na origem,
  * ponta para +Z, cúpula para cima quando fechada).
  */
-export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inner?: number; spread?: number; depth?: number; lobes?: number } = {}) {
+export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inner?: number; spread?: number; depth?: number; lobes?: number; sign?: 1 | -1; bodyInner?: number } = {}) {
   const R = o.R ?? 1;
+  const sg = o.sign ?? 1; // +1 valva de cima (cúpula), -1 valva de baixo (tigela)
   const N = o.bands ?? 8;
   const inner = o.inner ?? 0.3;
   const p = ((o.spread ?? 196) / 2) * (Math.PI / 180);
@@ -237,7 +238,7 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
       const phi = Math.atan2(x, y);
       const side = Math.pow(Math.max(0, Math.cos(Math.min(Math.abs(phi) / p, 1) * (Math.PI / 2) * 0.92)), 0.6);
       const cup = D * Math.pow(Math.sin(Math.PI * Math.min(r / R, 0.999)), 0.85) * side;
-      a.setXYZ(i, x, cup + z - thick / 2, y); // plano da forma (XY) → plano da valva (XZ), cúpula em Y
+      a.setXYZ(i, x, sg * cup + z - thick / 2, y); // plano da forma (XY) → plano da valva (XZ), cúpula em Y
     }
     g.computeVertexNormals();
     group.add(new THREE.Mesh(g, mat));
@@ -254,83 +255,22 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
     }
     for (let j = S; j >= 0; j--) {
       const phi = -p + (2 * p * j) / S;
-      const r = inner + off(inner, phi);
+      const ri = o.bodyInner ?? inner;
+      const r = ri + off(ri, phi);
       body.lineTo(r * Math.sin(phi), r * Math.cos(phi));
     }
     const bend = (x: number, y: number) => {
       const r = Math.hypot(x, y);
       const phi = Math.atan2(x, y);
       const side = Math.pow(Math.max(0, Math.cos(Math.min(Math.abs(phi) / p, 1) * (Math.PI / 2) * 0.92)), 0.6);
-      return D * Math.pow(Math.sin(Math.PI * Math.min(r / R, 0.999)), 0.85) * side;
+      return sg * D * Math.pow(Math.sin(Math.PI * Math.min(r / R, 0.999)), 0.85) * side;
     };
-    group.add(valveBody(THREE, body, bend, thick / 2 + 0.02));
+    group.add(valveBody(THREE, body, bend, sg * (thick / 2 + 0.02)));
   }
   return group;
 }
 
-/**
- * Valva de baixo no estilo da logo: leque em lente feito de raios de metal separados por vãos finos,
- * com o mesmo volume e dourado das faixas de cima. Mesmo sistema de eixos (dobradiça na origem, ponta para +Z,
- * tigela para baixo).
- */
-export function logoValveBottom(THREE: Three, o: { R?: number; rays?: number; spread?: number; depth?: number } = {}) {
-  const R = o.R ?? 1;
-  const N = o.rays ?? 15;
-  const p = ((o.spread ?? 164) / 2) * (Math.PI / 180);
-  const D = o.depth ?? 0.26;
-  const thick = 0.07;
-  const mat = logoGold(THREE);
-  const group = new THREE.Group();
-  const slot = (2 * p) / N;
-  const gap = slot * 0.14;
-  const edge = (phi: number) => R * (0.9 + 0.1 * Math.cos((phi / p) * (Math.PI / 2))); // borda em lente
-  const r0 = 0.07;
-  for (let k = 0; k < N; k++) {
-    const a0 = -p + k * slot + gap / 2;
-    const a1 = a0 + slot - gap;
-    const shape = new THREE.Shape();
-    shape.moveTo(r0 * Math.sin(a0), r0 * Math.cos(a0));
-    for (let j = 0; j <= 16; j++) {
-      const phi = a0 + ((a1 - a0) * j) / 16;
-      const r = edge(phi) * (1 + 0.075 * Math.sin((Math.PI * j) / 16)); // cada raio termina num gomo: borda recortada de concha
-      shape.lineTo(r * Math.sin(phi), r * Math.cos(phi));
-    }
-    shape.lineTo(r0 * Math.sin(a1), r0 * Math.cos(a1));
-    shape.closePath();
-    const g = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: true, bevelThickness: 0.022, bevelSize: 0.008, bevelSegments: 4, curveSegments: 4 });
-    // afina os raios ao longo do comprimento para a tigela curvar sem quebrar
-    const a = g.attributes.position as T.BufferAttribute;
-    for (let i = 0; i < a.count; i++) {
-      const x = a.getX(i);
-      const y = a.getY(i);
-      const z = a.getZ(i);
-      const r = Math.hypot(x, y);
-      const phi = Math.atan2(x, y);
-      const side = Math.pow(Math.max(0, Math.cos(Math.min(Math.abs(phi) / p, 1) * (Math.PI / 2) * 0.92)), 0.6);
-      const cup = D * Math.pow(Math.sin(Math.PI * Math.min(r / R, 0.999) * 0.5 + 0.0001), 0.85) * side;
-      a.setXYZ(i, x, -cup + z - thick / 2, y);
-    }
-    g.computeVertexNormals();
-    group.add(new THREE.Mesh(g, mat));
-  }
-  // corpo único embaixo dos raios, com a mesma borda de gomos
-  {
-    const body = new THREE.Shape();
-    body.moveTo(0, 0);
-    const M = N * 16;
-    for (let j = 0; j <= M; j++) {
-      const phi = -p + (2 * p * j) / M;
-      const r = edge(phi) * (1 + 0.075 * Math.abs(Math.sin((Math.PI * j) / 16)));
-      body.lineTo(r * Math.sin(phi), r * Math.cos(phi));
-    }
-    body.closePath();
-    const bend = (x: number, y: number) => {
-      const r = Math.hypot(x, y);
-      const phi = Math.atan2(x, y);
-      const side = Math.pow(Math.max(0, Math.cos(Math.min(Math.abs(phi) / p, 1) * (Math.PI / 2) * 0.92)), 0.6);
-      return -D * Math.pow(Math.sin(Math.PI * Math.min(r / R, 0.999) * 0.5 + 0.0001), 0.85) * side;
-    };
-    group.add(valveBody(THREE, body, bend, -(thick / 2 + 0.02)));
-  }
-  return group;
+/** Valva de baixo: as mesmas faixas onduladas e o mesmo contorno da de cima (as duas metades casam), em tigela. */
+export function logoValveBottom(THREE: Three) {
+  return logoValveTop(THREE, { sign: -1, depth: 0.18, bodyInner: 0.02 });
 }

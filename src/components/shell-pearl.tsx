@@ -6,7 +6,6 @@ import { useId } from "react";
 const W = 400;
 const H = 310;
 const HINGE = { x: 200, y: 232 };
-const LIP_Y = 236;
 
 const pt = (r: number, deg: number) => {
   const a = (deg * Math.PI) / 180;
@@ -47,29 +46,28 @@ const body = (() => {
   return `M ${arc(rOut, START, END).join(" L ")} L ${arc(INNER, END, START).join(" L ")} Z`;
 })();
 
-// Valva de baixo como a 3D: leque de raios com a borda recortada em gomos virada para a frente
-// e os sulcos convergindo para a dobradiça, atrás da pérola.
-const LIP_L = 40;
-const LIP_R = 360;
-const LOBES_B = 13;
-const ell = (deg: number, k = 1) => {
-  const a = (deg * Math.PI) / 180;
-  return { x: 200 + 160 * k * Math.cos(a), y: LIP_Y - 6 + 66 * k * Math.sin(a) };
-};
-const bowl = (() => {
-  let d = `M ${LIP_L} ${LIP_Y - 6} Q 200 ${LIP_Y + 12} ${LIP_R} ${LIP_Y - 6}`;
-  for (let i = 0; i < LOBES_B; i++) {
-    const c = ell(((i + 0.5) / LOBES_B) * 180, 1.1);
-    const e = ell(((i + 1) / LOBES_B) * 180);
-    d += ` Q ${f(c.x)} ${f(c.y)} ${f(e.x)} ${f(e.y)}`;
-  }
-  return `${d} Z`;
+// Valva de baixo: as mesmas faixas onduladas da de cima (as duas metades casam), vista de cima e achatada
+// em perspectiva, abrindo para a frente a partir da dobradiça.
+const B_START = 8;
+const B_END = 172;
+const SQ = 0.42; // achatamento (tigela vista de cima)
+const arcB = (r: number, from: number, to: number) =>
+  Array.from({ length: 61 }, (_, i) => {
+    const deg = from + ((to - from) * i) / 60;
+    const t = ((deg - B_START) / (B_END - B_START)) * 2 - 1;
+    const rr = r + 12 * Math.pow(r / R, 0.9) * Math.cos(LOBES * Math.PI * t);
+    const a = (deg * Math.PI) / 180;
+    return `${f(HINGE.x + rr * Math.cos(a))} ${f(HINGE.y + rr * Math.sin(a) * SQ)}`;
+  });
+const bottomBody = (() => {
+  const rOut = INNER + (BANDS - 1) * bandStep + bandStep * 0.76;
+  return `M ${arcB(rOut, B_START, B_END).join(" L ")} L ${HINGE.x} ${HINGE.y} Z`;
 })();
-const FOCUS = { x: 200, y: LIP_Y - 40 };
-const grooves = Array.from({ length: LOBES_B - 1 }, (_, i) => {
-  const e = ell(((i + 1) / LOBES_B) * 180);
-  const t = Math.min(0.62, (e.y - LIP_Y - 2) / (e.y - FOCUS.y)); // o sulco para no lábio (não invade a foto)
-  return `M ${f(e.x)} ${f(e.y)} L ${f(e.x + (FOCUS.x - e.x) * t)} ${f(e.y + (FOCUS.y - e.y) * t)}`;
+const bottomBands = Array.from({ length: BANDS }, (_, k) => {
+  const r0 = INNER + k * bandStep;
+  const r1 = r0 + bandStep * 0.76;
+  const cut = (1 - k / (BANDS - 1)) * 6;
+  return `M ${arcB(r1, B_START + cut, B_END - cut).join(" L ")} L ${arcB(r0, B_END - cut, B_START + cut).join(" L ")} Z`;
 });
 
 export function ShellPearl({ src }: { src: string }) {
@@ -77,7 +75,6 @@ export function ShellPearl({ src }: { src: string }) {
   const ink = `${id}-ink`;
   const nacre = `${id}-nacre`;
   const outer = `${id}-outer`;
-  const line = { stroke: `url(#${ink})`, fill: "none", strokeLinecap: "round", strokeLinejoin: "round" } as const;
 
   return (
     <span className="sand-shell" style={{ aspectRatio: `${W} / ${H}` }}>
@@ -119,9 +116,9 @@ export function ShellPearl({ src }: { src: string }) {
       </span>
 
       <svg className="sand-shell-front" viewBox={`0 0 ${W} ${H}`} aria-hidden>
-        <path d={bowl} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={3} strokeLinejoin="round" />
-        {grooves.map((d) => (
-          <path key={d} d={d} {...line} strokeWidth={1.6} strokeOpacity={0.55} />
+        <path d={bottomBody} fill="#c98e68" stroke={`url(#${ink})`} strokeWidth={2.2} strokeLinejoin="round" />
+        {bottomBands.map((d) => (
+          <path key={d} d={d} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={1.2} strokeLinejoin="round" />
         ))}
       </svg>
     </span>
