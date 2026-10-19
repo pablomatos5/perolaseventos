@@ -14,7 +14,7 @@ from scipy.ndimage import binary_fill_holes, binary_opening, gaussian_filter, la
 
 src, out = Path(sys.argv[1]), Path(sys.argv[2])
 
-for n in ("se", "sd"):
+for n in ("se",):
     rgb = np.asarray(Image.open(src / f"sereia-{n}-inteira.png").convert("RGB"))
     m = np.asarray(Image.open(src / f"mask-{n}.png").convert("L")).astype(float) / 255
     h = m.shape[0]
@@ -31,3 +31,8 @@ for n in ("se", "sd"):
     a = m * base
     Image.fromarray(np.dstack([rgb, (a * 255).astype(np.uint8)])).save(out / f"sereia-{n}-inteira.webp", quality=86, method=6)
     print(n, rgb.shape)
+
+# a da direita é a da esquerda espelhada: as duas ficam idênticas (mesmo recorte, opacidade e base na água;
+# a arte original da direita trazia uma névoa clara na base que a outra não tinha)
+Image.open(out / "sereia-se-inteira.webp").transpose(Image.FLIP_LEFT_RIGHT).save(out / "sereia-sd-inteira.webp", quality=86, method=6)
+print("sd = se espelhada")
