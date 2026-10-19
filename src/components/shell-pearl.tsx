@@ -41,18 +41,35 @@ const bands = Array.from({ length: BANDS }, (_, k) => {
   const innerArc = arc(r0, END - cut, START + cut);
   return `M ${outerArc.join(" L ")} L ${innerArc.join(" L ")} Z`;
 });
+// corpo único atrás das faixas (os vãos viram sulcos de UMA concha, não várias conchas empilhadas)
+const body = (() => {
+  const rOut = INNER + (BANDS - 1) * bandStep + bandStep * 0.76;
+  return `M ${arc(rOut, START, END).join(" L ")} L ${arc(INNER, END, START).join(" L ")} Z`;
+})();
 
-// Valva de baixo no estilo da logo: leque em lente (lábio arqueado) com sulcos que irradiam do fundo.
+// Valva de baixo como a 3D: leque de raios com a borda recortada em gomos virada para a frente
+// e os sulcos convergindo para a dobradiça, atrás da pérola.
 const LIP_L = 40;
 const LIP_R = 360;
-const APEX = { x: 200, y: LIP_Y + 54 };
-const bowl = `M ${LIP_L} ${LIP_Y - 6} Q 200 ${LIP_Y + 22} ${LIP_R} ${LIP_Y - 6} C ${LIP_R - 30} ${LIP_Y + 40}, 250 ${APEX.y}, 200 ${APEX.y} C 150 ${APEX.y}, ${LIP_L + 30} ${LIP_Y + 40}, ${LIP_L} ${LIP_Y - 6} Z`;
-const grooves = Array.from({ length: 13 }, (_, i) => {
-  const t = (i + 1) / 14;
-  const x = LIP_L + (LIP_R - LIP_L) * t;
-  const y = LIP_Y - 6 + 28 * 4 * t * (1 - t) * 0.92; // segue o lábio
-  const e = { x: APEX.x + (x - APEX.x) * 0.12, y: APEX.y - 6 };
-  return `M ${f(x)} ${f(y + 3)} L ${f(e.x)} ${f(e.y)}`;
+const LOBES_B = 13;
+const ell = (deg: number, k = 1) => {
+  const a = (deg * Math.PI) / 180;
+  return { x: 200 + 160 * k * Math.cos(a), y: LIP_Y - 6 + 66 * k * Math.sin(a) };
+};
+const bowl = (() => {
+  let d = `M ${LIP_L} ${LIP_Y - 6} Q 200 ${LIP_Y + 12} ${LIP_R} ${LIP_Y - 6}`;
+  for (let i = 0; i < LOBES_B; i++) {
+    const c = ell(((i + 0.5) / LOBES_B) * 180, 1.1);
+    const e = ell(((i + 1) / LOBES_B) * 180);
+    d += ` Q ${f(c.x)} ${f(c.y)} ${f(e.x)} ${f(e.y)}`;
+  }
+  return `${d} Z`;
+})();
+const FOCUS = { x: 200, y: LIP_Y - 40 };
+const grooves = Array.from({ length: LOBES_B - 1 }, (_, i) => {
+  const e = ell(((i + 1) / LOBES_B) * 180);
+  const t = Math.min(0.62, (e.y - LIP_Y - 2) / (e.y - FOCUS.y)); // o sulco para no lábio (não invade a foto)
+  return `M ${f(e.x)} ${f(e.y)} L ${f(e.x + (FOCUS.x - e.x) * t)} ${f(e.y + (FOCUS.y - e.y) * t)}`;
 });
 
 export function ShellPearl({ src }: { src: string }) {
@@ -81,6 +98,7 @@ export function ShellPearl({ src }: { src: string }) {
             <stop offset="1" stopColor="#dca46e" />
           </linearGradient>
         </defs>
+        <path d={body} fill="#c98e68" stroke={`url(#${ink})`} strokeWidth={2.2} strokeLinejoin="round" />
         {bands.map((d) => (
           <path key={d} d={d} fill={`url(#${nacre})`} stroke={`url(#${ink})`} strokeWidth={1.4} strokeLinejoin="round" />
         ))}
@@ -89,6 +107,7 @@ export function ShellPearl({ src }: { src: string }) {
       {/* lado de fora da MESMA valva de cima: gira junto com ela e só aparece enquanto está deitada
           (concha fechada, vista de cima). Mesma geometria, virada de costas (rotateY 180°). */}
       <svg className="sand-shell-lid" viewBox={`0 0 ${W} ${H}`} aria-hidden>
+        <path d={body} fill="#c98e68" stroke={`url(#${ink})`} strokeWidth={2.2} strokeLinejoin="round" />
         {bands.map((d) => (
           <path key={d} d={d} fill={`url(#${outer})`} stroke={`url(#${ink})`} strokeWidth={1.4} strokeLinejoin="round" />
         ))}
