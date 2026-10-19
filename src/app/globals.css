@@ -2686,3 +2686,9 @@ main { overflow-x: clip; }
   .hero-countdown { --fg-faint: rgb(251 238 221 / 0.8); }
   .hero-countdown .font-display { color: #fff6ea; }
 }
+/* concha da marca entre o logotipo e o 2K27 */
+.pl .brand-logo { margin-bottom: calc(var(--lw) * 0.189 * 0.55); }
+.pl-shell { display: block; width: calc(var(--lw) * 0.2); margin: 0 auto 0.35rem; }
+.pl-shell img { display: block; width: 100%; height: auto; }
+@media (max-width: 767px) { .pl .brand-logo { margin-bottom: calc(var(--lw) * 0.189 * 0.45); } .pl-shell { width: calc(var(--lw) * 0.17); margin-bottom: 0.2rem; } }
+@media (min-width: 768px) { .pl .brand-logo { margin-bottom: calc(var(--lw) * 0.189 * 0.3); } .pl-shell { width: calc(var(--lw) * 0.18); margin-bottom: 0.15rem; } }
