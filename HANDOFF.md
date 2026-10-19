@@ -186,6 +186,7 @@ publicar. Próximos passos naturais:
 6. Mais atrações conforme forem anunciadas; WhatsApp oficial quando a Meta aprovar.
 
 ## Armadilhas conhecidas
+- **Depois de cada deploy, limpe o microcache do Pérolas** (mídia fica 1 dia no nginx; sem isso imagens trocadas com o mesmo nome continuam velhas): `docker exec nexos-nginx-1 sh -c "find /var/cache/nginx/perolas -type f -delete"` — só a pasta do Pérolas, nunca reiniciar o nginx compartilhado.
 - **Migração em produção**: o serviço `migrate` usa imagem própria (target deps). Depois de mudar `prisma/`, rode
   `docker compose -f docker-compose.prod.yml --profile tools build migrate` ANTES do `run --rm migrate` (senão ele
   diz "No pending migrations" com a imagem velha). Ordem: backup (pg_dump) → build app → build+run migrate → up app.
