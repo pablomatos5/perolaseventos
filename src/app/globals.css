@@ -2849,3 +2849,64 @@ main > footer {
 /* fundo do mar do rodapé à noite (mesma arte, mais escura e azulada) */
 .seabed-scene { filter: brightness(0.55) saturate(0.85) hue-rotate(-12deg); }
 .koraki-mark { color: rgb(238 230 255 / 0.7); }
+
+/* ───────── Capa em pôr do sol ─────────
+   índigo no alto (logo dourado em destaque) → púrpura → magenta → coral → laranja → dourado no horizonte,
+   com o sol (brilho quente atrás da pérola) e o reflexo alaranjado no mar */
+.hero-sky-2027 {
+  background:
+    radial-gradient(ellipse 46% 26% at 50% 80%, rgb(255 236 180 / 0.95), rgb(255 170 90 / 0.55) 40%, transparent 75%),
+    radial-gradient(ellipse 90% 40% at 50% 86%, rgb(255 140 90 / 0.45), transparent 70%),
+    linear-gradient(180deg, #1c1a5c 0%, #2c2380 13%, #4a2c8c 26%, #7c3a90 38%, #b44d8c 50%, #e2667a 60%, #f8845f 69%, #ffa45a 77%, #ffc66e 85%, #ffdc98 92%);
+}
+.hero-sky-2027::before {
+  background:
+    radial-gradient(ellipse 34% 18% at 14% 30%, rgb(255 150 170 / 0.22), transparent 70%),
+    radial-gradient(ellipse 34% 18% at 86% 34%, rgb(255 170 140 / 0.22), transparent 70%);
+}
+/* textos do meio da capa sobre o céu quente: claros */
+.hero-save, .hero-save span { color: #fff3e2; text-shadow: 0 1px 8px rgb(90 30 70 / 0.45); }
+.hero-save svg { color: #ffe0a0; }
+.hero-countdown { --fg-faint: rgb(255 243 226 / 0.85); }
+.hero-countdown .font-display { color: #fff8ee; text-shadow: 0 1px 10px rgb(90 30 70 / 0.4); }
+/* mar refletindo o pôr do sol: faixa dourada no centro e água alaranjada perto do horizonte */
+.pearl-horizon::after {
+  display: block;
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 18% 100% at 50% 0%, rgb(255 214 140 / 0.75), rgb(255 170 100 / 0.3) 55%, transparent 80%),
+    linear-gradient(180deg, rgb(255 150 90 / 0.55), rgb(230 110 120 / 0.25) 55%, transparent);
+  mix-blend-mode: normal;
+}
+.hero-2027 .ocean-waves::before {
+  display: block;
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 14% 120% at 50% 0%, rgb(255 200 130 / 0.45), transparent 75%),
+    linear-gradient(180deg, rgb(230 110 120 / 0.22), transparent 70%);
+  animation: none;
+  mix-blend-mode: normal;
+  opacity: 1;
+}
+/* reflexo mais forte e contínuo (horizonte → ondas): mesma cor na emenda das duas faixas */
+.pearl-horizon::after {
+  background:
+    radial-gradient(ellipse 16% 140% at 50% 0%, rgb(255 222 150 / 0.85), rgb(255 180 110 / 0.4) 50%, transparent 85%),
+    linear-gradient(180deg, rgb(255 150 90 / 0.6), rgb(240 120 110 / 0.38));
+}
+.hero-2027 .ocean-waves::before {
+  background:
+    radial-gradient(ellipse 13% 160% at 50% 0%, rgb(255 200 130 / 0.55), rgb(255 170 110 / 0.2) 55%, transparent 85%),
+    linear-gradient(180deg, rgb(240 120 110 / 0.38), rgb(200 100 140 / 0.12));
+}
