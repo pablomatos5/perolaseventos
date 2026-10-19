@@ -143,26 +143,99 @@ export function KorakiMark() {
   );
 }
 
-// conchas e pérolas espalhadas pela areia da seção de ingressos: [x%, y%, tamanho rem, giro, tipo]
+// enfeites na areia da seção de ingressos, nos espaços livres (fora dos cards e das sereias):
+// [x%, y%, tamanho rem, giro, tipo, aparece no celular?] — s concha, p pérola, e estrela-do-mar, c caranguejo
 const TREASURES = [
-  [4, 14, 2.6, -18, "s"], [93, 9, 2.2, 22, "s"], [8, 62, 1.9, 12, "s"], [91, 55, 2.8, -10, "s"], [48, 94, 2, 28, "s"],
-  [12, 30, 0.9, 0, "p"], [14, 32.5, 0.55, 0, "p"], [86, 34, 0.8, 0, "p"], [6, 84, 0.75, 0, "p"], [95, 80, 1, 0, "p"],
-  [30, 97, 0.6, 0, "p"], [70, 96, 0.85, 0, "p"], [2, 45, 0.6, 0, "p"],
+  [26, 58, 3.6, -16, "e", false], [42, 74, 3.8, 14, "c", false], [31, 84, 3, 12, "s", false],
+  [22.5, 68, 1.1, 0, "p", false], [25, 70.5, 0.7, 0, "p", false], [47, 63, 0.8, 0, "p", false],
+  [64, 9, 2.8, 24, "s", false], [76, 7, 2.5, -28, "e", false],
+  [55, 88, 3.2, -8, "e", true], [86, 86, 3.4, 12, "c", true], [12, 86, 3, 30, "s", true],
+  [8, 89, 1, 0, "p", true], [93, 80, 1.1, 0, "p", true], [60, 84, 0.75, 0, "p", false],
+  [92, 10, 2.6, -20, "s", true], [6, 9, 2.3, 18, "e", true],
 ] as const;
 
-/** Conchinhas douradas e pérolas na areia (seção de ingressos). Decorativas, paradas: custo zero. */
+/** Estrela-do-mar coral com pontinhos em relevo. */
+function SandStarfish() {
+  let d = "";
+  for (let i = 0; i < 5; i++) {
+    const a = i * 72;
+    const r = (x: number) => (x * Math.PI) / 180;
+    const tip = [50 + 46 * Math.sin(r(a)), 52 - 46 * Math.cos(r(a))];
+    const before = [50 + 15 * Math.sin(r(a - 36)), 52 - 15 * Math.cos(r(a - 36))];
+    const after = [50 + 15 * Math.sin(r(a + 36)), 52 - 15 * Math.cos(r(a + 36))];
+    d += `${i ? "L" : "M"}${before[0].toFixed(1)} ${before[1].toFixed(1)}Q${((before[0] + tip[0]) / 2).toFixed(1)} ${((before[1] + tip[1]) / 2).toFixed(1)} ${tip[0].toFixed(1)} ${tip[1].toFixed(1)}Q${((after[0] + tip[0]) / 2).toFixed(1)} ${((after[1] + tip[1]) / 2).toFixed(1)} ${after[0].toFixed(1)} ${after[1].toFixed(1)}`;
+  }
+  const dots = Array.from({ length: 5 }, (_, i) =>
+    [14, 24, 34].map((k) => {
+      const a = (i * 72 * Math.PI) / 180;
+      return [50 + k * Math.sin(a), 52 - k * Math.cos(a)];
+    }),
+  ).flat();
+  return (
+    <svg viewBox="0 0 100 100">
+      <defs>
+        <radialGradient id="sf-g" cx="0.45" cy="0.4" r="0.7">
+          <stop offset="0" stopColor="#f6a37a" />
+          <stop offset="0.6" stopColor="#e07a4f" />
+          <stop offset="1" stopColor="#b8532f" />
+        </radialGradient>
+      </defs>
+      <path d={`${d}Z`} fill="url(#sf-g)" stroke="#a24a2a" strokeWidth="1.2" strokeLinejoin="round" />
+      {dots.map(([x, y]) => (
+        <circle key={`${x.toFixed(1)}-${y.toFixed(1)}`} cx={x} cy={y} r="2.1" fill="#ffd3b4" opacity="0.85" />
+      ))}
+      <circle cx="50" cy="52" r="3" fill="#ffd3b4" opacity="0.85" />
+    </svg>
+  );
+}
+
+/** Caranguejinho vermelho-coral visto de cima. */
+function Crab() {
+  return (
+    <svg viewBox="0 0 120 90">
+      <defs>
+        <radialGradient id="cb-g" cx="0.45" cy="0.35" r="0.75">
+          <stop offset="0" stopColor="#f28a6a" />
+          <stop offset="0.65" stopColor="#d5543a" />
+          <stop offset="1" stopColor="#9e3424" />
+        </radialGradient>
+      </defs>
+      <g fill="none" stroke="#a83a27" strokeWidth="4" strokeLinecap="round">
+        {/* patinhas */}
+        <path d="M38 52 26 60 18 72M40 58 30 70 26 82M80 52 92 60 100 72M78 58 88 70 92 82" />
+        {/* braços até as pinças */}
+        <path d="M40 40 28 30 22 20M80 40 92 30 98 20" />
+      </g>
+      {/* pinças */}
+      <path d="M22 20c-9-2-14-10-10-16 6 4 9 2 12-2 5 4 4 13-2 18Z" fill="url(#cb-g)" stroke="#9e3424" strokeWidth="1.5" />
+      <path d="M98 20c9-2 14-10 10-16-6 4-9 2-12-2-5 4-4 13 2 18Z" fill="url(#cb-g)" stroke="#9e3424" strokeWidth="1.5" />
+      {/* casco */}
+      <ellipse cx="60" cy="50" rx="28" ry="20" fill="url(#cb-g)" stroke="#9e3424" strokeWidth="1.5" />
+      <path d="M44 46q16 -8 32 0" stroke="#ffb59a" strokeWidth="2" fill="none" opacity="0.6" />
+      {/* olhinhos */}
+      <path d="M52 32v-6M68 32v-6" stroke="#9e3424" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="52" cy="25" r="3.4" fill="#2a1410" />
+      <circle cx="68" cy="25" r="3.4" fill="#2a1410" />
+      <circle cx="53" cy="24" r="1" fill="#fff" />
+      <circle cx="69" cy="24" r="1" fill="#fff" />
+    </svg>
+  );
+}
+
+/** Conchas, pérolas, estrelas-do-mar e caranguejinhos na areia (seção de ingressos). Parados: custo zero. */
 export function SandTreasures() {
   return (
     <div className="sand-treasures" aria-hidden>
-      {TREASURES.map(([x, y, size, rot, kind]) =>
-        kind === "s" ? (
-          <span key={`${x}-${y}`} className="sand-shell-wrap" style={{ left: `${x}%`, top: `${y}%`, width: `${size}rem`, rotate: `${rot}deg` }}>
-            <Scallop />
+      {TREASURES.map(([x, y, size, rot, kind, mobile]) => {
+        const style = { left: `${x}%`, top: `${y}%`, width: `${size}rem`, rotate: `${rot}deg` };
+        const cls = mobile ? "" : " no-cel";
+        if (kind === "p") return <span key={`${x}-${y}`} className={`sand-pearl-deco${cls}`} style={{ left: `${x}%`, top: `${y}%`, width: `${size}rem` }} />;
+        return (
+          <span key={`${x}-${y}`} className={`sand-deco sand-deco-${kind}${cls}`} style={style}>
+            {kind === "s" ? <Scallop /> : kind === "e" ? <SandStarfish /> : <Crab />}
           </span>
-        ) : (
-          <span key={`${x}-${y}`} className="sand-pearl-deco" style={{ left: `${x}%`, top: `${y}%`, width: `${size}rem` }} />
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }
