@@ -2509,3 +2509,17 @@ main { overflow-x: clip; }
   padding-bottom: 4rem;
 }
 [data-edition="2k27"] .eyebrow.rule::before { width: 3.9rem; background-size: 1.5rem 1px; } /* fio depois da concha maior */
+
+/* ───────── Desempenho (varredura): sem filtros e misturas em camadas grandes ───────── */
+/* fios do céu: halo já desenhado no SVG */
+.starfield > svg { filter: none; }
+/* só uma camada de estrelas do tamanho da tela pisca (cada uma ocupa memória de vídeo no celular) */
+.starfield > i:nth-child(2) { animation: none; will-change: auto; opacity: 0.8; }
+/* poeira de estrelas do topo: brilho já gravado na imagem */
+.hero-sky-2027::after { filter: none; }
+/* halo da concha: o degradê radial já é suave, sem blur */
+.shell-halo { filter: none; background: radial-gradient(circle at 50% 62%, rgb(var(--pearl-glow) / 0.38), rgb(var(--pearl-glow) / 0.12) 45%, transparent 70%); }
+/* grãos da areia dos ingressos sem multiply (mistura numa seção inteira obrigava repintar tudo) */
+.ingressos-sand::before { mix-blend-mode: normal; opacity: 0.38; }
+/* brilho da onda só na beira (parte que aparece em repouso): camada animada 3× menor */
+.beach-wave::after { top: 68%; }

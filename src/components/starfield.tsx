@@ -34,6 +34,19 @@ export function Starfield() {
             <stop offset="1" stopColor="#ffc9a3" stopOpacity="0" />
           </linearGradient>
         </defs>
+        {/* halo dos fios desenhado como traço largo e transparente (antes era filter: drop-shadow, caro na rolagem) */}
+        <g fill="none" stroke="url(#sky-thread)" strokeLinecap="round" opacity=".22">
+          <path d="M470 70C250 120 70 300 70 520S260 900 620 960" strokeWidth="16" />
+          <path d="M430 90C230 150 95 320 105 520S300 870 680 930" strokeWidth="11" />
+          <path d="M520 60C300 110 120 280 110 470S240 820 560 990" strokeWidth="10" />
+          <path d="M380 120C200 190 40 360 55 560S260 920 520 1000" strokeWidth="13" />
+        </g>
+        <g fill="none" stroke="url(#sky-thread)" strokeLinecap="round" opacity=".4">
+          <path d="M470 70C250 120 70 300 70 520S260 900 620 960" strokeWidth="7" />
+          <path d="M430 90C230 150 95 320 105 520S300 870 680 930" strokeWidth="5" />
+          <path d="M520 60C300 110 120 280 110 470S240 820 560 990" strokeWidth="4.5" />
+          <path d="M380 120C200 190 40 360 55 560S260 920 520 1000" strokeWidth="6" />
+        </g>
         <g fill="none" stroke="url(#sky-thread)" strokeLinecap="round">
           <path d="M470 70C250 120 70 300 70 520S260 900 620 960" strokeWidth="3" />
           <path d="M430 90C230 150 95 320 105 520S300 870 680 930" strokeWidth="1.8" />
