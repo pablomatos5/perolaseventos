@@ -2713,3 +2713,23 @@ main { overflow-x: clip; }
 /* enfeites na areia da maré (atrás do texto, sob a onda) */
 .beach-deco { z-index: 1; }
 @media (max-width: 767px) { .beach .no-cel { display: none; } .beach-deco { scale: 0.85; } }
+/* 2K27 no mesmo dourado do logotipo (degradê claro → âmbar → claro, sem brilho extra) */
+.pl-mark .pl-year span {
+  background: linear-gradient(180deg, #e3be71 0%, #a4772f 52%, #eacd8b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: none;
+}
+.pl-mark .pl-year { text-shadow: none; }
+.pl-mark .pl-year i { background: linear-gradient(90deg, transparent, #c99a4f); }
+.pl-mark .pl-year i:last-child { background: linear-gradient(90deg, #c99a4f, transparent); }
+/* celular: logotipo e 2K27 na concha maiores, compensando nos espaços (o resto não desce) */
+@media (max-width: 767px) {
+  .pl { --lw: min(88vw, 37svh, 22rem); }
+  .pl .brand-logo { margin-top: calc(var(--lw) * 0.189 * 0.35); margin-bottom: calc(var(--lw) * 0.189 * 0.15); }
+  .pl-mark .pl-shell { width: calc(var(--lw) * 0.4); }
+  .pl-mark .pl-year { font-size: calc(var(--lw) * 0.1); }
+  .hero-copy .hero-tagline { margin-top: 0.15rem; }
+}
