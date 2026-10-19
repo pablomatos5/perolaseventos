@@ -85,7 +85,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
 
         {/* logo do site (concha + PÉROLAS 2K27) */}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagem dentro da ImageResponse */}
-        <img alt="" src={img.logo} width={feed ? 700 : 860} height={Math.round(((feed ? 700 : 860) * 960) / 1554)} style={{ marginTop: 60 * k }} />
+        <img alt="" src={img.logo} width={feed ? 760 : 900} height={Math.round(((feed ? 760 : 900) * 537) / 1392)} style={{ marginTop: 60 * k }} />
 
         {/* presença confirmada */}
         <div style={{ marginTop: 40 * k, display: "flex", fontFamily: "CormorantItalic", fontSize: feed ? 56 : 64, color: "#fff", textShadow: "0 2px 18px rgba(60,30,110,0.5)" }}>

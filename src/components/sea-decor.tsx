@@ -108,7 +108,7 @@ export function Bubbles({ className = "" }: { className?: string }) {
 export function SideMermaid({ side }: { side: "left" | "right" }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element -- recorte da arte oficial em /public/2027
-    <img src={side === "left" ? "/2027/sereia-esq.webp" : "/2027/sereia-dir.webp"} alt="" loading="lazy" className={`side-mermaid is-${side}`} />
+    <img src={side === "left" ? "/2027/sereia-se-inteira.webp" : "/2027/sereia-sd-inteira.webp"} alt="" loading="lazy" className={`side-mermaid is-${side}`} />
   );
 }
 

@@ -116,17 +116,17 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   drawStar(p, 86, H - 34, 5, C.cream, 0.8);
 
   // ── logo: o mesmo do site (concha do flyer oficial com RÉVEILLON · PÉROLAS · 2K27) ──
-  const lw = 292;
+  const lw = 330;
   const lh = (lw * logo.height) / logo.width;
-  p.drawImage(logo, { x: (W - lw) / 2, y: H - 22 - lh, width: lw, height: lh });
-  center(p, "UM NOVO CICLO. INFINITAS POSSIBILIDADES.", H - 222, F.sansBold, 6.8, C.white, 2.4);
+  p.drawImage(logo, { x: (W - lw) / 2, y: H - 40 - lh, width: lw, height: lh });
+  center(p, "UM NOVO CICLO. INFINITAS POSSIBILIDADES.", H - 200, F.sansBold, 6.8, C.white, 2.4);
   // data e local em dourado, como no flyer oficial
   const dmy = ev.startsAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: TZ }).split("/").join(" · ");
   const dw = F.serif.widthOfTextAtSize(dmy, 26) + (dmy.length - 1) * 1.5;
-  center(p, dmy, H - 268, F.serif, 26, C.cream, 1.5);
-  p.drawLine({ start: { x: W / 2 - dw / 2 - 52, y: H - 259 }, end: { x: W / 2 - dw / 2 - 12, y: H - 259 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
-  p.drawLine({ start: { x: W / 2 + dw / 2 + 12, y: H - 259 }, end: { x: W / 2 + dw / 2 + 52, y: H - 259 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
-  center(p, ev.venue.toUpperCase(), H - 296, F.serif, 17, C.cream, 2.2);
+  center(p, dmy, H - 248, F.serif, 26, C.cream, 1.5);
+  p.drawLine({ start: { x: W / 2 - dw / 2 - 52, y: H - 239 }, end: { x: W / 2 - dw / 2 - 12, y: H - 239 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
+  p.drawLine({ start: { x: W / 2 + dw / 2 + 12, y: H - 239 }, end: { x: W / 2 + dw / 2 + 52, y: H - 239 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
+  center(p, ev.venue.toUpperCase(), H - 276, F.serif, 17, C.cream, 2.2);
 
   // ── moldura dourada fina com cantos de concha ──
   const fm = 12;
