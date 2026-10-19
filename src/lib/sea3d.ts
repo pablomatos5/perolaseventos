@@ -9,8 +9,9 @@ type Three = typeof T;
  * Deitada no plano XZ com a dobradiça na origem e a ponta para +Z. `sign` = +1 (cúpula para cima,
  * valva de cima fechada) ou -1 (tigela para baixo, valva de baixo).
  */
-export function valveGeometry(THREE: Three, o: { R?: number; depth?: number; ribs?: number; ribAmp?: number; spread?: number; sign: 1 | -1 }) {
+export function valveGeometry(THREE: Three, o: { R?: number; depth?: number; ribs?: number; ribAmp?: number; spread?: number; scallop?: number; sign: 1 | -1 }) {
   const R = o.R ?? 1;
+  const sc = o.scallop ?? 0.05; // recorte da borda (0 = borda lisa)
   const D = o.depth ?? 0.24;
   const ribs = o.ribs ?? 11;
   const ribAmp = o.ribAmp ?? 0.05;
@@ -32,7 +33,7 @@ export function valveGeometry(THREE: Three, o: { R?: number; depth?: number; rib
       const phi = -phiMax + 2 * phiMax * v;
       const c = 0.5 + 0.5 * Math.cos(v * ribs * 2 * Math.PI);
       const wave = Math.pow(c, 0.7); // nervura arredondada (1 = crista)
-      const r = u * R * (1 + 0.05 * wave);
+      const r = u * R * (1 + sc * wave);
       const side = Math.pow(Math.cos((phi / phiMax) * (Math.PI / 2) * 0.92), 0.6); // cuia mais funda no meio
       const cup = D * Math.pow(Math.sin(Math.PI * Math.min(u, 0.999)), 0.85) * side;
       const rib = ribAmp * Math.pow(u, 0.7) * wave;
@@ -145,8 +146,9 @@ export function photoPearl(THREE: Three, tex: T.Texture | null, radius = 0.42, f
 }
 
 /** Fio dourado na borda recortada da valva (acabamento que dá leitura de "concha" de longe). */
-export function valveRim(THREE: Three, o: { R?: number; ribs?: number; spread?: number; sign: 1 | -1 }) {
+export function valveRim(THREE: Three, o: { R?: number; ribs?: number; spread?: number; scallop?: number; sign: 1 | -1 }) {
   const R = o.R ?? 1;
+  const sc = o.scallop ?? 0.05;
   const ribs = o.ribs ?? 11;
   const phiMax = ((o.spread ?? 150) / 2) * (Math.PI / 180);
   const pts: T.Vector3[] = [];
@@ -154,8 +156,8 @@ export function valveRim(THREE: Three, o: { R?: number; ribs?: number; spread?: 
     const v = j / 200;
     const phi = -phiMax + 2 * phiMax * v;
     const wave = Math.pow(0.5 + 0.5 * Math.cos(v * ribs * 2 * Math.PI), 0.7);
-    const r = R * (1 + 0.05 * wave);
-    pts.push(new THREE.Vector3(r * Math.sin(phi), o.sign * 0.05 * wave, r * Math.cos(phi)));
+    const r = R * (1 + sc * wave);
+    pts.push(new THREE.Vector3(r * Math.sin(phi), o.sign * sc * wave, r * Math.cos(phi)));
   }
   const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 260, 0.014, 8, false);
   return new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({ color: 0xe0b06a, metalness: 0.8, roughness: 0.25, clearcoat: 1 }));
@@ -171,16 +173,16 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
   const N = o.bands ?? 8;
   const inner = o.inner ?? 0.3;
   const p = ((o.spread ?? 196) / 2) * (Math.PI / 180);
-  const D = o.depth ?? 0.22;
+  const D = o.depth ?? 0.06;
   const L = o.lobes ?? 5;
   const step = (R - inner) / N;
-  const bandW = step * 0.62; // o resto é vão
+  const bandW = step * 0.68; // o resto é vão
   const thick = 0.034;
   const S = 160;
   const mat = new THREE.MeshPhysicalMaterial({
-    color: 0xe8b47c,
-    metalness: 0.7,
-    roughness: 0.34,
+    color: 0xf7dfbd,
+    metalness: 0.45,
+    roughness: 0.3,
     clearcoat: 0.7,
     clearcoatRoughness: 0.2,
     sheen: 0.5,
@@ -226,7 +228,7 @@ export function logoValveTop(THREE: Three, o: { R?: number; bands?: number; inne
 
 /** Valva de baixo no estilo da logo: leque champanhe liso com sulcos finos que irradiam da dobradiça. */
 export function logoValveBottom(THREE: Three, o: { R?: number; grooves?: number; spread?: number } = {}) {
-  const g = valveGeometry(THREE, { R: o.R ?? 1, depth: 0.16, ribs: o.grooves ?? 16, ribAmp: 0.018, spread: o.spread ?? 160, sign: -1 });
+  const g = valveGeometry(THREE, { R: o.R ?? 1, depth: 0.12, ribs: o.grooves ?? 16, ribAmp: 0, scallop: 0, spread: o.spread ?? 160, sign: -1 });
   // cores: champanhe nas faixas, rosado nos sulcos
   const pos = g.attributes.position as T.BufferAttribute;
   const col = g.attributes.color as T.BufferAttribute;

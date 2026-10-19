@@ -13,7 +13,7 @@ import { ShellPearl } from "./shell-pearl";
 // Desenha só durante a abertura (~3 s) e para. Aparelho fraco (html.lite), movimento reduzido ou sem
 // WebGL: sempre a concha 2D (shell-pearl.tsx).
 
-const OPEN_DEG = 96;
+const OPEN_DEG = 80; // valva de cima fica de frente para a câmera (que olha um pouco de cima), como a logo
 const DURATION = 3.0; // s
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -74,7 +74,10 @@ async function buildEngine(): Promise<Engine> {
   const shell = new THREE.Group();
   const bottom = new THREE.Group();
   bottom.add(logoValveBottom(THREE));
-  bottom.add(valveRim(THREE, { sign: -1, ribs: 16, spread: 160 }));
+  bottom.add(valveRim(THREE, { sign: -1, ribs: 16, spread: 160, scallop: 0 }));
+  // como na logo: os sulcos do leque de baixo convergem para baixo (ponta virada para a frente)
+  bottom.rotation.y = Math.PI;
+  bottom.position.z = 0.95;
   const top = logoValveTop(THREE);
   const hinge = new THREE.Group(); // gira em volta da dobradiça (eixo X na origem)
   hinge.add(top);
