@@ -132,15 +132,8 @@ export function photoPearl(THREE: Three, tex: T.Texture | null, radius = 0.42, f
       new THREE.MeshPhysicalMaterial({ color: 0xfbf4ff, roughness: 0.2, clearcoat: 1, iridescence: 1, iridescenceIOR: 1.5 }),
     );
     ring.position.z = radius * 1.01;
-    // brilho de pérola: reflexo pequeno no canto de cima (transparente, não apaga a foto)
-    const shine = new THREE.Mesh(
-      new THREE.CircleGeometry(r * 0.22, 32),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, toneMapped: false }),
-    );
-    shine.position.set(-r * 0.42, r * 0.5, radius * 1.02);
-    shine.scale.set(1.4, 0.8, 1);
-    shine.rotation.z = 0.5;
-    group.add(photo, ring, shine);
+    // sem reflexo branco por cima da foto (pedido do usuário, 19/10): só a foto e o aro de pérola
+    group.add(photo, ring);
   }
   return group;
 }
