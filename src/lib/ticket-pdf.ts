@@ -124,22 +124,24 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   drawStar(p, 86, H - 34, 5, C.cream, 0.8);
 
   // ── logo: o mesmo do site (concha do flyer oficial com RÉVEILLON · PÉROLAS · 2K27) ──
-  const lw = 330;
+  // concha Pérolas no alto, como selo da marca
+  conch(W / 2, H - 44, 46);
+  const lw = 290;
   const lh = (lw * logo.height) / logo.width;
-  p.drawImage(logo, { x: (W - lw) / 2, y: H - 40 - lh, width: lw, height: lh });
-  center(p, "UM NOVO CICLO. INFINITAS POSSIBILIDADES.", H - 200, F.sansBold, 6.8, C.white, 2.4);
+  p.drawImage(logo, { x: (W - lw) / 2, y: H - 72 - lh, width: lw, height: lh });
+  center(p, "UM NOVO CICLO. INFINITAS POSSIBILIDADES.", H - 224, F.sansBold, 6.8, C.white, 2.4);
   // data e local em dourado, como no flyer oficial
   const dmy = ev.startsAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: TZ }).split("/").join(" · ");
   const dw = F.serif.widthOfTextAtSize(dmy, 26) + (dmy.length - 1) * 1.5;
-  center(p, dmy, H - 248, F.serif, 26, C.cream, 1.5);
-  p.drawLine({ start: { x: W / 2 - dw / 2 - 52, y: H - 239 }, end: { x: W / 2 - dw / 2 - 12, y: H - 239 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
-  p.drawLine({ start: { x: W / 2 + dw / 2 + 12, y: H - 239 }, end: { x: W / 2 + dw / 2 + 52, y: H - 239 }, thickness: 0.8, color: C.cream, opacity: 0.85 });
-  center(p, ev.venue.toUpperCase(), H - 276, F.serif, 17, C.cream, 2.2);
+  center(p, dmy, H - 262, F.serif, 26, C.deep, 1.5);
+  p.drawLine({ start: { x: W / 2 - dw / 2 - 52, y: H - 253 }, end: { x: W / 2 - dw / 2 - 12, y: H - 253 }, thickness: 0.8, color: C.goldInk, opacity: 0.9 });
+  p.drawLine({ start: { x: W / 2 + dw / 2 + 12, y: H - 253 }, end: { x: W / 2 + dw / 2 + 52, y: H - 253 }, thickness: 0.8, color: C.goldInk, opacity: 0.9 });
+  center(p, ev.venue.toUpperCase(), H - 290, F.serif, 17, C.deep, 2.2);
 
-  // ── moldura dourada fina com a concha Pérolas nos quatro cantos ──
+  // ── moldura dourada fina ──
   const fm = 12;
   roundRect(p, fm, fm, W - 2 * fm, H - 2 * fm, 18, C.white, 0, C.gold, 0.9);
-  for (const [cx, cy] of [[fm + 13, fm + 12], [W - fm - 13, fm + 12], [W - fm - 13, H - fm - 12], [fm + 13, H - fm - 12]] as const) conch(cx, cy, 24, 0.95);
+
 
   // ── painel de informações ──
   const top = H - 340;

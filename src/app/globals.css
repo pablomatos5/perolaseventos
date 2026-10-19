@@ -2572,3 +2572,19 @@ main { overflow-x: clip; }
 
 /* sereias do topo na frente da água (a pedra apoia no mar, com reflexo), em todas as telas */
 .hero-mermaid { z-index: 4; }
+
+/* computador: sereias encaixadas no ambiente como no celular — menores, mais para dentro e com a pedra
+   entrando no mar (antes iam quase até o alto da tela e pareciam coladas nas bordas) */
+@media (min-width: 768px) {
+  .hero-mermaid { height: min(64svh, 38rem); bottom: clamp(1.25rem, 3vw, 2.75rem); }
+  .hero-mermaid.is-left { left: clamp(0rem, 3vw, 4rem); }
+  .hero-mermaid.is-right { right: clamp(0rem, 3vw, 4rem); }
+}
+/* computador: esculturas de areia somem na areia por todas as bordas (sem o recorte reto da imagem) */
+@media (min-width: 1024px) {
+  .ingressos-sand.with-mermaid > .side-mermaid {
+    -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, transparent 100%);
+    mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, transparent 100%);
+    opacity: 0.9;
+  }
+}
