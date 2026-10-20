@@ -8,7 +8,8 @@ process.env.MP_WEBHOOK_SECRET = "segredo-de-teste";
 process.env.PAYMENT_PROVIDER = "mercadopago";
 
 const payments = new Map<string, { id: number; status: string; transaction_amount: number; external_reference: string }>();
-let lastPreference: Record<string, unknown> | null = null;
+let lastPayment: Record<string, unknown> | null = null;
+let nextPaymentId = 7000;
 
 const realFetch = globalThis.fetch;
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -17,9 +18,11 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
   const pay = url.match(/\/v1\/payments\/(\d+)/);
   if (pay) return payments.has(pay[1]) ? json(payments.get(pay[1])) : json({ message: "not found" }, 404);
-  if (/\/checkout\/preferences\/?$/.test(url)) {
-    lastPreference = JSON.parse(String(init?.body));
-    return json({ id: "pref-1", init_point: "https://mp/prod", sandbox_init_point: "https://mp/sandbox" }, 201);
+  // criação de pagamento (Pix no site): devolve o QR
+  if (/\/v1\/payments\/?$/.test(url) && init?.method === "POST") {
+    lastPayment = JSON.parse(String(init.body));
+    const id = ++nextPaymentId;
+    return json({ id, status: "pending", point_of_interaction: { transaction_data: { qr_code: `00020126-pix-${id}`, qr_code_base64: "iVBORw0KGgo=" } } }, 201);
   }
   return json({ message: `rota não simulada: ${url}` }, 500);
 }) as typeof fetch;
@@ -47,23 +50,29 @@ function check(name: string, ok: boolean, detail = "") {
 async function main() {
   const { db } = await import("../src/lib/db");
   const { createReservation } = await import("../src/lib/orders");
-  const { createCheckout } = await import("../src/lib/mercadopago");
+  const { createPixCharge } = await import("../src/lib/mercadopago");
   const { POST } = await import("../src/app/api/webhooks/mercadopago/route");
 
   const pista = await db.ticketType.findFirstOrThrow({ where: { name: "Pista Open Bar" } });
   const buyer = { buyerName: "Teste Mercado Pago", email: "mp@exemplo.com", phone: "91999990000", cpf: "52998224725" };
   const reserve = () => createReservation({ eventId: pista.eventId, ...buyer, items: [{ ticketTypeId: pista.id, masc: 1, fem: 1 }] });
 
-  // 1. Checkout Pro: corpo da preferência
+  // 1. Pix no próprio site: corpo do pagamento e QR guardado
   const o1 = await reserve();
-  const url = await createCheckout(o1.id);
-  const pref = lastPreference as { external_reference: string; items: { unit_price: number; quantity: number }[]; payment_methods: { excluded_payment_types: { id: string }[] }; expiration_date_to: string };
-  check("checkout usa link de sandbox com token TEST-", url === "https://mp/sandbox");
-  check("external_reference = id do pedido", pref.external_reference === o1.id);
-  const prefTotal = Math.round(pref.items.reduce((s, i) => s + i.unit_price * i.quantity, 0) * 100);
-  check("itens somam o total do pedido", prefTotal === o1.totalCents, `${prefTotal} vs ${o1.totalCents}`);
-  check("boleto excluído", pref.payment_methods.excluded_payment_types.some((t) => t.id === "ticket"));
-  check("link vence junto com a reserva", pref.expiration_date_to === o1.expiresAt.toISOString());
+  const charge = await createPixCharge(o1.id, "pix");
+  const body = lastPayment as { external_reference: string; transaction_amount: number; payment_method_id: string; application_fee?: number; date_of_expiration: string };
+  check("Pix criado com o método pix", body.payment_method_id === "pix");
+  check("external_reference = pedido + parte", body.external_reference === `${o1.id}:full`);
+  check("valor = total do pedido", Math.round(body.transaction_amount * 100) === o1.totalCents, `${body.transaction_amount} vs ${o1.totalCents / 100}`);
+  const connected = !!(await db.mpAccount.findUnique({ where: { id: "principal" } }));
+  check(
+    connected ? "conta do evento conectada: taxa de serviço separada para os devs" : "sem conta conectada não há taxa separada",
+    connected ? Math.round((body.application_fee ?? 0) * 100) === o1.feeCents : body.application_fee === undefined,
+    `application_fee=${body.application_fee}`,
+  );
+  check("QR guardado para a página do pedido", charge.qrCode.startsWith("00020126") && charge.amountCents === o1.totalCents);
+  const again = await createPixCharge(o1.id, "pix");
+  check("recarregar a página reaproveita o mesmo Pix", again.id === charge.id);
 
   // 2. Webhook aprovado
   payments.set("9001", { id: 9001, status: "approved", transaction_amount: o1.totalCents / 100, external_reference: o1.id });

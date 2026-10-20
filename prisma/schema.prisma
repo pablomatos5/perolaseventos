@@ -21,6 +21,9 @@ model Event {
   /// O prazo nunca passa de 2 dias antes da festa.
   splitPixEnabled Boolean   @default(false)
   splitPixDays    Int       @default(15)
+  /// Taxa do cartão repassada ao comprador, em centésimos de % (499 = 4,99%). 0 = cartão sai pelo mesmo preço do Pix.
+  /// O acréscimo é calculado para o vendedor receber o valor cheio: total ÷ (1 − taxa).
+  cardFeeBps      Int       @default(0)
   createdAt   DateTime     @default(now())
   ticketTypes TicketType[]
   orders      Order[]
@@ -127,8 +130,26 @@ model Order {
   createdAt     DateTime    @default(now())
   tickets       Ticket[]
   deliveries    Delivery[]
+  pixCharges    PixCharge[]
 
   @@index([status, expiresAt])
+}
+
+/// Pix gerado no próprio site (Checkout Transparente): QR e "copia e cola" guardados para a página do pedido
+/// mostrar o mesmo código ao recarregar. kind = pix (à vista) | pix2x-1 | pix2x-2 (parcelas do Pix em 2x).
+model PixCharge {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind        String
+  paymentId   String   @unique
+  amountCents Int
+  qrCode      String // Pix copia e cola
+  qrBase64    String // imagem do QR (PNG em base64)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([orderId, kind])
 }
 
 enum TicketGender {
@@ -200,4 +221,20 @@ model AuditLog {
   detail String   @default("")
 
   @@index([at])
+}
+
+/// Conta Mercado Pago do VENDEDOR (dona do evento), ligada à aplicação dos desenvolvedores pelo botão
+/// "Conectar Mercado Pago" do painel (OAuth). As cobranças saem em nome dela e a taxa de serviço vai para os
+/// desenvolvedores (marketplace_fee). Tokens guardados cifrados (AES-256-GCM, src/lib/mp-account.ts). Só uma linha.
+model MpAccount {
+  id           String   @id @default("principal")
+  mpUserId     String
+  nickname     String   @default("")
+  accessToken  String // cifrado
+  refreshToken String // cifrado
+  publicKey    String   @default("")
+  liveMode     Boolean  @default(true)
+  expiresAt    DateTime
+  connectedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

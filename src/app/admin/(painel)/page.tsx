@@ -2,8 +2,17 @@ import { connection } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { activeEvent, batchReport, kpis } from "@/lib/admin-data";
 import { formatBRL, formatDateTime } from "@/lib/format";
-import { closeBatchAction, reopenBatchAction, togglePauseAction } from "../actions";
-import { QuantityForm, SplitPixForm } from "../forms";
+import { connectedAccount, marketplaceConfigured } from "@/lib/mp-account";
+import { paymentMode } from "@/lib/payment-mode";
+import { closeBatchAction, disconnectMpAction, reopenBatchAction, togglePauseAction } from "../actions";
+import { CardFeeForm, QuantityForm, SplitPixForm } from "../forms";
+
+const MP_MESSAGE: Record<string, { ok: boolean; text: string }> = {
+  conectado: { ok: true, text: "Conta Mercado Pago conectada. As próximas vendas caem nela, com a taxa de serviço separada." },
+  erro: { ok: false, text: "O Mercado Pago não confirmou a conexão. Tente de novo." },
+  recusado: { ok: false, text: "Conexão cancelada ou expirada. Toque em “Conectar Mercado Pago” de novo." },
+  "sem-aplicacao": { ok: false, text: "A aplicação dos desenvolvedores (MP_CLIENT_ID/MP_CLIENT_SECRET) não está configurada no servidor." },
+};
 
 const STATE_STYLE: Record<string, string> = {
   "à venda": "bg-ok/15 text-ok",
@@ -14,12 +23,14 @@ const STATE_STYLE: Record<string, string> = {
   cortesia: "bg-ocean/20 text-fg-muted",
 };
 
-export default async function AdminHome() {
+export default async function AdminHome({ searchParams }: { searchParams: Promise<{ mp?: string }> }) {
   await connection();
   await requireAdmin();
   const event = await activeEvent();
   if (!event) return <p className="text-fg-muted">Nenhum evento publicado.</p>;
-  const [k, report] = await Promise.all([kpis(event.id), batchReport(event.id)]);
+  const [k, report, mpAcc, { mp }] = await Promise.all([kpis(event.id), batchReport(event.id), connectedAccount(), searchParams]);
+  const mpMsg = mp ? MP_MESSAGE[mp] : undefined;
+  const mode = paymentMode();
 
   const cards = [
     { label: "Receita confirmada", value: formatBRL(k.revenueCents) },
@@ -53,6 +64,46 @@ export default async function AdminHome() {
           </div>
         ))}
       </dl>
+      <section className="grid gap-3">
+        <h2 className="font-display text-2xl">Mercado Pago</h2>
+        {mpMsg && <p className={`rounded-xl px-4 py-3 text-sm ${mpMsg.ok ? "bg-ok/15 text-ok" : "bg-danger/15 text-danger"}`}>{mpMsg.text}</p>}
+        <div className="glass-card grid gap-6 p-6 md:p-8">
+          {mpAcc ? (
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-sm">
+                  <span className="mr-2 inline-block size-2.5 rounded-full bg-ok align-middle" />
+                  Conectada: <strong>{mpAcc.nickname || "conta Mercado Pago"}</strong> <span className="text-fg-faint">(nº {mpAcc.mpUserId})</span>
+                  {!mpAcc.liveMode && <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">modo teste</span>}
+                </p>
+                <p className="mt-1 text-xs text-fg-faint">
+                  Desde {formatDateTime(mpAcc.connectedAt)} · autorização renovada sozinha antes de {formatDateTime(mpAcc.expiresAt)}
+                </p>
+                <p className="mt-1 text-xs text-fg-faint">O valor dos ingressos cai nesta conta; a taxa de serviço vai direto para os desenvolvedores.</p>
+              </div>
+              <form action={disconnectMpAction}>
+                <button className="btn px-4! py-2!">Desconectar</button>
+              </form>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p className="max-w-xl text-sm text-fg-muted">
+                Conecte a conta Mercado Pago do evento (de preferência a do CNPJ) para receber as vendas. Você entra na sua conta no site do
+                Mercado Pago e autoriza: ninguém precisa passar senha ou chave.
+              </p>
+              {marketplaceConfigured() ? (
+                <a href="/api/mercadopago/conectar" className="btn solid">Conectar Mercado Pago</a>
+              ) : (
+                <span className="text-xs text-danger">Aplicação dos desenvolvedores não configurada.</span>
+              )}
+            </div>
+          )}
+          {mode !== "mercadopago" && (
+            <p className="text-xs text-fg-faint">Pagamento real desligado neste servidor (modo {mode}): as vendas ainda não usam o Mercado Pago.</p>
+          )}
+          <CardFeeForm eventId={event.id} bps={event.cardFeeBps} />
+        </div>
+      </section>
       <section className="grid gap-3">
         <h2 className="font-display text-2xl">Pix em 2x</h2>
         <SplitPixForm eventId={event.id} enabled={event.splitPixEnabled} days={event.splitPixDays} />

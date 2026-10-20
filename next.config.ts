@@ -4,13 +4,14 @@ import type { NextConfig } from "next";
 // 'unsafe-inline' em script: o Next injeta scripts inline de hidratação; sem nonce isso é o necessário.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  // Mercado Pago: SDK, campos seguros do cartão e script de segurança do aparelho (pagamento dentro do site)
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://sdk.mercadopago.com https://www.mercadopago.com https://*.mlstatic.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.mlstatic.com https://*.mercadopago.com https://*.mercadolibre.com",
   "media-src 'self'",
   "font-src 'self'",
-  "connect-src 'self' https://challenges.cloudflare.com",
-  "frame-src https://challenges.cloudflare.com",
+  "connect-src 'self' https://challenges.cloudflare.com https://*.mercadopago.com https://*.mercadolibre.com https://*.mercadolivre.com https://*.mlstatic.com",
+  "frame-src https://challenges.cloudflare.com https://*.mercadopago.com https://*.mercadolibre.com https://*.mercadolivre.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",

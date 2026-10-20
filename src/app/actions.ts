@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { deliverTickets, notifyFirstInstallment } from "@/lib/delivery";
-import { createCheckout, type CheckoutKind } from "@/lib/mercadopago";
+import { createPixCharge, payWithCard, type CardInput, type CheckoutKind, type PixKind } from "@/lib/mercadopago";
 import { createReservation, firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, SaleError, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { allow, clientIp } from "@/lib/rate-limit";
@@ -101,19 +101,79 @@ async function canPay(orderId: string, kind: CheckoutKind) {
   return kind !== "pix2x-1" || splitPixAvailable(order.event);
 }
 
-/** Leva o cliente ao Checkout Pro do Mercado Pago na forma escolhida (Pix, cartão ou parcela do Pix em 2x). */
-export async function payAction(token: string, kind: CheckoutKind = "pix") {
+/** Pix no próprio site (à vista ou parcela do Pix em 2x): gera o QR e volta à página do pedido mostrando-o. */
+export async function pixAction(token: string, kind: PixKind = "pix") {
   const orderId = verifyOrderToken(token);
   if (!orderId) throw new Error("Pedido inválido");
   if (!KINDS.has(kind) || paymentMode() !== "mercadopago" || !(await canPay(orderId, kind))) redirect(`/pedido/${token}`);
-  let checkoutUrl: string;
+  // freio: gerar Pix sem parar (cada um é uma cobrança no Mercado Pago)
+  if (!allow(`pix:${orderId}`, 8, 15 * 60_000) || !allow(`pix-ip:${await clientIp()}`, 30, 15 * 60_000)) redirect(`/pedido/${token}?erro=limite`);
   try {
-    checkoutUrl = await createCheckout(orderId, kind);
+    await createPixCharge(orderId, kind);
   } catch (e) {
-    console.error("[mercadopago] não foi possível criar o checkout:", e);
+    console.error("[mercadopago] não foi possível gerar o Pix:", e);
     redirect(`/pedido/${token}?erro=pagamento`);
   }
-  redirect(checkoutUrl);
+  redirect(`/pedido/${token}?pagar=pix&forma=${kind}`);
+}
+
+export type CardField = "number" | "expiry" | "cvv" | "name" | "cpf";
+export type CardState = { ok?: boolean; error?: string; field?: CardField } | undefined;
+
+// recusa por dado errado: aponta o campo do formulário que a pessoa precisa corrigir
+const CARD_FIELD: Record<string, CardField> = {
+  cc_rejected_bad_filled_card_number: "number",
+  cc_rejected_bad_filled_date: "expiry",
+  cc_rejected_bad_filled_security_code: "cvv",
+};
+
+// Mensagens para o comprador conforme o motivo da recusa (status_detail do Mercado Pago)
+const CARD_REJECTED: Record<string, string> = {
+  cc_rejected_bad_filled_card_number: "Confira o número do cartão.",
+  cc_rejected_bad_filled_date: "Confira a validade do cartão.",
+  cc_rejected_bad_filled_security_code: "Confira o código de segurança (CVV).",
+  cc_rejected_bad_filled_other: "Confira os dados do cartão.",
+  cc_rejected_insufficient_amount: "Saldo ou limite insuficiente. Tente outro cartão ou pague no Pix.",
+  cc_rejected_call_for_authorize: "O banco pediu autorização: ligue para o seu banco e tente de novo, ou pague no Pix.",
+  cc_rejected_card_disabled: "Cartão desativado. Ligue para o banco ou use outro cartão.",
+  cc_rejected_duplicated_payment: "Você já fez um pagamento igual agora há pouco. Confira o seu extrato antes de tentar de novo.",
+  cc_rejected_max_attempts: "Tentativas demais com este cartão. Use outro cartão ou pague no Pix.",
+  cc_rejected_high_risk: "O pagamento foi recusado pela análise de segurança. Tente outro cartão ou pague no Pix.",
+};
+
+/** Cartão no próprio site: recebe só o token gerado pelos campos seguros do Mercado Pago (nunca o número do cartão). */
+export async function cardPayAction(token: string, input: CardInput): Promise<CardState> {
+  const orderId = verifyOrderToken(token);
+  if (!orderId) return { error: "Pedido inválido." };
+  if (paymentMode() !== "mercadopago" || !(await canPay(orderId, "card"))) return { error: "Este pedido não aceita pagamento agora. Atualize a página." };
+  const parsed = z
+    .object({
+      token: z.string().min(8).max(200),
+      paymentMethodId: z.string().regex(/^[a-z0-9_]{2,30}$/),
+      issuerId: z.string().regex(/^\d{1,12}$/).optional(),
+      installments: z.number().int().min(1).max(12),
+      deviceId: z.string().max(4000).optional(),
+    })
+    .safeParse(input);
+  if (!parsed.success) {
+    console.warn("[mercadopago] dados do cartão recusados na conferência:", parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
+    return { error: "Dados do cartão incompletos. Confira e tente de novo." };
+  }
+  // freio contra teste de cartões roubados: poucas tentativas por pedido e por conexão
+  if (!allow(`card:${orderId}`, 6, 15 * 60_000) || !allow(`card-ip:${await clientIp()}`, 12, 15 * 60_000)) {
+    return { error: "Tentativas demais. Espere alguns minutos ou pague no Pix." };
+  }
+  try {
+    const r = await payWithCard(orderId, parsed.data);
+    if (r.status === "approved") {
+      revalidatePath(`/pedido/${token}`);
+      return { ok: true };
+    }
+    return { error: CARD_REJECTED[r.detail] ?? "Pagamento recusado pelo cartão. Tente outro cartão ou pague no Pix.", field: CARD_FIELD[r.detail] };
+  } catch (e) {
+    console.error("[mercadopago] falha no pagamento com cartão:", e);
+    return { error: "Não foi possível falar com o Mercado Pago agora. Tente de novo em instantes." };
+  }
 }
 
 /** Só funciona com PAYMENT_PROVIDER=mock fora de produção. Em produção, quem confirma é o webhook. */

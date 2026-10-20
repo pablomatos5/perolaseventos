@@ -16,4 +16,10 @@ export const femalePrice = (b: { priceCents: number; femalePriceCents: number | 
 /** Taxa de serviço por ingresso vendido (fica com os desenvolvedores); cortesia não paga. */
 export const SERVICE_FEE_CENTS = 250;
 
+/**
+ * Total no cartão com a taxa do cartão repassada ao comprador (bps = centésimos de %, 499 = 4,99%).
+ * Calculado para o vendedor receber o valor cheio depois da taxa: total ÷ (1 − taxa), arredondado para cima.
+ */
+export const cardTotalCents = (cents: number, bps: number) => (bps > 0 ? Math.ceil((cents * 10_000) / (10_000 - bps)) : cents);
+
 export const genderLabel = (g: "MASCULINO" | "FEMININO" | null) => (g === "FEMININO" ? "Feminino" : g === "MASCULINO" ? "Masculino" : "Cortesia");

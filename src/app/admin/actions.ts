@@ -14,6 +14,7 @@ import { createCourtesy, SaleError } from "@/lib/orders";
 import { blocked, clientIp, fail } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
 import { createDevice } from "@/lib/portaria-auth";
+import { connectedAccount, disconnectAccount } from "@/lib/mp-account";
 
 export type FormState = { ok?: string; error?: string } | undefined;
 
@@ -104,6 +105,27 @@ const courtesySchema = z.object({
   qty: z.coerce.number().int().min(1, "Mínimo 1.").max(20, "Máximo 20 por vez."),
   note: z.string().trim().max(80),
 });
+
+// ───────── Mercado Pago (conta do evento + taxa do cartão) ─────────
+export async function disconnectMpAction() {
+  await requireAdmin();
+  const acc = await connectedAccount();
+  await disconnectAccount();
+  if (acc) await audit("painel", "desconectou a conta Mercado Pago do evento", `${acc.nickname || "conta"} (${acc.mpUserId})`);
+  revalidatePath("/admin");
+}
+
+export async function updateCardFeeAction(eventId: string, _prev: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const pct = Number(String(form.get("percent") ?? "").replace(",", "."));
+  if (!Number.isFinite(pct) || pct < 0 || pct > 15) return { error: "Taxa de 0 a 15%." };
+  const bps = Math.round(pct * 100);
+  await db.event.update({ where: { id: eventId }, data: { cardFeeBps: bps } });
+  const label = `${(bps / 100).toFixed(2).replace(".", ",")}%`;
+  await audit("painel", "mudou a taxa do cartão repassada", label);
+  revalidatePath("/admin");
+  return { ok: bps > 0 ? `Cartão com acréscimo de ${label} (o evento recebe o valor cheio).` : "Cartão pelo mesmo preço do Pix." };
+}
 
 export async function createCourtesyAction(_prev: FormState, form: FormData): Promise<FormState> {
   await requireAdmin();

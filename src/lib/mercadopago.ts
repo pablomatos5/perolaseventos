@@ -1,13 +1,33 @@
-import MercadoPagoConfig, { Payment, Preference } from "mercadopago";
+import MercadoPagoConfig, { Payment } from "mercadopago";
 import { db } from "@/lib/db";
-import { genderLabel } from "@/lib/format";
-import { deliverTickets, notifyFirstInstallment, orderLink } from "@/lib/delivery";
+import { cardTotalCents } from "@/lib/format";
+import { deliverTickets, notifyFirstInstallment } from "@/lib/delivery";
 import { firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, refundOrder } from "@/lib/orders";
+import { sellerAccessToken, sellerPublicKey } from "@/lib/mp-account";
 
-function client() {
-  const accessToken = process.env.MP_ACCESS_TOKEN;
-  if (!accessToken) throw new Error("MP_ACCESS_TOKEN não configurado");
-  return new MercadoPagoConfig({ accessToken, options: { timeout: 10_000 } });
+// Pagamento DENTRO do site (Checkout Transparente do Mercado Pago):
+// - Pix: o servidor cria o pagamento e a página do pedido mostra o QR e o "copia e cola";
+// - cartão: os campos do cartão são do Mercado Pago (Secure Fields, embutidos na página), o navegador gera um
+//   token e o servidor cobra com esse token. O número do cartão nunca passa pelo nosso servidor.
+// Em todos, a taxa de serviço dos ingressos vai para os desenvolvedores (application_fee) quando a conta do
+// evento está conectada pelo painel.
+
+/**
+ * Credencial das cobranças:
+ * - conta do vendedor conectada no painel ("Conectar Mercado Pago") → cobrança em nome dele, com a taxa de
+ *   serviço separada para os desenvolvedores (marketplace = true);
+ * - senão, MP_ACCESS_TOKEN do .env (cobrança simples, sem divisão).
+ */
+async function client() {
+  const seller = await sellerAccessToken();
+  const accessToken = seller ?? process.env.MP_ACCESS_TOKEN;
+  if (!accessToken) throw new Error("Nenhuma conta Mercado Pago: conecte a do evento no painel (ou configure MP_ACCESS_TOKEN)");
+  return { config: new MercadoPagoConfig({ accessToken, options: { timeout: 15_000 } }), marketplace: !!seller };
+}
+
+/** Chave pública para os campos do cartão no navegador (da conta conectada; senão MP_PUBLIC_KEY). */
+export async function checkoutPublicKey() {
+  return (await sellerPublicKey()) || process.env.MP_PUBLIC_KEY || null;
 }
 
 const isPublicHttps = (url: string | undefined) => !!url && url.startsWith("https://");
@@ -18,102 +38,117 @@ const isPublicHttps = (url: string | undefined) => !!url && url.startsWith("http
  * - "pix2x-1" / "pix2x-2": 1ª e 2ª parcelas do Pix em 2x (o ingresso só sai depois da 2ª)
  */
 export type CheckoutKind = "pix" | "card" | "pix2x-1" | "pix2x-2";
+export type PixKind = Exclude<CheckoutKind, "card">;
 
 /** Liga o pagamento ao pedido e à parcela: "<orderId>" (antigo, à vista), "<orderId>:full", ":p1", ":p2". */
 const reference = (orderId: string, kind: CheckoutKind) => `${orderId}:${kind === "pix2x-1" ? "p1" : kind === "pix2x-2" ? "p2" : "full"}`;
 
-/**
- * Cria o Checkout Pro (página do Mercado Pago) para um pedido, já filtrado pela forma escolhida.
- * Boleto fica de fora: compensa em dias e a reserva dura minutos.
- * Retorna a URL para onde o cliente deve ser mandado.
- */
-export async function createCheckout(orderId: string, kind: CheckoutKind = "pix") {
-  const order = await db.order.findUniqueOrThrow({
-    where: { id: orderId },
-    include: { event: true, tickets: { include: { ticketType: true, batch: true } } },
-  });
+type OrderForPay = { id: string; code: string; totalCents: number; feeCents: number; firstPaidCents: number; email: string; cpf: string; buyerName: string; expiresAt: Date; event: { name: string; edition: string; cardFeeBps: number }; tickets: unknown[] };
 
-  // Uma linha por combinação setor + lote + masculino/feminino, como aparece no comprovante do cliente.
-  const lines = new Map<string, { title: string; unit: number; qty: number }>();
-  for (const t of order.tickets) {
-    const key = `${t.ticketTypeId}|${t.batchId}|${t.gender}`;
-    const line = lines.get(key) ?? {
-      title: `${order.event.name} ${order.event.edition} · ${t.ticketType.name} ${genderLabel(t.gender).toLowerCase()} (${t.batch.name})`,
-      unit: t.priceCents,
-      qty: 0,
-    };
-    line.qty++;
-    lines.set(key, line);
-  }
-  // taxa de serviço numa linha própria: o total cobrado bate com order.totalCents
-  if (order.feeCents > 0) {
-    lines.set("taxa", { title: "Taxa de serviço", unit: order.feeCents / order.tickets.length, qty: order.tickets.length });
-  }
-  // Pix em 2x: uma linha só com o valor da parcela
-  if (kind === "pix2x-1" || kind === "pix2x-2") {
-    const cents = kind === "pix2x-1" ? firstInstallmentCents(order.totalCents) : order.totalCents - order.firstPaidCents;
-    lines.clear();
-    lines.set(kind, {
-      title: `${order.event.name} ${order.event.edition} · ${order.tickets.length} ingresso(s) · ${kind === "pix2x-1" ? "1ª" : "2ª"} parcela de 2 (Pix)`,
-      unit: cents,
-      qty: 1,
-    });
-  }
-  const pixOnly = kind !== "card";
-  // 2ª parcela: o Pix gerado vale até o prazo, mas no máximo 1 dia (a pessoa gera outro se precisar)
-  const expires = kind === "pix2x-2" ? new Date(Math.min(order.expiresAt.getTime(), Date.now() + 86_400_000)) : order.expiresAt;
+/** Quanto cobrar nesta forma (cartão já com a taxa do cartão repassada). Sempre calculado no servidor. */
+export function amountFor(order: OrderForPay, kind: CheckoutKind) {
+  if (kind === "card") return cardTotalCents(order.totalCents, order.event.cardFeeBps);
+  if (kind === "pix2x-1") return firstInstallmentCents(order.totalCents);
+  if (kind === "pix2x-2") return order.totalCents - order.firstPaidCents;
+  return order.totalCents;
+}
 
-  const appUrl = process.env.APP_URL!;
-  const back = orderLink(order.id);
-  // O Mercado Pago só aceita notification_url e auto_return com endereço público https.
-  // Em localhost a confirmação acontece pela conciliação no retorno (reconcilePayment na página do pedido).
-  const publicUrl = isPublicHttps(appUrl);
+/** Parte dos desenvolvedores neste pagamento: a taxa de serviço; no Pix em 2x, metade em cada parcela. */
+const feeFor = (order: OrderForPay, kind: CheckoutKind) =>
+  kind === "pix2x-1" ? Math.floor(order.feeCents / 2) : kind === "pix2x-2" ? order.feeCents - Math.floor(order.feeCents / 2) : order.feeCents;
+
+const describe = (order: OrderForPay, kind: CheckoutKind) =>
+  `${order.event.name} ${order.event.edition} · ${order.tickets.length} ingresso(s)${kind === "pix2x-1" ? " · 1ª parcela" : kind === "pix2x-2" ? " · 2ª parcela" : ""}`;
+
+function commonBody(order: OrderForPay, kind: CheckoutKind, marketplace: boolean) {
+  const appUrl = process.env.APP_URL;
   const [first, ...rest] = order.buyerName.trim().split(/\s+/);
+  const fee = feeFor(order, kind);
+  return {
+    transaction_amount: amountFor(order, kind) / 100,
+    description: describe(order, kind).slice(0, 250),
+    external_reference: reference(order.id, kind),
+    statement_descriptor: "PEROLAS EVENTOS",
+    // O Mercado Pago só aceita notification_url pública em https. Em localhost a confirmação vem da consulta
+    // feita logo depois do pagamento (cartão) ou da página do pedido, que confere o Pix a cada poucos segundos.
+    ...(isPublicHttps(appUrl) && { notification_url: `${appUrl}/api/webhooks/mercadopago` }),
+    ...(marketplace && fee > 0 && { application_fee: fee / 100 }),
+    payer: { email: order.email, first_name: first, last_name: rest.join(" ") || first, identification: { type: "CPF", number: order.cpf } },
+  };
+}
 
-  const pref = await new Preference(client()).create({
+const loadOrder = (orderId: string) =>
+  db.order.findUniqueOrThrow({ where: { id: orderId }, include: { event: true, tickets: { select: { id: true } } } });
+
+/**
+ * Pix gerado no site: reaproveita o QR ainda válido (mesmo valor) ou cria um pagamento novo.
+ * O Pix vale até a reserva acabar (2ª parcela: até o prazo, no máximo 1 dia; a pessoa gera outro se precisar).
+ */
+export async function createPixCharge(orderId: string, kind: PixKind) {
+  const order = await loadOrder(orderId);
+  const cents = amountFor(order, kind);
+  const reuse = await db.pixCharge.findFirst({
+    where: { orderId, kind, amountCents: cents, expiresAt: { gt: new Date(Date.now() + 60_000) } },
+    orderBy: { createdAt: "desc" },
+  });
+  if (reuse) return reuse;
+
+  const mp = await client();
+  // o Mercado Pago pede pelo menos ~30 min de validade no Pix; se a reserva acaba antes, o pagamento que
+  // chegar depois é aceito como "pago com atraso" (paidLate), como já acontecia no checkout anterior
+  const end = kind === "pix2x-2" ? Math.min(order.expiresAt.getTime(), Date.now() + 86_400_000) : order.expiresAt.getTime();
+  const expires = new Date(Math.max(end, Date.now() + 31 * 60_000));
+  const p = await new Payment(mp.config).create({
+    body: { ...commonBody(order, kind, mp.marketplace), payment_method_id: "pix", date_of_expiration: expires.toISOString() },
+    requestOptions: { idempotencyKey: `pix-${order.id}-${kind}-${cents}-${expires.getTime()}` },
+  });
+  const tx = p.point_of_interaction?.transaction_data;
+  if (!p.id || !tx?.qr_code || !tx.qr_code_base64) throw new Error("Mercado Pago não devolveu o QR do Pix");
+  return db.pixCharge.create({
+    data: { orderId, kind, paymentId: String(p.id), amountCents: cents, qrCode: tx.qr_code, qrBase64: tx.qr_code_base64, expiresAt: expires },
+  });
+}
+
+/** Pix mais recente ainda válido desta forma (para a página do pedido mostrar o QR). */
+export function activePixCharge(orderId: string, kind: PixKind) {
+  return db.pixCharge.findFirst({ where: { orderId, kind, expiresAt: { gt: new Date() } }, orderBy: { createdAt: "desc" } });
+}
+
+export type CardInput = {
+  token: string;
+  paymentMethodId: string;
+  issuerId?: string;
+  installments: number;
+  /** id do aparelho gerado pelo script de segurança do Mercado Pago (melhora a aprovação) */
+  deviceId?: string;
+};
+
+/** Cobra no cartão com o token gerado pelos campos seguros do Mercado Pago e já confere o resultado. */
+export async function payWithCard(orderId: string, input: CardInput) {
+  const order = await loadOrder(orderId);
+  const mp = await client();
+  const p = await new Payment(mp.config).create({
     body: {
-      items: [...lines.entries()].map(([id, l]) => ({
-        id,
-        title: l.title.slice(0, 250),
-        quantity: l.qty,
-        unit_price: l.unit / 100,
-        currency_id: "BRL",
-      })),
-      payer: {
-        name: first,
-        surname: rest.join(" "),
-        email: order.email,
-        identification: { type: "CPF", number: order.cpf },
-      },
-      external_reference: reference(order.id, kind),
-      back_urls: { success: back, pending: back, failure: back },
-      ...(publicUrl && { auto_return: "approved", notification_url: `${appUrl}/api/webhooks/mercadopago` }),
-      // Pix (bank_transfer) ou só cartões, conforme a escolha do cliente
-      payment_methods: pixOnly
-        ? { excluded_payment_types: [{ id: "ticket" }, { id: "atm" }, { id: "credit_card" }, { id: "debit_card" }, { id: "prepaid_card" }], installments: 1 }
-        : { excluded_payment_types: [{ id: "ticket" }, { id: "atm" }, { id: "bank_transfer" }], installments: 12 },
-      // O link de pagamento vence junto com a reserva (ou com o prazo da parcela); Pix gerado nele também.
-      expires: true,
-      expiration_date_to: expires.toISOString(),
-      date_of_expiration: expires.toISOString(),
-      statement_descriptor: "PEROLAS EVENTOS",
+      ...commonBody(order, "card", mp.marketplace),
+      token: input.token,
+      payment_method_id: input.paymentMethodId,
+      ...(input.issuerId && { issuer_id: Number(input.issuerId) }),
+      installments: input.installments,
       binary_mode: true, // sem "em análise": aprovado ou recusado, para não segurar ingresso indefinidamente
     },
-    requestOptions: { idempotencyKey: `pref-${order.id}-${kind}-${expires.getTime()}` },
+    requestOptions: { idempotencyKey: `card-${order.id}-${input.token}`, ...(input.deviceId && { meliSessionId: input.deviceId }) },
   });
-
-  const url = process.env.MP_ACCESS_TOKEN!.startsWith("TEST-") ? pref.sandbox_init_point : pref.init_point;
-  if (!url) throw new Error("Mercado Pago não devolveu o link de pagamento");
-  return url;
+  if (p.id && p.status === "approved") await reconcilePayment(String(p.id));
+  return { status: p.status ?? "unknown", detail: p.status_detail ?? "" };
 }
 
 /**
  * Fonte da verdade do pagamento: SEMPRE consulta a API do Mercado Pago pelo id,
  * nunca confia no corpo do webhook nem nos parâmetros da URL de retorno.
- * Chamado pelo webhook e pela página do pedido quando o cliente volta do checkout.
+ * Chamado pelo webhook, depois do cartão e pela página do pedido (Pix).
  */
 export async function reconcilePayment(paymentId: string) {
-  const p = await new Payment(client()).get({ id: paymentId });
+  const p = await new Payment((await client()).config).get({ id: paymentId });
   const [orderId, part = "full"] = (p.external_reference ?? "").split(":");
   if (!orderId) return { status: p.status, handled: false };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { createCourtesyAction, createDeviceAction, loginAction, updateQuantityAction, updateSplitPixAction, type FormState } from "./actions";
+import { createCourtesyAction, createDeviceAction, loginAction, updateCardFeeAction, updateQuantityAction, updateSplitPixAction, type FormState } from "./actions";
 
 function Feedback({ state }: { state: FormState }) {
   if (!state) return null;
@@ -152,6 +152,27 @@ export function SplitPixForm({ eventId, enabled, days }: { eventId: string; enab
       </div>
       <p className="text-xs text-fg-faint md:col-span-3">
         O prazo conta a partir do pagamento da 1ª parcela e nunca passa de 2 dias antes da festa. Os ingressos ficam reservados até o prazo e só são entregues depois da 2ª parcela; sem a 2ª, voltam para a venda.
+      </p>
+    </form>
+  );
+}
+
+export function CardFeeForm({ eventId, bps }: { eventId: string; bps: number }) {
+  const [state, action, pending] = useActionState(updateCardFeeAction.bind(null, eventId), undefined);
+  return (
+    <form action={action} className="grid gap-4 md:grid-cols-[auto_1fr] md:items-end">
+      <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint">
+        Taxa do cartão repassada (%)
+        <input name="percent" inputMode="decimal" defaultValue={(bps / 100).toFixed(2).replace(".", ",")} className="w-32 rounded-lg border border-line bg-bg/60 px-3 py-2 text-base normal-case tracking-normal text-fg" />
+      </label>
+      <div className="flex flex-wrap items-center gap-4">
+        <button className="btn solid" disabled={pending}>Salvar</button>
+        {state?.ok && <span className="text-sm text-ok">{state.ok}</span>}
+        {state?.error && <span className="text-sm text-danger">{state.error}</span>}
+      </div>
+      <p className="text-xs text-fg-faint md:col-span-2">
+        Use a taxa do Mercado Pago para cartão no seu plano. Quem escolhe cartão paga o acréscimo (mostrado antes de pagar) e o evento recebe o
+        mesmo valor do Pix. 0 = cartão pelo mesmo preço do Pix.
       </p>
     </form>
   );

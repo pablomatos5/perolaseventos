@@ -3,13 +3,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { payAction, simulatePaymentAction } from "@/app/actions";
+import { pixAction, simulatePaymentAction } from "@/app/actions";
+import { CardPayForm } from "@/components/card-pay-form";
+import { PixCopy } from "@/components/pix-copy";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HolderForm, ShareTicketButton, StoryShare } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
-import { formatBRL, formatDateTime, genderLabel } from "@/lib/format";
+import { formatBRL, formatDateTime, genderLabel, cardTotalCents } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
-import { reconcilePayment } from "@/lib/mercadopago";
+import { activePixCharge, amountFor, checkoutPublicKey, reconcilePayment, type PixKind } from "@/lib/mercadopago";
 import { firstInstallmentCents, RESERVATION_MINUTES, secondInstallmentDue, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { ticketLinkToken, ticketToken, verifyOrderToken } from "@/lib/tokens";
@@ -42,7 +44,14 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
   if (mpProvider && paymentId && /^\d+$/.test(paymentId)) {
     await reconcilePayment(paymentId).catch((e) => console.error("[mercadopago] conciliação no retorno falhou:", e));
   }
+  // Pagamento no próprio site: ?pagar=pix&forma=<pix|pix2x-1|pix2x-2> mostra o QR · ?pagar=cartao mostra o cartão
+  const paying = query.pagar === "pix" || query.pagar === "cartao" ? query.pagar : null;
+  const pixKind: PixKind = query.forma === "pix2x-1" || query.forma === "pix2x-2" ? query.forma : "pix";
+  const pixCharge = mpProvider && paying === "pix" ? await activePixCharge(orderId, pixKind) : null;
+  // o Pix confirma pelo webhook; aqui também confere a cada atualização da página (e é o que vale em localhost)
+  if (pixCharge) await reconcilePayment(pixCharge.paymentId).catch((e) => console.error("[mercadopago] conferência do Pix falhou:", e));
   const declined = query.status === "rejected" || query.collection_status === "rejected";
+  const tooMany = query.erro === "limite";
   const existing = query.reserva === "existente";
   const checkoutFailed = query.erro === "pagamento";
 
@@ -60,6 +69,30 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
   const canSplit = order.status === "PENDING" && !expired && splitPixAvailable(order.event);
   const splitDue = canSplit ? secondInstallmentDue(order.event) : null;
   const firstCents = firstInstallmentCents(order.totalCents);
+  const cardCents = cardTotalCents(order.totalCents, order.event.cardFeeBps);
+  const publicKey = mpProvider && paying === "cartao" ? await checkoutPublicKey() : null;
+  const pixPanel = (back: string) =>
+    pixCharge ? (
+      <div className="pix-panel mt-6">
+        <span className="eyebrow">Pague com Pix</span>
+        <p className="pix-amount">{formatBRL(pixCharge.amountCents)}</p>
+        {/* eslint-disable-next-line @next/next/no-img-element -- QR gerado pelo Mercado Pago (base64) */}
+        <img className="pix-qr" src={`data:image/png;base64,${pixCharge.qrBase64}`} alt="QR Code do Pix" width={240} height={240} />
+        <ol className="pix-steps">
+          <li>Abra o app do seu banco e escolha <strong>Pix → Ler QR Code</strong> ou <strong>Pix Copia e Cola</strong>.</li>
+          <li>Confira o valor e o recebedor e confirme.</li>
+          <li>Esta página atualiza sozinha quando o pagamento cair.</li>
+        </ol>
+        <code className="pix-code">{pixCharge.qrCode}</code>
+        <PixCopy code={pixCharge.qrCode} />
+        <p className="text-center text-xs text-fg-faint">
+          Código válido até {pixCharge.expiresAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Belem" })}
+          {" · "}
+          <Link href={back} className="underline">trocar forma de pagamento</Link>
+        </p>
+        <AutoRefresh seconds={5} />
+      </div>
+    ) : null;
   const dayMonth = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Belem" });
   // endereço pelo qual a página foi aberta (domínio em produção, IP da rede em testes no celular)
   const h = await headers();
@@ -109,18 +142,48 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
               Pagamento online indisponível no momento. Fale com a Pérolas pelo Instagram @perolaseventos.
             </p>
           )}
+          {tooMany && (
+            <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
+              Muitas tentativas seguidas. Espere alguns minutos e tente de novo.
+            </p>
+          )}
           {declined && (
             <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
               O pagamento não foi aprovado. Tente outro cartão ou pague com Pix.
             </p>
           )}
-          {(mpProvider || isSimulated(mode)) && (
+          {mpProvider && paying === "pix" && pixCharge && pixPanel(`/pedido/${token}`)}
+          {mpProvider && paying === "cartao" && (
+            <div className="pay-panel mt-6">
+              <div className="flex items-end justify-between gap-4">
+                <span className="eyebrow">Pague com cartão</span>
+                <Link href={`/pedido/${token}`} className="text-xs text-fg-faint underline">trocar forma de pagamento</Link>
+              </div>
+              {cardCents > order.totalCents && (
+                <p className="mt-2 text-xs text-fg-faint">Inclui {formatBRL(cardCents - order.totalCents)} de taxa do cartão. No Pix sai por {formatBRL(order.totalCents)}.</p>
+              )}
+              {publicKey ? (
+                <CardPayForm token={token} publicKey={publicKey} amountCents={amountFor(order, "card")} buyerName={order.buyerName} cpf={order.cpf} />
+              ) : (
+                <p className="pay-result is-error mt-4">Pagamento com cartão indisponível agora. Pague no Pix.</p>
+              )}
+              <AutoRefresh seconds={20} />
+            </div>
+          )}
+          {(isSimulated(mode) || (mpProvider && !(paying === "pix" && pixCharge) && paying !== "cartao")) && (
             <div className="pay-options mt-6">
               <span className="eyebrow">Como você quer pagar?</span>
               {(
                 [
                   { kind: "pix", title: "Pix à vista", price: formatBRL(order.totalCents), note: "Aprovação na hora: os ingressos saem logo depois." },
-                  { kind: "card", title: "Cartão de crédito ou débito", price: formatBRL(order.totalCents), note: "Crédito em até 12x (juros do cartão) ou débito." },
+                  {
+                    kind: "card",
+                    title: "Cartão de crédito ou débito",
+                    price: formatBRL(cardCents),
+                    note: cardCents > order.totalCents
+                      ? `Inclui ${formatBRL(cardCents - order.totalCents)} de taxa do cartão. Crédito em até 12x (juros do cartão) ou débito.`
+                      : "Crédito em até 12x (juros do cartão) ou débito.",
+                  },
                   ...(canSplit && splitDue
                     ? [{
                         kind: "pix2x-1" as const,
@@ -131,20 +194,27 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                     : []),
                 ] as const
               ).map((o) => (
-                <form key={o.kind} action={(isSimulated(mode) ? simulatePaymentAction : payAction).bind(null, token, o.kind)}>
-                  <button className={`pay-option ${o.kind === "pix" ? "is-main" : ""}`}>
+                mpProvider && o.kind === "card" ? (
+                  <Link key={o.kind} href={`/pedido/${token}?pagar=cartao`} className="pay-option">
                     <span className="pay-option-title">{o.title}</span>
                     <span className="pay-option-price">{o.price}</span>
                     <span className="pay-option-note">{o.note}</span>
-                  </button>
-                </form>
+                  </Link>
+                ) : (
+                  <form key={o.kind} action={isSimulated(mode) ? simulatePaymentAction.bind(null, token, o.kind) : pixAction.bind(null, token, o.kind as PixKind)}>
+                    <button className={`pay-option ${o.kind === "pix" ? "is-main" : ""}`}>
+                      <span className="pay-option-title">{o.title}</span>
+                      <span className="pay-option-price">{o.price}</span>
+                      <span className="pay-option-note">{o.note}</span>
+                    </button>
+                  </form>
+                )
               ))}
               <p className="text-center text-xs text-fg-faint">
                 {isSimulated(mode)
                   ? mode === "demo" ? "Demonstração: o pagamento é simulado." : "Desenvolvimento: o pagamento é simulado."
-                  : "Pagamento processado pelo Mercado Pago. Esta página atualiza sozinha quando o Pix cair."}
+                  : "Pagamento seguro processado pelo Mercado Pago, aqui mesmo no site."}
               </p>
-              {mpProvider && <AutoRefresh seconds={5} />}
             </div>
           )}
         </section>
@@ -175,10 +245,14 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                 {order.tickets.length > 1 ? `Seus ${order.tickets.length} ingressos estão reservados` : "Seu ingresso está reservado"} até o prazo.
                 O QR e o PDF são liberados <strong className="text-fg">assim que a 2ª parcela for paga</strong>.
               </p>
-              {(mpProvider || isSimulated(mode)) && (
-                <form action={(isSimulated(mode) ? simulatePaymentAction : payAction).bind(null, token, "pix2x-2")} className="mt-6">
-                  <button className="btn solid w-full">{isSimulated(mode) ? "Simular 2ª parcela (Pix)" : `Pagar 2ª parcela no Pix · ${formatBRL(remainingCents)}`}</button>
-                </form>
+              {mpProvider && paying === "pix" && pixKind === "pix2x-2" && pixCharge ? (
+                pixPanel(`/pedido/${token}`)
+              ) : (
+                (mpProvider || isSimulated(mode)) && (
+                  <form action={isSimulated(mode) ? simulatePaymentAction.bind(null, token, "pix2x-2") : pixAction.bind(null, token, "pix2x-2")} className="mt-6">
+                    <button className="btn solid w-full">{isSimulated(mode) ? "Simular 2ª parcela (Pix)" : `Pagar 2ª parcela no Pix · ${formatBRL(remainingCents)}`}</button>
+                  </form>
+                )
               )}
               {mpProvider && <AutoRefresh seconds={8} />}
             </>
