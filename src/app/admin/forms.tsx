@@ -14,11 +14,15 @@ function Feedback({ state }: { state: FormState }) {
 
 const input = "rounded-xl border border-line bg-bg/60 px-4 py-3 text-base text-fg outline-none focus:border-accent";
 
-export function LoginForm() {
+export function LoginForm({ next = "" }: { next?: string }) {
   const [state, action, pending] = useActionState(loginAction, undefined);
   return (
     <form action={action} className="glass-card grid w-full max-w-sm gap-4 p-8">
       <span className="eyebrow rule">Painel Pérolas</span>
+      {next === "/api/mercadopago/conectar" && (
+        <p className="text-sm text-fg-muted">Digite a senha do painel. Em seguida você vai para o Mercado Pago para conectar a conta do evento.</p>
+      )}
+      <input type="hidden" name="next" value={next} />
       <input name="password" type="password" placeholder="Senha" required autoFocus className={input} autoComplete="current-password" />
       <button className="btn solid" disabled={pending}>
         {pending ? "Entrando…" : "Entrar"}

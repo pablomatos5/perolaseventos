@@ -31,7 +31,15 @@ export async function loginAction(_prev: FormState, form: FormData): Promise<For
     return { error: "Senha incorreta." };
   }
   await startSession();
-  redirect("/admin");
+  redirect(safeNext(form.get("next")));
+}
+
+/** Para onde voltar depois do login: só páginas do painel ou o "Conectar Mercado Pago" (nunca outro site). */
+function safeNext(raw: FormDataEntryValue | null) {
+  const next = typeof raw === "string" ? raw : "";
+  if (next === "/api/mercadopago/conectar") return next;
+  if (/^\/admin(\/[a-z0-9/-]*)?(\?[\w=&%-]*)?$/i.test(next) && !next.startsWith("/admin/login")) return next;
+  return "/admin";
 }
 
 export async function logoutAction() {

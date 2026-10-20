@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/admin-auth";
+import { isAdmin } from "@/lib/admin-auth";
 import { authorizeUrl, marketplaceConfigured } from "@/lib/mp-account";
 
 /**
@@ -9,7 +9,8 @@ import { authorizeUrl, marketplaceConfigured } from "@/lib/mp-account";
  * O "state" aleatório (cookie de 10 min) impede que alguém forje o retorno com o código de outra conta.
  */
 export async function GET() {
-  await requireAdmin();
+  // sem login: pede a senha do painel e volta direto para cá (link único para o dono do evento)
+  if (!(await isAdmin())) redirect("/admin/login?next=/api/mercadopago/conectar");
   if (!marketplaceConfigured()) redirect("/admin?mp=sem-aplicacao");
   const state = randomBytes(24).toString("base64url");
   (await cookies()).set("mp_oauth_state", state, {
