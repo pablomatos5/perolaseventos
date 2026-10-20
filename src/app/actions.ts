@@ -117,6 +117,9 @@ export async function pixAction(token: string, kind: PixKind = "pix") {
   redirect(`/pedido/${token}?pagar=pix&forma=${kind}`);
 }
 
+/** Parcelamento máximo no cartão (juros por conta de quem compra). */
+const MAX_INSTALLMENTS = 6;
+
 export type CardField = "number" | "expiry" | "cvv" | "name" | "cpf";
 export type CardState = { ok?: boolean; error?: string; field?: CardField } | undefined;
 
@@ -151,7 +154,7 @@ export async function cardPayAction(token: string, input: CardInput): Promise<Ca
       token: z.string().min(8).max(200),
       paymentMethodId: z.string().regex(/^[a-z0-9_]{2,30}$/),
       issuerId: z.string().regex(/^\d{1,12}$/).optional(),
-      installments: z.number().int().min(1).max(12),
+      installments: z.number().int().min(1).max(MAX_INSTALLMENTS),
       deviceId: z.string().max(4000).optional(),
     })
     .safeParse(input);

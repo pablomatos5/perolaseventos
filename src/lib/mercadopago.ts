@@ -34,7 +34,7 @@ const isPublicHttps = (url: string | undefined) => !!url && url.startsWith("http
 
 /**
  * Como o cliente vai pagar:
- * - "pix": Pix à vista · "card": cartão de crédito (até 12x) ou débito, à vista no pedido
+ * - "pix": Pix à vista · "card": cartão de crédito (até 6x) ou débito, à vista no pedido
  * - "pix2x-1" / "pix2x-2": 1ª e 2ª parcelas do Pix em 2x (o ingresso só sai depois da 2ª)
  */
 export type CheckoutKind = "pix" | "card" | "pix2x-1" | "pix2x-2";

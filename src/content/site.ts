@@ -116,7 +116,7 @@ export const faq = [
   },
   {
     q: "Quais formas de pagamento?",
-    a: "Pix ou cartão de crédito em até 12x, pelo Mercado Pago. Seus ingressos ficam reservados por 15 minutos enquanto você paga.",
+    a: "Pix (à vista ou em 2x sem juros) ou cartão de crédito em até 6x, pelo Mercado Pago. Seus ingressos ficam reservados por 15 minutos enquanto você paga.",
   },
   {
     q: "Como funcionam os lotes?",

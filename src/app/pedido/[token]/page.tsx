@@ -182,8 +182,8 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                     title: "Cartão de crédito ou débito",
                     price: formatBRL(cardCents),
                     note: cardCents > order.totalCents
-                      ? `Inclui ${formatBRL(cardCents - order.totalCents)} de taxa do cartão. Crédito em até 12x (juros do cartão) ou débito.`
-                      : "Crédito em até 12x (juros do cartão) ou débito.",
+                      ? `Inclui ${formatBRL(cardCents - order.totalCents)} de taxa do cartão. Crédito em até 6x (juros do cartão) ou débito.`
+                      : "Crédito em até 6x (juros do cartão) ou débito.",
                   },
                   ...(canSplit && splitDue
                     ? [{

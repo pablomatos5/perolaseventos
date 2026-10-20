@@ -154,8 +154,8 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
             if (pm.payment_type_id === "credit_card") {
               const inst = await mp.getInstallments({ amount: (amountCents / 100).toFixed(2), bin, paymentTypeId: pm.payment_type_id });
               const costs = inst[0]?.payer_costs ?? [];
-              // o Mercado Pago oferece até 18x; o site (e o servidor) aceitam até 12x
-              setOptions(costs.filter((c) => c.installments <= 12).map((c) => ({ installments: c.installments, label: c.recommended_message })));
+              // o Mercado Pago oferece até 18x; o site (e o servidor, MAX_INSTALLMENTS em actions.ts) aceitam até 6x
+              setOptions(costs.filter((c) => c.installments <= 6).map((c) => ({ installments: c.installments, label: c.recommended_message })));
             } else setOptions([]);
             setInstallments(1);
           } catch {
