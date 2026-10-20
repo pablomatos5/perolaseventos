@@ -139,7 +139,60 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
               </form>
             )}
           </header>
-          <div className="overflow-x-auto">
+          {/* celular: um cartão por lote (a tabela larga fica para o computador) */}
+          <ul className="lot-cards md:hidden">
+            {t.rows.map((r) => {
+              const pct = r.quantity ? Math.min(100, ((r.sold + r.reserved) / r.quantity) * 100) : 0;
+              return (
+                <li key={r.id} className="lot-card">
+                  <div className="lot-card-head">
+                    <strong>{r.name}</strong>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATE_STYLE[r.state]}`}>{r.state}</span>
+                  </div>
+                  <div className="lot-card-bar" aria-hidden>
+                    <i style={{ width: `${pct}%` }} />
+                  </div>
+                  <dl className="lot-card-stats">
+                    <div>
+                      <dt>Vendidos</dt>
+                      <dd>{r.sold}</dd>
+                      {r.checkedIn > 0 && <small>{r.checkedIn} entraram</small>}
+                    </div>
+                    <div>
+                      <dt>Restam</dt>
+                      <dd>{r.remaining}</dd>
+                      {r.reserved > 0 && <small>{r.reserved} reservados</small>}
+                    </div>
+                    <div>
+                      <dt>Receita</dt>
+                      <dd>{formatBRL(r.revenueCents)}</dd>
+                    </div>
+                  </dl>
+                  <div className="lot-card-edit">
+                    <div>
+                      <span className="lot-card-label">Preço (R$)</span>
+                      {r.hidden ? <span className="tabular-nums">{formatBRL(r.priceCents)}</span> : <PriceForm batchId={r.id} priceCents={r.priceCents} femalePriceCents={r.femalePriceCents} />}
+                    </div>
+                    <div>
+                      <span className="lot-card-label">Quantidade</span>
+                      <QuantityForm batchId={r.id} quantity={r.quantity} />
+                    </div>
+                  </div>
+                  {r.state === "à venda" && (
+                    <form action={closeBatchAction.bind(null, r.id)}>
+                      <button className="btn w-full py-2.5!">Virar lote agora</button>
+                    </form>
+                  )}
+                  {r.state === "encerrado" && (
+                    <form action={reopenBatchAction.bind(null, r.id)}>
+                      <button className="btn w-full py-2.5!">Reabrir lote</button>
+                    </form>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[920px] text-sm">
               <thead className="text-left text-xs uppercase tracking-widest text-fg-faint">
                 <tr>

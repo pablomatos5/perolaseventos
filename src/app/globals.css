@@ -3294,3 +3294,57 @@ body:has(.painel) { background: #f6f2fb; }
   .tide-dots button { width: 2.05rem; height: 3rem; }
   .tide-dots .shell-icon { width: 1.4rem; height: 1.35rem; }
 }
+
+/* ───────── Painel no celular: simples e fácil de tocar ───────── */
+@media (max-width: 767px) {
+  /* cabeçalho compacto: logo + Sair em cima, menu numa linha só deslizando para o lado */
+  .painel-header > div { flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.6rem 1rem 0.5rem; }
+  .painel-header .page-brand-sm { order: 1; margin: 0; width: 5.5rem; }
+  .painel-header form { order: 2; }
+  .painel-nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto; gap: 0.3rem; margin: 0 -1rem; padding: 0.1rem 1rem 0.3rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .painel-nav::-webkit-scrollbar { display: none; }
+  .painel-nav a { flex: none; padding: 0.5rem 0.9rem; font-size: 0.85rem; background: rgb(42 33 96 / 0.04); }
+  .painel main { padding: 1.5rem 1rem 3rem; }
+  .painel .display { font-size: 2rem !important; }
+  .painel .kpi { padding: 0.9rem 1rem; }
+  .painel .kpi dd { font-size: 1.9rem; }
+  .painel .kpi.is-money dd { font-size: 2.2rem; }
+  .painel .glass-card { border-radius: 1rem; }
+  .painel section.glass-card > header { padding: 0.9rem 1rem; }
+  .painel section.glass-card > header h2 { font-size: 1.35rem; }
+  /* busca de pedidos: campo inteiro, filtro + botão embaixo */
+  .painel form[role="search"] { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; }
+  .painel form[role="search"] input { grid-column: 1 / -1; min-width: 0; width: 100%; }
+  /* pedidos: botões numa linha, menores */
+  .painel li.glass-card .btn { padding: 0.5rem 0.8rem !important; font-size: 0.62rem; letter-spacing: 0.1em; }
+}
+/* cartões de lote (só no celular) */
+.lot-cards { display: grid; gap: 0; list-style: none; margin: 0; padding: 0; }
+.lot-card { display: grid; gap: 0.75rem; padding: 1rem; border-top: 1px solid var(--line-soft); }
+.lot-card:first-child { border-top: 0; }
+.lot-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.lot-card-head strong { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.35rem; font-weight: 600; color: var(--fg); }
+.lot-card-bar { height: 0.3rem; border-radius: 999px; background: rgb(42 33 96 / 0.08); overflow: hidden; }
+.lot-card-bar i { display: block; height: 100%; background: linear-gradient(90deg, #d9a860, #9a6a2f); }
+.lot-card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin: 0; }
+.lot-card-stats > div { display: grid; gap: 0.1rem; padding: 0.55rem 0.6rem; border-radius: 0.7rem; background: #faf7fd; }
+.lot-card-stats dt { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-faint); }
+.lot-card-stats dd { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+.lot-card-stats small { font-size: 0.68rem; color: var(--fg-faint); }
+.lot-card-edit { display: grid; gap: 0.75rem; }
+.lot-card-label { display: block; margin-bottom: 0.3rem; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-faint); }
+.lot-card .price-form { gap: 0.5rem; }
+.lot-card .price-form label { flex: 1 1 6rem; }
+.lot-card .price-form input, .lot-card input[name="quantity"] { width: 100% !important; padding: 0.6rem 0.75rem !important; font-size: 1rem !important; }
+.lot-card form:has(input[name="quantity"]) { display: flex; align-items: center; gap: 0.6rem; }
+.lot-card form:has(input[name="quantity"]) input { flex: 1; }
+.lot-card form button:not(.btn) { flex: none; align-self: end; padding: 0.6rem 0.95rem; border-radius: 999px; border: 1px solid rgb(201 148 74 / 0.5); background: #fff6e6; color: #6b4a1a; font-size: 0.75rem; font-weight: 600; text-decoration: none; }
+.lot-card .price-form > span { flex-basis: 100%; }
+/* textos longos (e-mail, nome) quebram em vez de empurrar o painel para fora da tela */
+.painel main, .painel .glass-card, .painel li { min-width: 0; }
+.painel .glass-card { overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .painel form[role="search"] .btn { padding-inline: 1.1rem; }
+  .painel li.glass-card { padding: 1rem; }
+  .painel li.glass-card .flex.flex-wrap.gap-2 { gap: 0.4rem; }
+}

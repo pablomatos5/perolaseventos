@@ -121,7 +121,7 @@ export function DeviceForm() {
       <form action={action} className="grid content-start gap-4">
         <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint">
           Nome do aparelho
-          <input name="name" required maxLength={40} placeholder="Portão 1, Camarote, Maquininha..." className={input} />
+          <input name="name" required maxLength={40} placeholder="Portão 1, Portão 2, Maquininha..." className={input} />
         </label>
         <button className="btn solid w-fit" disabled={pending}>
           {pending ? "Gerando…" : "Autorizar novo aparelho"}
