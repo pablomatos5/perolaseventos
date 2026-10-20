@@ -193,6 +193,17 @@ publicar. Próximos passos naturais:
   5031 4332 1540 6351, 11/30, CVV 123, nome APRO. Pix de teste não pode ser pago (só gerado).
 - Retorno do OAuth está cadastrado só com o domínio: no teste local o retorno é desviado para o localhost pelo Chrome.
 
+### 20/10 (tarde) — painel e portaria
+- Painel com visual próprio claro (`.painel` no globals.css, menu com aba ativa em `(painel)/nav.tsx`).
+- Preço **masculino e feminino** editável por lote (`PriceForm` / `updatePriceAction`; feminino vazio = igual ao masculino).
+- **Camarote removido** do banco (produção e local; tinha 0 ingressos). Pedidos de demonstração apagados (backup
+  perolas-20261020-1424). Senha do painel trocada (está em `.env.producao-acessos` no PC de casa).
+- Login do painel com `?next=` (só `/admin…` ou `/api/mercadopago/conectar`): link único para o dono conectar o MP:
+  `https://perolaseventos.store/api/mercadopago/conectar`.
+- Portaria: selo grande ♀ FEMININO (rosa) / ♂ MASCULINO (azul) na leitura e na busca — **testar num aparelho autorizado**.
+- Aviso "não compartilhe: QR vale uma única entrada; masculino/feminino conferido na entrada" no pedido, ingresso
+  individual, e-mail, PDF e na compra (`src/components/ticket-rules.tsx`).
+
 ### Para ligar o pagamento REAL (em ordem)
 1. Painel do MP, aplicação real 4338262596056762: Produto integrado → Checkout Transparente / API de Payments;
    **Webhooks** (modo produção) → URL `https://perolaseventos.store/api/webhooks/mercadopago`, evento "Pagamentos" →
