@@ -181,7 +181,6 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
       <div ref={stageRef} className="beach tide-stage">
         <div className="beach-sand" />
         <div className="beach-wet" />
-        <Footsteps />
 
         {steps.map((s, i) => (
           <div key={s.key} className={`tide-writing ${i === shown ? "is-active" : ""}`} aria-hidden={i !== shown}>
@@ -279,30 +278,6 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         ))}
       </ul>
     </section>
-  );
-}
-
-// Pegada de um pé direito humano (dedos para cima, dedão à esquerda): calcanhar, arco fino no lado
-// de dentro, planta larga e cinco dedos separados, do dedão ao mindinho.
-const SOLE =
-  "M30 36C43 34 51 44 50 58C49 72 45 84 44 96C43 108 45 120 39 130C34 138 21 138 18 128C15 118 19 108 23 98C26 90 31 84 29 76C27 68 12 66 11 55C10 43 19 37 30 36Z";
-const TOES = [
-  [14, 25, 6.4, 8.4, -8],
-  [26.5, 21, 4.1, 5, 0],
-  [35.5, 23, 3.7, 4.5, 6],
-  [43, 28.5, 3.3, 4, 14],
-  [48.5, 36, 2.9, 3.5, 24],
-] as const;
-
-/** Uma pegada marcada na areia, no canto da praia. Decorativa. */
-function Footsteps() {
-  return (
-    <svg className="beach-steps" viewBox="0 0 60 140" aria-hidden>
-      <path d={SOLE} />
-      {TOES.map(([cx, cy, rx, ry, rot]) => (
-        <ellipse key={cx} cx={cx} cy={cy} rx={rx} ry={ry} transform={`rotate(${rot} ${cx} ${cy})`} />
-      ))}
-    </svg>
   );
 }
 
