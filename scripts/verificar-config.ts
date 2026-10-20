@@ -28,15 +28,22 @@ else (prod ? warnings : ok).push(prod ? "Turnstile desligado: só o limite por I
 const mode = paymentMode();
 if (mode === "demo") warnings.push("MODO DEMONSTRAÇÃO ligado (PAYMENT_PROVIDER=demo): ninguém paga e o site mostra a faixa. Antes das vendas reais: troque para mercadopago e apague os pedidos de teste.");
 if (mode === "off") {
-  if (env.PAYMENT_PROVIDER === "mercadopago") problems.push("PAYMENT_PROVIDER=mercadopago mas MP_ACCESS_TOKEN está vazio");
+  if (env.PAYMENT_PROVIDER === "mercadopago") problems.push("PAYMENT_PROVIDER=mercadopago mas falta a aplicação (MP_CLIENT_ID/MP_CLIENT_SECRET)");
   else if (env.PAYMENT_PROVIDER === "mock" && prod) problems.push("PAYMENT_PROVIDER=mock não funciona em produção (daria ingresso de graça)");
   else problems.push(`PAYMENT_PROVIDER="${env.PAYMENT_PROVIDER ?? ""}" inválido: use "mercadopago" (ou "mock" só em dev, "demo" para apresentação)`);
 } else ok.push(`pagamento: ${mode}`);
 
+// Mercado Pago no modelo marketplace: a conta do evento conecta pelo painel e a taxa vai para a aplicação dos devs
+if (env.MP_CLIENT_ID && env.MP_CLIENT_SECRET) ok.push("aplicação Mercado Pago dos devs (MP_CLIENT_ID/SECRET): botão “Conectar” no painel");
+else if (env.MP_CLIENT_ID || env.MP_CLIENT_SECRET) problems.push("aplicação Mercado Pago pela metade: preencha MP_CLIENT_ID e MP_CLIENT_SECRET");
+if (env.MP_CLIENT_ID && !env.MP_TOKEN_KEY) warnings.push("MP_TOKEN_KEY vazio: a autorização da conta do evento é cifrada com chave derivada do TICKET_SECRET (trocar o TICKET_SECRET desconecta a conta)");
+if (prod && env.MP_OAUTH_TEST) problems.push("MP_OAUTH_TEST só serve para testes no PC: apague do servidor");
+if (env.MP_ACCESS_TOKEN && env.MP_CLIENT_ID) warnings.push("MP_ACCESS_TOKEN preenchido: se a conta do evento não estiver conectada, as vendas cairiam NESTA conta. Deixe vazio em produção.");
+
 if (mode === "mercadopago") {
-  const token = env.MP_ACCESS_TOKEN!;
+  const token = env.MP_ACCESS_TOKEN ?? "";
   if (token.startsWith("TEST-")) (prod ? warnings : ok).push(prod ? "MP_ACCESS_TOKEN é de TESTE: ninguém paga de verdade" : "MP_ACCESS_TOKEN de teste (sandbox)");
-  else if (!prod) warnings.push("MP_ACCESS_TOKEN de PRODUÇÃO em ambiente de dev: compras serão cobradas de verdade");
+  else if (token && !prod) warnings.push("MP_ACCESS_TOKEN de PRODUÇÃO em ambiente de dev: compras serão cobradas de verdade");
   if (!env.MP_WEBHOOK_SECRET) {
     (prod ? problems : warnings).push("MP_WEBHOOK_SECRET vazio: o webhook recusa as notificações (em localhost a conciliação no retorno cobre)");
   } else ok.push("MP_WEBHOOK_SECRET");

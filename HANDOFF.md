@@ -197,8 +197,9 @@ publicar. Próximos passos naturais:
 1. Painel do MP, aplicação real 4338262596056762: Produto integrado → Checkout Transparente / API de Payments;
    **Webhooks** (modo produção) → URL `https://perolaseventos.store/api/webhooks/mercadopago`, evento "Pagamentos" →
    copiar a assinatura secreta.
-2. `.env` da VPS: `MP_CLIENT_ID`, `MP_CLIENT_SECRET` (os do PC de casa), `MP_WEBHOOK_SECRET`, `MP_TOKEN_KEY` novo,
-   `PAYMENT_PROVIDER=mercadopago` (sai o demo: sem faixa e sem marca d'água). `MP_ACCESS_TOKEN` fica VAZIO.
+2. `.env` da VPS: ✅ `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_TOKEN_KEY` já estão lá (20/10; backup `.env.bak-20261020-0142`),
+   o botão "Conectar" já aparece no painel do site no ar. Falta `MP_WEBHOOK_SECRET` e, na hora de vender,
+   `PAYMENT_PROVIDER=mercadopago` (sai o demo: sem faixa e sem marca d'água) + recriar o container. `MP_ACCESS_TOKEN` fica VAZIO.
 3. Antes: apagar pedidos de teste, trocar a senha do painel, `check:config`, valores dos lotes, taxa do cartão, termos.
 4. A Pérolas entra no painel e clica "Conectar Mercado Pago" com a conta dela (CNPJ de preferência).
 5. Compra real pequena para conferir (e estornar), e-mail de entrega (Resend) funcionando.
