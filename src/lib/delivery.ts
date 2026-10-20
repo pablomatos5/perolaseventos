@@ -26,7 +26,9 @@ export async function deliverTickets(orderId: string) {
     ``,
     `Seus ingressos estão no PDF anexo (abre sem internet). Para ver ou baixar de novo: ${link}`,
     ``,
-    `Mostre o QR na entrada. Cada ingresso só pode ser usado uma vez, não compartilhe prints.`,
+    `Atenção:`,
+    `- Não compartilhe o seu ingresso. Cada QR vale uma única entrada: depois de lido, não passa de novo.`,
+    `- Masculino e feminino são conferidos na entrada. O ingresso feminino só vale para mulheres.`,
   ].join("\n");
 
   // PDF dos ingressos anexado; se a geração falhar, o e-mail sai mesmo assim com o link

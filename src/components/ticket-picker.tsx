@@ -119,6 +119,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
                     <div>
                       <div className="mb-2 text-xs uppercase tracking-widest text-fg-faint">Feminino · {formatBRL(t.femaleCents)}</div>
                       <Stepper label="feminino" value={q.fem} max={cap - q.masc} onChange={(v) => set(t.id, { fem: v })} />
+                      <p className="mt-2 max-w-[14rem] text-[0.7rem] leading-snug text-fg-faint">Só para mulheres: conferido na entrada.</p>
                     </div>
                   </div>
                   {t.next && (

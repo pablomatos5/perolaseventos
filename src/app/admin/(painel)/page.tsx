@@ -5,7 +5,7 @@ import { formatBRL, formatDateTime } from "@/lib/format";
 import { connectedAccount, marketplaceConfigured } from "@/lib/mp-account";
 import { paymentMode } from "@/lib/payment-mode";
 import { closeBatchAction, disconnectMpAction, reopenBatchAction, togglePauseAction } from "../actions";
-import { CardFeeForm, QuantityForm, SplitPixForm } from "../forms";
+import { CardFeeForm, PriceForm, QuantityForm, SplitPixForm } from "../forms";
 
 const MP_MESSAGE: Record<string, { ok: boolean; text: string }> = {
   conectado: { ok: true, text: "Conta Mercado Pago conectada. As próximas vendas caem nela, com a taxa de serviço separada." },
@@ -140,11 +140,11 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
             )}
           </header>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-[920px] text-sm">
               <thead className="text-left text-xs uppercase tracking-widest text-fg-faint">
                 <tr>
                   <th className="px-6 py-3 font-medium">Lote</th>
-                  <th className="px-3 py-3 font-medium">Preço</th>
+                  <th className="px-3 py-3 font-medium">Preço (R$)</th>
                   <th className="px-3 py-3 font-medium">Vendidos</th>
                   <th className="px-3 py-3 font-medium">Reservados</th>
                   <th className="px-3 py-3 font-medium">Restam</th>
@@ -165,7 +165,13 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                           <div className="h-full bg-accent" style={{ width: `${pct}%` }} />
                         </div>
                       </td>
-                      <td className="px-3 py-3 tabular-nums">{formatBRL(r.priceCents)}</td>
+                      <td className="px-3 py-3">
+                        {r.hidden ? (
+                          <span className="tabular-nums">{formatBRL(r.priceCents)}</span>
+                        ) : (
+                          <PriceForm batchId={r.id} priceCents={r.priceCents} femalePriceCents={r.femalePriceCents} />
+                        )}
+                      </td>
                       <td className="px-3 py-3 tabular-nums">
                         {r.sold}
                         {r.checkedIn > 0 && <span className="text-fg-faint"> ({r.checkedIn} entraram)</span>}

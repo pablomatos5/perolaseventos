@@ -11,6 +11,7 @@ export type BatchRow = {
   id: string;
   name: string;
   priceCents: number;
+  femalePriceCents: number | null; // vazio = mesmo preço do masculino
   quantity: number;
   hidden: boolean;
   sold: number;
@@ -60,6 +61,7 @@ export async function batchReport(eventId: string) {
           id: b.id,
           name: b.name,
           priceCents: b.priceCents,
+          femalePriceCents: b.femalePriceCents,
           quantity: b.quantity,
           hidden: b.hidden,
           sold: s,

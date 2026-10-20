@@ -3236,3 +3236,20 @@ body:has(.painel) { background: #f6f2fb; }
 .painel label, .painel label.text-fg-faint, .painel .uppercase.tracking-widest { color: var(--fg-faint); }
 .painel form label { color: var(--fg-muted); }
 .painel .text-xs.text-fg-faint, .painel p.text-fg-faint { color: var(--fg-faint); opacity: 1; }
+/* painel: preço masculino e feminino do lote, lado a lado */
+.painel .price-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; }
+.painel .price-form label { display: grid; gap: 0.15rem; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-faint); }
+.painel .price-form input { width: 5.6rem; padding: 0.3rem 0.5rem; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+/* portaria: gênero do ingresso bem visível (contra homem entrando com ingresso feminino) */
+.gender-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; vertical-align: middle; }
+.gender-badge.is-fem { background: #ffe0ef; color: #a1135c; }
+.gender-badge.is-masc { background: #dbe8ff; color: #1b4fa8; }
+.gender-badge.is-cortesia { background: #efe9ff; color: #4f3b9a; }
+.gender-badge.is-big { display: grid; justify-items: center; gap: 0.15rem; padding: 0.7rem 1.6rem; border-radius: 1.2rem; font-size: clamp(2rem, 9vw, 3.4rem); letter-spacing: 0.08em; box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.5); border: 3px solid currentColor; }
+.gender-badge.is-big b { font-size: 1.1em; line-height: 1; }
+.gender-badge.is-big small { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: none; opacity: 0.9; }
+/* aviso junto dos ingressos: QR de uma entrada e gênero conferido na portaria */
+.ticket-rules { display: grid; gap: 0.5rem; padding: 1rem 1.15rem; border-radius: 1rem; border: 1px solid rgb(217 168 96 / 0.55); background: rgb(255 243 220 / 0.92); color: #3a2b10; font-size: 0.86rem; line-height: 1.45; }
+.ticket-rules strong { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8a5a1c; }
+.ticket-rules ul { display: grid; gap: 0.45rem; padding-left: 1.1rem; list-style: disc; }
+.ticket-rules b { color: #2a1f55; }

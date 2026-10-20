@@ -325,7 +325,7 @@ export function Scanner() {
   }
 
   async function admitManual(hit: SearchHit) {
-    if (!window.confirm(`Liberar a entrada de ${hit.holder} (${hit.type}) sem o QR?\nConfira o documento com foto.`)) return;
+    if (!window.confirm(`Liberar a entrada de ${hit.holder} (${hit.type}${hit.gender ? ` · ${hit.gender.toUpperCase()}` : ""}) sem o QR?\nConfira o documento com foto.`)) return;
     let r: Result;
     try {
       const res = await fetch("/api/checkin", { method: "POST", headers: authHeaders(), body: JSON.stringify({ ticketId: hit.ticketId, manual: true }), signal: AbortSignal.timeout(5000) });
@@ -446,11 +446,14 @@ export function Scanner() {
               <div className="text-7xl font-semibold md:text-8xl">{last.result === "ok" ? "✓" : last.result === "error" ? "!" : "✕"}</div>
               <div className="mt-3 text-2xl font-semibold md:text-4xl">{last.message}</div>
               {last.holder && (
-                <div className="mt-4 text-lg">
-                  {last.holder}
-                  {last.type && ` · ${last.type}`}
-                  {last.batch && ` · ${last.batch}`}
-                  {last.gender && <strong className="mt-2 block text-3xl uppercase">{last.gender}</strong>}
+                <div className="mt-4 grid justify-items-center gap-3 text-lg">
+                  {/* gênero em destaque: evita homem entrando com ingresso feminino (mais barato) */}
+                  <GenderBadge gender={last.gender} big />
+                  <span>
+                    {last.holder}
+                    {last.type && ` · ${last.type}`}
+                    {last.batch && ` · ${last.batch}`}
+                  </span>
                 </div>
               )}
               {/* ações grandes: um toque e já lê o próximo */}
@@ -535,7 +538,7 @@ export function Scanner() {
                     <div className="truncate font-medium">{h.holder}</div>
                     <div className="truncate text-xs text-fg-faint">
                       {h.type} · {h.batch}
-                      {h.gender && ` · ${h.gender}`} · pedido {h.code}
+                      {h.gender && <> · <GenderBadge gender={h.gender} /></>} · pedido {h.code}
                       {h.cpfEnd && ` · CPF ${h.cpfEnd}`}
                       {h.buyer !== h.holder && ` · comprou: ${h.buyer}`}
                     </div>
@@ -557,5 +560,18 @@ export function Scanner() {
         )}
       </div>
     </main>
+  );
+}
+
+/** Selo do gênero do ingresso (feminino rosa, masculino azul); grande no resultado da leitura. */
+function GenderBadge({ gender, big = false }: { gender?: string; big?: boolean }) {
+  if (!gender) return null;
+  if (gender === "Cortesia") return <span className="gender-badge is-cortesia">{gender.toUpperCase()}</span>;
+  const fem = gender === "Feminino";
+  return (
+    <span className={`gender-badge ${fem ? "is-fem" : "is-masc"} ${big ? "is-big" : ""}`}>
+      <b aria-hidden>{fem ? "♀" : "♂"}</b> {gender.toUpperCase()}
+      {big && <small>{fem ? "Confira: entrada feminina" : "Entrada masculina"}</small>}
+    </span>
   );
 }

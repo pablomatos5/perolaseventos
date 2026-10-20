@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { createCourtesyAction, createDeviceAction, loginAction, updateCardFeeAction, updateQuantityAction, updateSplitPixAction, type FormState } from "./actions";
+import { createCourtesyAction, createDeviceAction, loginAction, updateCardFeeAction, updatePriceAction, updateQuantityAction, updateSplitPixAction, type FormState } from "./actions";
 
 function Feedback({ state }: { state: FormState }) {
   if (!state) return null;
@@ -40,6 +40,30 @@ export function QuantityForm({ batchId, quantity }: { batchId: string; quantity:
       <button className="text-xs text-accent underline-offset-4 hover:underline disabled:opacity-50" disabled={pending}>
         salvar
       </button>
+      {state?.error && <span className="text-xs text-danger">{state.error}</span>}
+    </form>
+  );
+}
+
+const reais = (c: number | null) => (c == null ? "" : (c / 100).toFixed(2).replace(".", ","));
+
+/** Preço masculino e feminino do lote (feminino vazio = igual ao masculino). */
+export function PriceForm({ batchId, priceCents, femalePriceCents }: { batchId: string; priceCents: number; femalePriceCents: number | null }) {
+  const [state, action, pending] = useActionState(updatePriceAction.bind(null, batchId), undefined);
+  return (
+    <form action={action} className="price-form">
+      <label>
+        <span>Masc.</span>
+        <input name="masc" inputMode="decimal" defaultValue={reais(priceCents)} aria-label="Preço masculino (R$)" />
+      </label>
+      <label>
+        <span>Fem.</span>
+        <input name="fem" inputMode="decimal" defaultValue={reais(femalePriceCents)} placeholder={reais(priceCents)} aria-label="Preço feminino (R$); vazio = igual ao masculino" />
+      </label>
+      <button className="text-xs font-semibold text-accent underline-offset-4 hover:underline disabled:opacity-50" disabled={pending}>
+        {pending ? "…" : "salvar"}
+      </button>
+      {state?.ok && <span className="text-xs text-ok">{state.ok}</span>}
       {state?.error && <span className="text-xs text-danger">{state.error}</span>}
     </form>
   );

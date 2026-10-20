@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { pixAction, simulatePaymentAction } from "@/app/actions";
 import { CardPayForm } from "@/components/card-pay-form";
 import { PixCopy } from "@/components/pix-copy";
+import { TicketRules } from "@/components/ticket-rules";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HolderForm, ShareTicketButton, StoryShare } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
@@ -293,9 +294,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
 
       {order.status === "PAID" && (
         <section className="mt-10 grid gap-6">
-          <p className="text-sm text-fg-muted">
-            Mostre o QR na entrada. Cada ingresso vale para <strong className="text-fg">uma pessoa e uma entrada</strong>: depois de lido, o mesmo QR não passa de novo, então não compartilhe prints.
-          </p>
+          <TicketRules />
           <div className="glass-card flex flex-wrap items-center justify-between gap-4 p-5">
             <p className="max-w-md text-sm text-fg-muted">
               <strong className="text-fg">Na festa pode faltar sinal.</strong> Baixe o PDF agora: ele fica no celular e abre sem internet (também dá para imprimir).

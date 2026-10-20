@@ -233,7 +233,10 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   center(p, `Nº ${t.id.slice(-10).toUpperCase()}${t.qrVersion ? ` · v${t.qrVersion}` : ""}`, qrY - 44, F.sans, 7.5, C.soft, 1);
 
   // ── regras ──
-  const rules = ["Apresente este QR na entrada (celular ou impresso). Vale uma entrada: depois de lido, não passa de novo. Não compartilhe nem poste."];
+  const rules = [
+    "Apresente este QR na entrada (celular ou impresso). Vale uma única entrada: depois de lido, não passa de novo. Não compartilhe nem poste.",
+    "Masculino e feminino são conferidos na entrada: o ingresso feminino só vale para mulheres.",
+  ];
   let ry = qrY - 64;
   for (const r of rules) {
     for (const line of wrap(r, F.sans, 7.6, W - 2 * M - 10)) {

@@ -89,6 +89,35 @@ export async function updateQuantityAction(batchId: string, _prev: FormState, fo
   return { ok: "Quantidade atualizada." };
 }
 
+/** "180", "180,00", "R$ 1.234,50" → centavos; vazio → null. */
+function parseBRL(raw: FormDataEntryValue | null): number | null | "invalido" {
+  const t = String(raw ?? "").replace(/[R$\s]/g, "").trim();
+  if (!t) return null;
+  const norm = t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : t;
+  const n = Number(norm);
+  if (!Number.isFinite(n) || n < 0 || n > 100_000) return "invalido";
+  return Math.round(n * 100);
+}
+
+/** Preço do lote: masculino obrigatório; feminino vazio = mesmo do masculino. Ingressos já vendidos mantêm o preço deles. */
+export async function updatePriceAction(batchId: string, _prev: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const masc = parseBRL(form.get("masc"));
+  const fem = parseBRL(form.get("fem"));
+  if (masc === null || masc === "invalido") return { error: "Preço masculino inválido." };
+  if (fem === "invalido") return { error: "Preço feminino inválido." };
+  const b = await db.batch.update({
+    where: { id: batchId },
+    data: { priceCents: masc, femalePriceCents: fem === null || fem === masc ? null : fem },
+    include: { ticketType: true },
+  });
+  const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  await audit("painel", "mudou o preço do lote", `${b.ticketType.name} · ${b.name}: masc ${brl(masc)} · fem ${brl(fem ?? masc)}`);
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { ok: "Preço salvo." };
+}
+
 // ───────── Pix em 2x ─────────
 
 /** Liga/desliga o Pix em 2x e define em quantos dias (depois da 1ª parcela) vence a 2ª. */
