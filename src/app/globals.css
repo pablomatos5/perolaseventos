@@ -3357,7 +3357,7 @@ body:has(.painel) { background: #f6f2fb; }
 .beach-sand {
   background:
     radial-gradient(ellipse 80% 45% at 50% 0%, rgb(255 246 232 / 0.3), transparent 70%),
-    url("/2027/areia-real.webp") 0 0 / 640px 640px,
+    url("/2027/areia-real.webp?v=2") 0 0 / 640px 640px,
     #e2c09c;
   background-blend-mode: normal;
 }
@@ -3365,3 +3365,12 @@ body:has(.painel) { background: #f6f2fb; }
 .tide-arrow.is-round { width: 3.2rem; aspect-ratio: 1; border-radius: 50%; border: 1px solid rgb(112 76 38 / 0.45); background: rgb(255 250 244 / 0.85); color: #7a4e1c; font-size: 1.55rem; line-height: 1; padding: 0; box-shadow: 0 0.4rem 1rem -0.4rem rgb(112 76 38 / 0.45); }
 .tide-arrow.is-round:hover { background: #fff6e8; }
 @media (max-width: 767px) { .tide-arrow.is-round { width: 3rem; font-size: 1.45rem; } }
+/* celular: a mesma areia num arquivo menor (960 px para um ladrilho de 480 px na tela) */
+@media (max-width: 767px) {
+  .beach-sand {
+    background:
+      radial-gradient(ellipse 80% 45% at 50% 0%, rgb(255 246 232 / 0.3), transparent 70%),
+      url("/2027/areia-real-cel.webp?v=2") 0 0 / 480px 480px,
+      #e2c09c;
+  }
+}
