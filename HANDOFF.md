@@ -204,6 +204,12 @@ publicar. Próximos passos naturais:
 - Aviso "não compartilhe: QR vale uma única entrada; masculino/feminino conferido na entrada" no pedido, ingresso
   individual, e-mail, PDF e na compra (`src/components/ticket-rules.tsx`).
 
+### 20/10 (noite) — ordem dos lotes em produção
+- Pista: **Lote promocional** (sortOrder 0, à venda) → 1º lote → 2º → 3º → Lote final, todos na fila (closedAt limpo;
+  nenhum tinha ingresso). O site vende sempre o 1º lote aberto pela ordem e fecha os anteriores quando um lote vende.
+- Valores do 1º ao final ainda são os provisórios (150/180/220/260): confirmar com o cliente e ajustar no painel.
+- Painel no celular: lotes em cartões, menu deslizante (só < 768 px).
+
 ### Para ligar o pagamento REAL (em ordem)
 1. Painel do MP, aplicação real 4338262596056762: Produto integrado → Checkout Transparente / API de Payments;
    **Webhooks** (modo produção) → URL `https://perolaseventos.store/api/webhooks/mercadopago`, evento "Pagamentos" →
