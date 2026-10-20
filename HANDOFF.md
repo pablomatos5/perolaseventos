@@ -198,7 +198,8 @@ publicar. Próximos passos naturais:
    **Webhooks** (modo produção) → URL `https://perolaseventos.store/api/webhooks/mercadopago`, evento "Pagamentos" →
    copiar a assinatura secreta.
 2. `.env` da VPS: ✅ `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_TOKEN_KEY` já estão lá (20/10; backup `.env.bak-20261020-0142`),
-   o botão "Conectar" já aparece no painel do site no ar. Falta `MP_WEBHOOK_SECRET` e, na hora de vender,
+   o botão "Conectar" já aparece no painel do site no ar. ✅ `MP_WEBHOOK_SECRET` também (webhook cadastrado no painel
+   do MP, modo produção, evento Pagamentos). Na hora de vender:
    `PAYMENT_PROVIDER=mercadopago` (sai o demo: sem faixa e sem marca d'água) + recriar o container. `MP_ACCESS_TOKEN` fica VAZIO.
 3. Antes: apagar pedidos de teste, trocar a senha do painel, `check:config`, valores dos lotes, taxa do cartão, termos.
 4. A Pérolas entra no painel e clica "Conectar Mercado Pago" com a conta dela (CNPJ de preferência).
@@ -214,6 +215,9 @@ publicar. Próximos passos naturais:
 6. Mais atrações conforme forem anunciadas; WhatsApp oficial quando a Meta aprovar.
 
 ## Armadilhas conhecidas
+- **Passar valor do PC (Windows) para o `.env` da VPS por pipe** (`python print | ssh ... read`): vem com `` no fim e o
+  valor fica quebrado dentro das aspas. Depois de gravar, confira o tamanho dentro do container
+  (`docker exec perolas-app node -e "console.log(process.env.X.length)"`) — Client ID 16, Secret 32, webhook 64.
 - **Depois de cada deploy, limpe o microcache do Pérolas** (mídia fica 1 dia no nginx; sem isso imagens trocadas com o mesmo nome continuam velhas): `docker exec nexos-nginx-1 sh -c "find /var/cache/nginx/perolas -type f -delete"` — só a pasta do Pérolas, nunca reiniciar o nginx compartilhado.
 - **Migração em produção**: o serviço `migrate` usa imagem própria (target deps). Depois de mudar `prisma/`, rode
   `docker compose -f docker-compose.prod.yml --profile tools build migrate` ANTES do `run --rm migrate` (senão ele
