@@ -146,13 +146,11 @@ export function KorakiMark() {
 
 // enfeites na areia da seção de ingressos, nos espaços livres (fora dos cards e das sereias):
 // [x%, y%, tamanho rem, giro, tipo, aparece no celular?] — s concha, p pérola, e estrela-do-mar, c caranguejo
+// só as pérolas na areia dos ingressos (conchas, estrelas-do-mar e caranguejos saíram: areia mais realista)
+// [esquerda %, topo %, tamanho rem, aparece no celular?]
 const TREASURES = [
-  [26, 58, 3.6, -16, "e", false], [42, 74, 3.8, 14, "c", false], [31, 84, 3, 12, "s", false],
-  [22.5, 68, 1.1, 0, "p", false], [25, 70.5, 0.7, 0, "p", false], [47, 63, 0.8, 0, "p", false],
-  [64, 9, 2.8, 24, "s", false], [76, 7, 2.5, -28, "e", false],
-  [55, 88, 3.2, -8, "e", true], [86, 86, 3.4, 12, "c", true], [12, 86, 3, 30, "s", true],
-  [8, 89, 1, 0, "p", true], [93, 80, 1.1, 0, "p", true], [60, 84, 0.75, 0, "p", false],
-  [92, 10, 2.6, -20, "s", false], [6, 9, 2.3, 18, "e", false],
+  [22.5, 68, 1.1, false], [25, 70.5, 0.7, false], [47, 63, 0.8, false],
+  [8, 89, 1, true], [93, 80, 1.1, true], [60, 84, 0.75, false],
 ] as const;
 
 /** Estrela-do-mar coral com pontinhos em relevo. */
@@ -228,16 +226,9 @@ export function Crab() {
 export function SandTreasures() {
   return (
     <div className="sand-treasures" aria-hidden>
-      {TREASURES.map(([x, y, size, rot, kind, mobile]) => {
-        const style = { left: `${x}%`, top: `${y}%`, width: `${size}rem`, rotate: `${rot}deg` };
-        const cls = mobile ? "" : " no-cel";
-        if (kind === "p") return <span key={`${x}-${y}`} className={`sand-pearl-deco${cls}`} style={{ left: `${x}%`, top: `${y}%`, width: `${size}rem` }} />;
-        return (
-          <span key={`${x}-${y}`} className={`sand-deco sand-deco-${kind}${cls}`} style={style}>
-            {kind === "s" ? <Scallop /> : kind === "e" ? <SandStarfish /> : <Crab />}
-          </span>
-        );
-      })}
+      {TREASURES.map(([x, y, size, mobile]) => (
+        <span key={`${x}-${y}`} className={`sand-pearl-deco${mobile ? "" : " no-cel"}`} style={{ left: `${x}%`, top: `${y}%`, width: `${size}rem` }} />
+      ))}
     </div>
   );
 }
