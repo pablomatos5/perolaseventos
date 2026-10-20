@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { prewarmShell3D, ShellPearl3D } from "./shell-pearl-3d";
-import { Crab, SandStarfish, Scallop } from "./sea-decor";
 
 export type TideStep = {
   key: string;
@@ -20,17 +19,6 @@ const SAND_PEARLS = [
   [79, 60, 1.5],
   [31, 80, 1.05],
   [92, 40, 0.95],
-] as const;
-
-// conchas, estrelas-do-mar e caranguejinhos na areia, nas bordas (fora do texto central):
-// [esquerda %, topo %, tamanho rem, giro, tipo, aparece no celular?] — s concha, e estrela, c caranguejo
-const SAND_DECO = [
-  [8, 50, 2.6, -14, "e", true],
-  [90, 70, 2.6, 18, "c", true],
-  [85, 46, 2.4, 22, "s", false],
-  [20, 84, 2.4, -24, "s", true],
-  [72, 88, 2.8, 10, "e", false],
-  [10, 74, 2.4, -8, "c", false],
 ] as const;
 
 const WAVE_MS = 1800; // duração de uma ida e volta da onda (casa com @keyframes swash no CSS)
@@ -194,16 +182,6 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         <div className="beach-sand" />
         <div className="beach-wet" />
         <Footsteps />
-        {SAND_DECO.map(([left, top, size, rot, kind, mobile]) => (
-          <span
-            key={`${left}-${top}`}
-            className={`sand-deco sand-deco-${kind} beach-deco${mobile ? "" : " no-cel"}`}
-            style={{ left: `${left}%`, top: `${top}%`, width: `${size}rem`, rotate: `${rot}deg` }}
-            aria-hidden
-          >
-            {kind === "s" ? <Scallop /> : kind === "e" ? <SandStarfish /> : <Crab />}
-          </span>
-        ))}
 
         {steps.map((s, i) => (
           <div key={s.key} className={`tide-writing ${i === shown ? "is-active" : ""}`} aria-hidden={i !== shown}>
@@ -259,9 +237,8 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         ))}
 
         <div className="tide-controls">
-          <button type="button" className="tide-arrow is-prev" onClick={() => goRef.current(at - 1, true)} aria-label="Informação anterior">
-            <ShellIcon />
-            <span aria-hidden>‹</span>
+          <button type="button" className="tide-arrow is-round" onClick={() => goRef.current(at - 1, true)} aria-label="Informação anterior">
+            ‹
           </button>
           <ol className="tide-dots">
             {steps.map((s, i) => (
@@ -272,9 +249,8 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
               </li>
             ))}
           </ol>
-          <button type="button" className="tide-arrow is-next" onClick={() => goRef.current(at + 1, true)} aria-label="Próxima informação">
-            <ShellIcon />
-            <span aria-hidden>›</span>
+          <button type="button" className="tide-arrow is-round" onClick={() => goRef.current(at + 1, true)} aria-label="Próxima informação">
+            ›
           </button>
         </div>
 
