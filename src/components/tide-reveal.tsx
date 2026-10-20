@@ -259,18 +259,22 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
         ))}
 
         <div className="tide-controls">
-          <button type="button" className="tide-arrow" onClick={() => goRef.current(at - 1, true)} aria-label="Informação anterior">
-            ‹
+          <button type="button" className="tide-arrow is-prev" onClick={() => goRef.current(at - 1, true)} aria-label="Informação anterior">
+            <ShellIcon />
+            <span aria-hidden>‹</span>
           </button>
           <ol className="tide-dots">
             {steps.map((s, i) => (
               <li key={s.key}>
-                <button type="button" className={i === shown ? "is-on" : ""} onClick={() => goRef.current(i, true)} aria-label={`Ir para: ${s.big}`} aria-current={i === shown || undefined} />
+                <button type="button" className={i === shown ? "is-on" : ""} onClick={() => goRef.current(i, true)} aria-label={`Ir para: ${s.big}`} aria-current={i === shown || undefined}>
+                  <ShellIcon />
+                </button>
               </li>
             ))}
           </ol>
-          <button type="button" className="tide-arrow" onClick={() => goRef.current(at + 1, true)} aria-label="Próxima informação">
-            ›
+          <button type="button" className="tide-arrow is-next" onClick={() => goRef.current(at + 1, true)} aria-label="Próxima informação">
+            <ShellIcon />
+            <span aria-hidden>›</span>
           </button>
         </div>
 
@@ -322,6 +326,19 @@ function Footsteps() {
       {TOES.map(([cx, cy, rx, ry, rot]) => (
         <ellipse key={cx} cx={cx} cy={cy} rx={rx} ry={ry} transform={`rotate(${rot} ${cx} ${cy})`} />
       ))}
+    </svg>
+  );
+}
+
+/** Conchinha simples (leque com 4 ondinhas e 3 risquinhos) para os controles do carrossel da areia; a cor vem do CSS. */
+function ShellIcon() {
+  return (
+    <svg className="shell-icon" viewBox="0 0 24 23" aria-hidden>
+      <path
+        className="shell-body"
+        d="M12 21 Q2.84 17.61 3.44 10.22 Q2.94 6.42 6.71 5.72 Q8.54 2.35 12 4 Q15.46 2.35 17.29 5.72 Q21.06 6.42 20.56 10.22 Q21.16 17.61 12 21 Z"
+      />
+      <path className="shell-ribs" d="M12 19.4 L7.6 8.2 M12 19.4 L12 6.6 M12 19.4 L16.4 8.2" />
     </svg>
   );
 }

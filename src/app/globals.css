@@ -3253,3 +3253,44 @@ body:has(.painel) { background: #f6f2fb; }
 .ticket-rules strong { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8a5a1c; }
 .ticket-rules ul { display: grid; gap: 0.45rem; padding-left: 1.1rem; list-style: disc; }
 .ticket-rules b { color: #2a1f55; }
+/* carrossel da areia: setas e pontinhos viram conchinhas (a da etapa atual em dourado) */
+.shell-icon { display: block; width: 100%; height: 100%; overflow: visible; }
+.shell-icon .shell-body { fill: var(--shell-fill, transparent); stroke: var(--shell-line, rgb(112 76 38 / 0.7)); stroke-width: 1.3; stroke-linejoin: round; }
+.shell-icon .shell-ribs { fill: none; stroke: var(--shell-line, rgb(112 76 38 / 0.7)); stroke-width: 0.9; stroke-linecap: round; opacity: 0.75; }
+.shell-icon .shell-hinge { fill: var(--shell-line, rgb(112 76 38 / 0.7)); }
+.tide-dots { gap: 0.1rem; }
+.tide-dots button { width: 1.9rem; height: 2.75rem; }
+.tide-dots button::before { content: none; }
+.tide-dots .shell-icon { width: 1.15rem; height: 1.1rem; transition: transform 0.4s, filter 0.4s; }
+.tide-dots button.is-on .shell-icon { --shell-line: #8a5a1c; transform: scale(1.45) translateY(-1px); filter: drop-shadow(0 2px 2px rgb(110 70 30 / 0.35)); }
+.tide-dots button.is-on .shell-icon .shell-body { fill: #e7b866; }
+.tide-dots button.is-on .shell-icon .shell-ribs { stroke: #fff3d6; opacity: 0.9; }
+.tide-arrow { position: relative; width: 3.2rem; border: 0; border-radius: 0; background: none; box-shadow: none; padding: 0; }
+.tide-arrow .shell-icon { --shell-line: rgb(122 78 28 / 0.75); position: absolute; inset: 0; filter: drop-shadow(0 0.35rem 0.5rem rgb(112 76 38 / 0.35)); }
+.tide-arrow .shell-icon .shell-body { fill: rgb(255 250 244 / 0.92); }
+.tide-arrow > span { position: relative; margin-top: 0.15rem; font-size: 1.4rem; font-weight: 600; color: #7a4e1c; text-shadow: 0 0 6px rgb(255 250 244 / 0.9); }
+.tide-arrow:hover .shell-icon .shell-body { fill: #fff1d4; }
+/* setas: a concha aponta para o lado da seta (leque virado), com a seta desenhada por cima */
+.tide-arrow { width: 3.4rem; }
+.tide-arrow .shell-icon { transform-origin: 50% 50%; }
+.tide-arrow.is-prev .shell-icon { rotate: -90deg; }
+.tide-arrow.is-next .shell-icon { rotate: 90deg; }
+.tide-arrow > span { z-index: 1; margin: 0; font-size: 1.75rem; font-weight: 700; color: #6b4216; text-shadow: 0 0 4px #fffaf4, 0 0 10px rgb(255 250 244 / 0.95); line-height: 1; }
+.tide-arrow.is-prev > span { translate: -0.12rem -0.08rem; }
+.tide-arrow.is-next > span { translate: 0.12rem -0.08rem; }
+.shell-icon .shell-ribs { stroke-width: 1; opacity: 0.55; }
+.tide-arrow .shell-icon .shell-ribs { opacity: 0.35; }
+.tide-arrow .shell-icon .shell-ribs { display: none; }
+/* controles da areia maiores (pedido 21/10) */
+.tide-controls { gap: 1rem; }
+.tide-arrow { width: 4.4rem; }
+.tide-arrow > span { font-size: 2.2rem; }
+.tide-dots button { width: 2.4rem; height: 3.2rem; }
+.tide-dots .shell-icon { width: 1.55rem; height: 1.5rem; }
+@media (max-width: 767px) {
+  .tide-controls { gap: 0.5rem; }
+  .tide-arrow { width: 3.9rem; }
+  .tide-arrow > span { font-size: 1.95rem; }
+  .tide-dots button { width: 2.05rem; height: 3rem; }
+  .tide-dots .shell-icon { width: 1.4rem; height: 1.35rem; }
+}
