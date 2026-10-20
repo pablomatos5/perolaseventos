@@ -3180,6 +3180,9 @@ body:has(.painel) { background: #f6f2fb; }
 .painel-nav a.is-active { background: linear-gradient(135deg, #fff1d4, #f3d39d); color: #5c3d14; box-shadow: inset 0 0 0 1px rgb(201 148 74 / 0.45); }
 .painel-sair { padding: 0.45rem 0.9rem; border-radius: 999px; font-size: 0.82rem; color: var(--fg-muted); border: 1px solid var(--line); }
 .painel-sair:hover { color: var(--fg); border-color: rgb(42 33 96 / 0.3); }
+/* selo do papel da sessão no cabeçalho: equipe (neutro) ou desenvolvedor (dourado) */
+.painel-papel { padding: 0.28rem 0.7rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--fg-muted); background: rgb(42 33 96 / 0.06); border: 1px solid var(--line); white-space: nowrap; }
+.painel-papel.is-dev { color: #5c3d14; background: linear-gradient(135deg, #fff1d4, #f3d39d); border-color: rgb(201 148 74 / 0.45); }
 
 /* títulos, rótulos e textos com contraste de leitura */
 .painel .display, .painel h1, .painel h2, .painel .font-display { color: var(--fg); }
@@ -3301,6 +3304,7 @@ body:has(.painel) { background: #f6f2fb; }
   .painel-header > div { flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.6rem 1rem 0.5rem; }
   .painel-header .page-brand-sm { order: 1; margin: 0; width: 5.5rem; }
   .painel-header form { order: 2; }
+  .painel-header-right { order: 2; gap: 0.5rem; }
   .painel-nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto; gap: 0.3rem; margin: 0 -1rem; padding: 0.1rem 1rem 0.3rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .painel-nav::-webkit-scrollbar { display: none; }
   .painel-nav a { flex: none; padding: 0.5rem 0.9rem; font-size: 0.85rem; background: rgb(42 33 96 / 0.04); }

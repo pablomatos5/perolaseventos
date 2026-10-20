@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { endSession, passwordOk, requireAdmin, startSession } from "@/lib/admin-auth";
+import { checkPassword, endSession, requireAdmin, startSession } from "@/lib/admin-auth";
 import { activeEvent } from "@/lib/admin-data";
 import { db } from "@/lib/db";
 import { deliverTickets } from "@/lib/delivery";
@@ -25,12 +25,14 @@ export async function loginAction(_prev: FormState, form: FormData): Promise<For
   await new Promise((r) => setTimeout(r, 600));
   const key = `login:${await clientIp()}`;
   if (blocked(key, 5, 15 * 60_000)) return { error: "Muitas tentativas erradas. Aguarde 15 minutos." };
-  if (!passwordOk(String(form.get("password") ?? ""))) {
+  const role = checkPassword(String(form.get("password") ?? ""));
+  if (!role) {
     fail(key);
     await audit("painel", "login recusado", `IP ${key.slice(6)}`);
     return { error: "Senha incorreta." };
   }
-  await startSession();
+  await startSession(role);
+  await audit(role === "dev" ? "dev" : "painel", "entrou no painel", role === "dev" ? "acesso de desenvolvedor" : "acesso da equipe");
   redirect(safeNext(form.get("next")));
 }
 
