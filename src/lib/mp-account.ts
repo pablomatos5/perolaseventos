@@ -15,8 +15,14 @@ const RENEW_BEFORE_MS = 30 * 86_400_000;
 /** Endereço de retorno cadastrado na aplicação do Mercado Pago (tem que ser idêntico ao do painel deles). */
 export const redirectUri = () => process.env.MP_REDIRECT_URI || `${process.env.APP_URL}/api/mercadopago/conectar/retorno`;
 
+// Só neste PC, para testes (MP_OAUTH_TEST=true, nunca em produção): usa a aplicação de TESTE (MP_TEST_CLIENT_ID/SECRET),
+// criada por uma conta de teste. O Mercado Pago não mistura conta real e de teste no mesmo pagamento.
+const testMode = () => process.env.MP_OAUTH_TEST === "true" && process.env.NODE_ENV !== "production";
+const clientId = () => (testMode() ? process.env.MP_TEST_CLIENT_ID : process.env.MP_CLIENT_ID);
+const clientSecret = () => (testMode() ? process.env.MP_TEST_CLIENT_SECRET : process.env.MP_CLIENT_SECRET);
+
 /** A aplicação dos desenvolvedores está configurada? (sem ela não há botão "Conectar") */
-export const marketplaceConfigured = () => !!(process.env.MP_CLIENT_ID && process.env.MP_CLIENT_SECRET);
+export const marketplaceConfigured = () => !!(clientId() && clientSecret());
 
 // Chave de cifra: MP_TOKEN_KEY, ou derivada do TICKET_SECRET (HKDF, rótulo próprio) quando não houver.
 function key() {
@@ -41,7 +47,7 @@ function open(sealed: string) {
 /** Link da página de autorização do Mercado Pago (o vendedor entra na conta dele e autoriza). */
 export function authorizeUrl(state: string) {
   const u = new URL(AUTH_URL);
-  u.searchParams.set("client_id", process.env.MP_CLIENT_ID!);
+  u.searchParams.set("client_id", clientId()!);
   u.searchParams.set("response_type", "code");
   u.searchParams.set("platform_id", "mp");
   u.searchParams.set("state", state);
@@ -65,9 +71,9 @@ async function tokenRequest(body: Record<string, string>): Promise<TokenResponse
     // MP_OAUTH_TEST=true (só em testes): pede credenciais de TESTE da conta conectada (contas de teste do
     // Mercado Pago só cobram em modo teste). Nunca ligar em produção.
     body: JSON.stringify({
-      client_id: process.env.MP_CLIENT_ID,
-      client_secret: process.env.MP_CLIENT_SECRET,
-      ...(process.env.MP_OAUTH_TEST === "true" && process.env.NODE_ENV !== "production" && { test_token: true }),
+      client_id: clientId(),
+      client_secret: clientSecret(),
+      ...(testMode() && { test_token: true }),
       ...body,
     }),
     signal: AbortSignal.timeout(15_000),
