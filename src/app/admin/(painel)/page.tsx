@@ -32,14 +32,16 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const mpMsg = mp ? MP_MESSAGE[mp] : undefined;
   const mode = paymentMode();
 
+  const money = [
+    { label: "Receita confirmada", value: formatBRL(k.revenueCents), hint: "ingressos pagos (sem a taxa de serviço)" },
+    { label: "Taxa de serviço", value: formatBRL(k.feeCents), hint: "vai para os desenvolvedores" },
+  ];
   const cards = [
-    { label: "Receita confirmada", value: formatBRL(k.revenueCents) },
-    { label: "Taxa de serviço (desenvolvedores)", value: formatBRL(k.feeCents) },
     { label: "Ingressos vendidos", value: k.paid },
     { label: "Cortesias", value: k.courtesies },
     { label: "Check-ins", value: k.checkins },
-    { label: "Pagamentos em aberto agora", value: k.pending },
-    { label: "Pix 2x aguardando a 2ª parcela", value: k.partial },
+    { label: "Pagamentos em aberto", value: k.pending },
+    { label: "Pix 2x esperando a 2ª", value: k.partial },
   ];
 
   return (
@@ -56,14 +58,25 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         </p>
       </div>
 
-      <dl className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        {cards.map((c) => (
-          <div key={c.label} className="glass-card p-5">
-            <dt className="text-[0.68rem] leading-snug uppercase tracking-[0.14em] break-words text-fg-faint">{c.label}</dt>
-            <dd className="mt-2 font-display text-3xl">{c.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="grid gap-4">
+        <dl className="grid gap-4 sm:grid-cols-2">
+          {money.map((c) => (
+            <div key={c.label} className="kpi is-money">
+              <dt>{c.label}</dt>
+              <dd>{c.value}</dd>
+              <span>{c.hint}</span>
+            </div>
+          ))}
+        </dl>
+        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {cards.map((c) => (
+            <div key={c.label} className="kpi">
+              <dt>{c.label}</dt>
+              <dd>{c.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
       <section className="grid gap-3">
         <h2 className="font-display text-2xl">Mercado Pago</h2>
         {mpMsg && <p className={`rounded-xl px-4 py-3 text-sm ${mpMsg.ok ? "bg-ok/15 text-ok" : "bg-danger/15 text-danger"}`}>{mpMsg.text}</p>}
