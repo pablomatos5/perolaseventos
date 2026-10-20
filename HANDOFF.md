@@ -203,7 +203,12 @@ publicar. Próximos passos naturais:
    `PAYMENT_PROVIDER=mercadopago` (sai o demo: sem faixa e sem marca d'água) + recriar o container. `MP_ACCESS_TOKEN` fica VAZIO.
 3. Antes: apagar pedidos de teste, trocar a senha do painel, `check:config`, valores dos lotes, taxa do cartão, termos.
 4. A Pérolas entra no painel e clica "Conectar Mercado Pago" com a conta dela (CNPJ de preferência).
-5. Compra real pequena para conferir (e estornar), e-mail de entrega (Resend) funcionando.
+5. Compra real pequena para conferir (e estornar).
+- ✅ **E-mail (20/10)**: Resend com o domínio perolaseventos.store verificado (DKIM `resend._domainkey`, CNAMEs `rsend`
+  e `send`, DMARC `_dmarc` no hPanel da Hostinger), conta do Resend no e-mail pessoal do usuário, chave "Pérolas site"
+  (só envio) em `RESEND_API_KEY` no PC e na VPS. Remetente `Pérolas Eventos <ingressos@perolaseventos.store>`.
+  Testado pelo "Reenviar" do painel (pedido 3G2WLL → "enviado"). Plano grátis: 100 e-mails/dia — trocar para o pago
+  se a abertura das vendas passar disso. Receber respostas em ingressos@ ainda não configurado (opcional: ImprovMX).
 
 ## Pendências / próximos passos (antes das vendas reais)
 1. **Mercado Pago**: `PAYMENT_PROVIDER=mercadopago` + `MP_ACCESS_TOKEN`/`MP_WEBHOOK_SECRET` (produção hoje sem cobrança real).
@@ -215,7 +220,8 @@ publicar. Próximos passos naturais:
 6. Mais atrações conforme forem anunciadas; WhatsApp oficial quando a Meta aprovar.
 
 ## Armadilhas conhecidas
-- **Passar valor do PC (Windows) para o `.env` da VPS por pipe** (`python print | ssh ... read`): vem com `` no fim e o
+- **Passar valor do PC (Windows) para o `.env` da VPS por pipe** (`python print | ssh ... read`): vem com `
+` no fim e o
   valor fica quebrado dentro das aspas. Depois de gravar, confira o tamanho dentro do container
   (`docker exec perolas-app node -e "console.log(process.env.X.length)"`) — Client ID 16, Secret 32, webhook 64.
 - **Depois de cada deploy, limpe o microcache do Pérolas** (mídia fica 1 dia no nginx; sem isso imagens trocadas com o mesmo nome continuam velhas): `docker exec nexos-nginx-1 sh -c "find /var/cache/nginx/perolas -type f -delete"` — só a pasta do Pérolas, nunca reiniciar o nginx compartilhado.
