@@ -176,6 +176,33 @@ publicar. Próximos passos naturais:
 2. Prévia de link (`src/app/opengraph-image.jpg` / twitter) ainda com o logo antigo.
 3. Decidir se o ingresso noturno (`?tema=noite`) vira o padrão.
 
+## Pagamento dentro do site + divisão da taxa (20/10) — no ar, ainda em modo demonstração
+- **Checkout Transparente** (API de Payments): Pix com QR/"copia e cola" na página do pedido (`PixCharge` guarda o QR;
+  reaproveita ao recarregar) e cartão com os Secure Fields do Mercado Pago no visual do site
+  (`src/components/card-pay-form.tsx`, erros por campo). O número do cartão nunca passa pelo servidor (token).
+- **Conta do evento por OAuth**: painel → "Conectar Mercado Pago" (`/api/mercadopago/conectar` → retorno
+  `/api/mercadopago/conectar/retorno`). Tokens cifrados (AES-256-GCM, chave `MP_TOKEN_KEY` ou derivada do TICKET_SECRET)
+  na tabela `MpAccount`, renovados sozinhos 30 dias antes de vencer (180 dias).
+- **Divisão**: cada pagamento leva `application_fee` = taxa de serviço (R$ 2,50/ingresso; Pix 2x: metade em cada
+  parcela) → cai na conta dona da aplicação (devs, app 4338262596056762, conta 652589285). Testado com contas de teste:
+  R$ 182,50 cobrados → MP R$ 5,46 · devs R$ 2,50 · vendedor R$ 174,54.
+- **Taxa do cartão** repassada (painel, `Event.cardFeeBps`): total = valor ÷ (1 − taxa). Com 2,99% o vendedor recebe cheio.
+- Teste local: `MP_OAUTH_TEST=true` + `MP_TEST_CLIENT_ID/SECRET` (app de teste 2589722219554257 da conta de teste
+  "Devs teste") — o MP não mistura conta real e de teste. Contas de teste: Vendedor TESTUSER8964343317901825292,
+  Comprador TESTUSER7266408720541848324, Devs teste TESTUSER4535046512479514634 (senhas com o usuário). Cartão de teste
+  5031 4332 1540 6351, 11/30, CVV 123, nome APRO. Pix de teste não pode ser pago (só gerado).
+- Retorno do OAuth está cadastrado só com o domínio: no teste local o retorno é desviado para o localhost pelo Chrome.
+
+### Para ligar o pagamento REAL (em ordem)
+1. Painel do MP, aplicação real 4338262596056762: Produto integrado → Checkout Transparente / API de Payments;
+   **Webhooks** (modo produção) → URL `https://perolaseventos.store/api/webhooks/mercadopago`, evento "Pagamentos" →
+   copiar a assinatura secreta.
+2. `.env` da VPS: `MP_CLIENT_ID`, `MP_CLIENT_SECRET` (os do PC de casa), `MP_WEBHOOK_SECRET`, `MP_TOKEN_KEY` novo,
+   `PAYMENT_PROVIDER=mercadopago` (sai o demo: sem faixa e sem marca d'água). `MP_ACCESS_TOKEN` fica VAZIO.
+3. Antes: apagar pedidos de teste, trocar a senha do painel, `check:config`, valores dos lotes, taxa do cartão, termos.
+4. A Pérolas entra no painel e clica "Conectar Mercado Pago" com a conta dela (CNPJ de preferência).
+5. Compra real pequena para conferir (e estornar), e-mail de entrega (Resend) funcionando.
+
 ## Pendências / próximos passos (antes das vendas reais)
 1. **Mercado Pago**: `PAYMENT_PROVIDER=mercadopago` + `MP_ACCESS_TOKEN`/`MP_WEBHOOK_SECRET` (produção hoje sem cobrança real).
 2. **E-mail**: Resend (`RESEND_API_KEY`, SPF/DKIM).
