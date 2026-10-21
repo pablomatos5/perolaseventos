@@ -120,7 +120,7 @@ for d, n, power in CURVES:
         env *= np.sin(np.pi * t) ** 0.6  # pontas do arco somem
         q = p + nm * off[:, None]
         w = power * rng.uniform(0.25, 0.7) * env
-        col = np.array([1.0, 0.93, 0.8]) * w[:, None] * 0.55
+        col = np.array([1.0, 0.84, 0.58]) * w[:, None] * 0.55  # dourado (fraco, sobre o azul, não pode virar prata)
         splat(core, q[:, 0], q[:, 1], col)
     # faíscas: pontinhos espalhados em volta do feixe, alguns grandes
     ns = int(140 * power)
@@ -130,11 +130,12 @@ for d, n, power in CURVES:
     lum = (rng.pareto(2.0, ns) + 0.3) * np.sin(np.pi * t[idx]) ** 0.5 * power
     splat(spark, q[:, 0], q[:, 1], np.array([1.0, 0.9, 0.72]) * lum[:, None] * 1.4)
 
-fios = blur(core, 0.6) * 5.5 + blur(core, 3) * 1.6 + blur(core, 12) * 3.5 + blur(core, 34) * 3.0
-fios += blur(spark, 0.7) * 7 + blur(spark, 3.5) * 6 + blur(spark, 12) * 3
+# discreto e elegante: fios finos bem marcados, halo curto e fraco (o forte atrapalhava a leitura)
+fios = blur(core, 0.6) * 3.2 + blur(core, 3) * 0.7 + blur(core, 12) * 1.1 + blur(core, 34) * 0.6
+fios += blur(spark, 0.7) * 6 + blur(spark, 3.5) * 2.5 + blur(spark, 12) * 0.8
 # tom: núcleo quase branco, brilho em volta dourado-pêssego (como no flyer)
 warm = np.array([1.0, 0.78, 0.55])
-glow_part = blur(core, 12) * 3.5 + blur(core, 34) * 3.0
+glow_part = blur(core, 12) * 1.1 + blur(core, 34) * 0.6
 fios = fios - glow_part + glow_part * warm
 save_rgba(fios, "fios-luz", q=80)
 

@@ -11,6 +11,8 @@ import numpy as np
 from PIL import Image
 from scipy.ndimage import gaussian_filter, map_coordinates
 
+from elementos import place
+
 OUT = sys.argv[1]
 SAND = np.asarray(Image.open(f"{OUT}/areia-real.webp").convert("RGB"), np.float32) / 255
 CAUS = np.asarray(Image.open(f"{OUT}/mar-causticas.webp").convert("RGBA"), np.float32)[..., 3] / 255
@@ -47,7 +49,7 @@ def sample(levels, u, v, lod):
     return out
 
 
-def render(W, H, horizon, texel, seed, pearls, name):
+def render(W, H, horizon, texel, seed, pearls, items, name):
     rng = np.random.default_rng(seed)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     yh = horizon * H
@@ -122,6 +124,17 @@ def render(W, H, horizon, texel, seed, pearls, name):
     sky = far + (glow - far) * np.exp(-np.clip(yh - yy, 0, None) / (H * 0.12))[..., None] * halo
     col = np.where((yy < yh)[..., None], sky, col)
 
+    # ── corais, algas, rochas…: mesma luz e mesma névoa da areia ──
+    def fog_at(by):
+        sr = (H - yh) / max(by - yh, 0.6)
+        f = float(np.clip(1 - np.exp(-((sr * 0.085) ** 1.15)), 0, 1))
+        return f, far + (glow - far) * np.exp(-(((by - yh) / (H * 0.08)) ** 2)) * 0.8
+
+    def light_at(x):
+        return 0.85 * (0.5 + 0.5 * np.exp(-(((x - W * 0.5) / (W * 0.55)) ** 2)))
+
+    col = place(col, W, H, yh, texel, rng, items, fog_at, light_at)
+
     col *= (1 - 0.28 * ((xx - W / 2) / (W / 2)) ** 2)[..., None]  # vinheta lateral
     col += rng.normal(0, 0.006, col.shape)  # granulação fina: tira o "liso de computador"
     img = Image.fromarray((np.clip(col, 0, 1) * 255).astype(np.uint8))
@@ -129,6 +142,23 @@ def render(W, H, horizon, texel, seed, pearls, name):
     print(name, img.size, os.path.getsize(f"{OUT}/{name}.webp") // 1024, "KB")
 
 
-# pérolas longe do centro (onde ficam o botão e o texto), maiores no primeiro plano
-render(2880, 1000, 0.34, 1.0, 7, [(0.13, 0.78, 34), (0.17, 0.86, 22), (0.84, 0.70, 28), (0.905, 0.9, 40), (0.33, 0.42, 30), (0.70, 0.36, 26)], "fundo-mar-real-pc")
-render(1170, 1300, 0.30, 1.2, 9, [(0.1, 0.9, 34), (0.9, 0.82, 30), (0.22, 0.38, 26), (0.8, 0.33, 22)], "fundo-mar-real-cel")
+# pérolas e elementos longe do centro (onde ficam o botão e o texto); tamanho = no primeiro plano (encolhe ao longe)
+# (tipo, x, linha 0 = horizonte .. 1 = base, tamanho px). Gerado com semente fixa: sai sempre igual.
+def jardim(seed, lados, fundo):
+    r = np.random.default_rng(seed)
+    kinds = ["coral", "coral", "alga", "alga", "leque", "tubo", "rocha", "capim", "capim", "cerebro"]
+    items = []
+    for (xa, xb), n, (sa, sb), (pa, pb) in lados:  # moitas cheias nas laterais
+        for _ in range(n):
+            pd = r.uniform(pa, pb) ** 0.6
+            items.append((kinds[r.integers(len(kinds))], r.uniform(xa, xb), pd, r.uniform(sa, sb)))
+    for _ in range(fundo):  # silhuetas ao fundo, sumindo na névoa
+        items.append((kinds[r.integers(len(kinds))], r.uniform(0.02, 0.98), r.uniform(0.04, 0.3), r.uniform(200, 380)))
+    return items
+
+
+PC = jardim(11, [((0.0, 0.27), 26, (80, 190), (0.45, 1.0)), ((0.73, 1.0), 26, (80, 190), (0.45, 1.0))], 22)
+# celular: o botão fixo de compra cobre a base, então as moitas ficam no meio da areia, dos lados do botão do Instagram
+CEL = jardim(12, [((0.05, 0.3), 16, (110, 230), (0.25, 0.7)), ((0.7, 0.95), 16, (110, 230), (0.25, 0.7)), ((0.0, 1.0), 8, (150, 260), (0.75, 1.0))], 14)
+render(2880, 1000, 0.34, 1.0, 7, [(0.13, 0.78, 34), (0.17, 0.86, 22), (0.84, 0.70, 28), (0.905, 0.9, 40), (0.33, 0.42, 30), (0.70, 0.36, 26)], PC, "fundo-mar-real-pc")
+render(1170, 1300, 0.30, 1.2, 9, [(0.1, 0.9, 34), (0.9, 0.82, 30), (0.22, 0.38, 26), (0.8, 0.33, 22)], CEL, "fundo-mar-real-cel")

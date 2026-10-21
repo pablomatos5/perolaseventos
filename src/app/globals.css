@@ -3469,3 +3469,14 @@ body:has(.painel) { background: #f6f2fb; }
 .seabed-scene { -webkit-mask-image: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.6) 22%, #000 38%); mask-image: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.6) 22%, #000 38%); }
 .seabed-rays { opacity: 0.16; animation-name: raios-mar-suave; }
 @keyframes raios-mar-suave { from { opacity: 0.08; } to { opacity: 0.2; } }
+/* fios de luz discretos: presentes, mas sem brigar com o texto (no celular passam por cima das seções) */
+.starfield > .sky-threads { opacity: 0.6; }
+@media (max-width: 767px) { .starfield > .sky-threads { opacity: 0.45; object-position: 18% 50%; } }
+
+
+
+
+
+
+
+
