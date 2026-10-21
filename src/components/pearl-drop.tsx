@@ -21,7 +21,12 @@ export function PearlDrop() {
 
     let fall = 0; // distância (px) da pérola até a linha d'água, medida com a página no topo
     let hitAt = 1; // rolagem (px) em que a pérola toca a água
+    let armed = false; // queda já ligada (não esperar o tempo fixo se a pessoa rolar antes)
     const measure = () => {
+      // mede a posição de REPOUSO da pérola mesmo com a animação de entrada ainda rodando:
+      // congela a entrada por um instante (layout puro, sem o transform da animação) e lê a caixa.
+      const anim = pearl.style.animation;
+      pearl.style.animation = "none";
       pearl.classList.remove("sd");
       pearl.style.translate = "";
       pearl.style.scale = "";
@@ -35,8 +40,12 @@ export function PearlDrop() {
         pearl.style.setProperty("--fall", `${fall.toFixed(1)}px`);
         // a queda vai até 88% da animação; os 12% finais são o mergulho (encolhe e se dissolve na superfície)
         pearl.style.setProperty("--fall-range", `${(hitAt / 0.88).toFixed(1)}px`);
+        pearl.style.animation = ""; // devolve o controle ao CSS: a classe .sd faz a queda pela rolagem
         pearl.classList.add("sd");
+      } else {
+        pearl.style.animation = anim; // caminho JS (navegador antigo): restaura a entrada
       }
+      armed = true;
     };
 
     let raf = 0;
@@ -50,7 +59,8 @@ export function PearlDrop() {
         splashed = hit;
         water.classList.toggle("is-splash", hit);
       }
-      if (native) return; // o navegador já move a pérola
+      if (native) return; // o navegador já move a pérola (queda colada na rolagem, no compositor)
+      pearl.style.animation = "none"; // caminho JS: desliga a entrada para o translate inline valer
       const eased = t * t * (3 - 2 * t); // suave no começo e no fim
       pearl.style.translate = `0 ${(eased * fall).toFixed(1)}px`;
       pearl.classList.toggle("is-sunk", hit);
@@ -58,6 +68,9 @@ export function PearlDrop() {
       if (hit) pearl.style.translate = `0 ${(fall + 6).toFixed(1)}px`;
     };
     const onScroll = () => {
+      // liga a queda já na primeira rolagem, sem esperar o tempo fixo da entrada (antes a pérola
+      // ficava travada até ~2,3 s, ainda mais sob o carregamento inicial)
+      if (!armed) measure();
       if (!raf) raf = requestAnimationFrame(update);
     };
     const onResize = () => {
@@ -66,9 +79,12 @@ export function PearlDrop() {
     };
     const toBeach = () => document.querySelector(".beach")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    // espera a entrada da concha e da pérola terminar (pearl-in: 1,1 s + 1,1 s) para medir a posição final
-    const timer = setTimeout(onResize, 2300);
+    // se a pessoa não rolar, mede a posição final quando a entrada da pérola termina (rise-sun: 0,4 s + 2,2 s);
+    // se rolar antes, onScroll já ligou a queda na hora (sem esperar)
+    const timer = setTimeout(onResize, 2600);
     window.addEventListener("scroll", onScroll, { passive: true });
+    // se a pessoa já rolou durante o carregamento (antes deste efeito montar), liga a queda na hora
+    if (window.scrollY > 0) onScroll();
     // celular: a barra de endereço aparece/some na rolagem e dispara "resize" só de altura; ignora
     let lastW = innerWidth;
     const onWidth = () => {
