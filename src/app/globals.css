@@ -3481,16 +3481,19 @@ body:has(.painel) { background: #f6f2fb; }
 
 
 
-/* concha grande do rodapé: o botão senta no centro da metade de baixo (65,5% da altura da imagem) */
-.concha-rodape { position: relative; display: grid; place-items: center; width: 100%; height: 3.2rem; margin-top: clamp(9rem, 15vw, 12rem); }
-.concha-rodape > img {
-  position: absolute; left: 50%; top: 50%; width: clamp(34rem, 46vw, 42rem); max-width: none; height: auto;
-  translate: -50% -65.5%; pointer-events: none;
+/* concha grande do rodapé: render 3D sentada na areia (scripts/fundo-mar/concha.py, com a mesma luz e areia da cena).
+   O script imprime onde fica o centro da metade de baixo: x 47,8% · y 74,7% da imagem, largura útil 69% */
+.concha-rodape { position: relative; width: min(34rem, 100%); aspect-ratio: 929 / 1003; margin-top: 1rem; }
+.concha-rodape > img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; }
+.concha-rodape > .ig-link { position: absolute; left: 47.8%; top: 74.7%; translate: -50% -50%; white-space: nowrap; }
+@media (max-width: 767px) {
+  /* a assinatura Koraki fica embaixo, centralizada: a concha termina acima dela */
+  .seabed-footer { padding-bottom: 7.6rem; }
+  .concha-rodape { width: min(36rem, calc(100vw - 0.75rem)); }
+  .concha-rodape > .ig-link { font-size: 0.64rem; letter-spacing: 0.06em; gap: 0.4rem; }
+  .concha-rodape > .ig-link svg { width: 0.95rem; height: 0.95rem; }
 }
-.concha-rodape > .ig-link { position: relative; }
-@media (max-width: 767px) { .concha-rodape > img { width: 34rem; } .concha-rodape { margin-top: 10rem; } }
-.concha-rodape + p { position: relative; margin-top: 4.6rem; }
-@media (max-width: 767px) { .concha-rodape + p { margin-top: 3.6rem; } }
+
 
 
 
