@@ -114,18 +114,23 @@ export function SideMermaid({ side }: { side: "left" | "right" }) {
 }
 
 /**
- * Fim da página no fundo do mar: ilustração 2D detalhada (corais, algas, anêmonas, estrelas-do-mar,
- * conchas, luz na areia e a pérola na concha aberta) gerada por scripts/fundo-mar/ilustracao.py e servida
- * como imagem webp leve — custo zero no celular. Bolhas por cima dão vida. O rodapé fica por cima.
+ * Fim da página no fundo do mar, realista: a mesma areia grão a grão do site vista em perspectiva no fundo
+ * da água à noite (scripts/fundo-mar/realista.py), com o luar dançando na areia (cáusticas em perspectiva,
+ * animadas só com background-position), raios de luz, partículas em suspensão e bolhas. O rodapé fica por cima.
  */
 export function Seabed() {
   return (
     <div className="seabed" aria-hidden>
-      <Bubbles />
       <picture>
-        <source media="(max-width: 767px)" srcSet="/2027/fundo-mar-cel.webp" width={1170} height={1000} />
-        <img src="/2027/fundo-mar-pc.webp" alt="" width={2880} height={760} loading="lazy" decoding="async" className="seabed-scene" />
+        <source media="(max-width: 767px)" srcSet="/2027/fundo-mar-real-cel.webp" width={1170} height={1300} />
+        <img src="/2027/fundo-mar-real-pc.webp" alt="" width={2880} height={1000} loading="lazy" decoding="async" className="seabed-scene" />
       </picture>
+      <div className="seabed-caustics">
+        <i />
+      </div>
+      <div className="seabed-rays" />
+      <div className="seabed-particles" />
+      <Bubbles />
     </div>
   );
 }

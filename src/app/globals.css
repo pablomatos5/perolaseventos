@@ -3375,18 +3375,97 @@ body:has(.painel) { background: #f6f2fb; }
   }
 }
 
-/* Leitura na areia nova (grão a grão): escrita mais funda e escura, e um "alisado" suave
-   atrás do texto, como a areia que o dedo empurra — o grão some ali e as letras saltam. */
+/* Leitura na areia nova (grão a grão): escrita mais funda e escura. */
 .tide-writing {
   color: rgb(84 52 22 / 0.96);
   text-shadow: 0 1.5px 0 rgb(255 240 214 / 0.75), 0 -1px 0 rgb(60 32 8 / 0.5), 0 0 1.2rem rgb(236 212 178 / 0.9);
-}
-.tide-writing::before {
-  content: ""; position: absolute; inset: -6% -4%; z-index: -1; pointer-events: none;
-  background: radial-gradient(closest-side, rgb(232 208 172 / 0.78), rgb(232 208 172 / 0.45) 60%, transparent);
 }
 .tide-writing .sand-small, .tide-writing .sand-eyebrow { font-weight: 700; color: rgb(92 58 24); }
 .sand-link { text-decoration-color: rgb(92 58 24 / 0.55); }
 .beach-pearl { z-index: 0; }
 /* no computador o nome longo cabe numa linha só: sem isso o @ do artista passava do quadro e sumia */
 @media (min-width: 768px) { .tide-writing .sand-big.is-long { max-width: 24ch; } }
+
+/* ── Céu e bolhas realistas (texturas de scripts/fundo-mar/ceu.py) ──
+   estrelas com brilho e cor de céu de verdade (muitas fracas, poucas fortes, azuladas/brancas/amareladas);
+   a 2ª camada tem só as fortes e pisca; o redemoinho de luz virou fios finos como no flyer. */
+.starfield > i:nth-child(1) { background: url("/2027/ceu-estrelas.webp") 0 0 / 640px 640px; }
+.starfield > i:nth-child(2) { background: url("/2027/ceu-cintila.webp") 170px 90px / 880px 880px; }
+.starfield > i:nth-child(3) { background: url("/2027/ceu-estrelas.webp") 300px 210px / 1100px 1100px; opacity: 0.55; animation: none; will-change: auto; }
+.starfield > .sky-threads { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.starfield > s { background: url("/2027/brilho.webp") center / 100% no-repeat; }
+.starfield > s.gold { background: url("/2027/brilho-ouro.webp") center / 100% no-repeat; }
+/* bolha de ar de verdade: transparente, borda fina clara e reflexo da luz (sem tom roxo) */
+.sea-bubbles > i { border: 0; box-shadow: none; background: url("/2027/bolha.webp") center / 100% no-repeat; }
+/* mar do horizonte casando com a maré: um reflexo do sol só (antes eram dois, um em cada camada de água,
+   e o segundo recomeçava no meio e marcava uma faixa); a água perto do horizonte fica no mesmo violeta */
+.pearl-horizon::after {
+  background:
+    radial-gradient(ellipse 12% 100% at 50% 0%, rgb(255 222 160 / 0.5), rgb(255 190 130 / 0.16) 55%, transparent 85%),
+    linear-gradient(180deg, rgb(255 170 130 / 0.22), transparent 55%);
+}
+.hero-2027 .ocean-waves::before { display: none; }
+/* a água do herói cresce até o fim da seção: no celular sobrava uma fresta e o céu amarelo aparecia entre ela e a maré */
+.hero-2027 .ocean-waves { flex: 1 0 auto; }
+
+
+
+
+
+
+
+
+/* pontinhos do carrossel = pequenas pérolas (nácar com brilho); a da etapa atual é maior e dourada */
+.tide-dots .dot-pearl {
+  width: 0.8rem; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff 0 12%, #f6eee8 34%, #dccbd6 68%, #b7a0b8);
+  box-shadow: inset -1px -2px 3px rgb(120 90 110 / 0.35), 0 2px 3px rgb(110 70 30 / 0.4);
+  opacity: 0.8; transition: transform 0.4s, opacity 0.4s;
+}
+.tide-dots button:hover .dot-pearl { opacity: 1; }
+.tide-dots button.is-on .dot-pearl {
+  opacity: 1; transform: scale(1.55);
+  background: radial-gradient(circle at 34% 30%, #fff 0 12%, #fff4dc 32%, #edc98a 66%, #b98944);
+  box-shadow: inset -1px -2px 3px rgb(120 80 30 / 0.4), 0 2px 4px rgb(110 70 30 / 0.45), 0 0 8px rgb(255 226 170 / 0.8);
+}
+
+/* ── Rodapé: fundo do mar realista (fundo-mar-real-*.webp) ──
+   a cena ocupa o rodapé inteiro; o horizonte some no céu da página e o conteúdo fica na areia da frente */
+.seabed-footer { padding-top: 0; padding-bottom: clamp(3rem, 6vw, 5rem); min-height: clamp(24rem, 42vw, 38rem); display: grid; align-content: end; }
+.seabed-scene {
+  top: 0; bottom: 0; height: 100%; filter: none;
+  object-fit: cover; object-position: 50% 100%;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%); mask-image: linear-gradient(180deg, transparent, #000 22%);
+}
+/* luar dançando na areia: textura de cáusticas deitada em perspectiva, deslizando devagar */
+.seabed-caustics {
+  position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; top: 34%; overflow: hidden; perspective: 22rem; perspective-origin: 50% 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 45%); mask-image: linear-gradient(180deg, transparent, #000 45%);
+  mix-blend-mode: screen; opacity: 0.28;
+}
+.seabed-caustics > i {
+  position: absolute; left: -60%; right: -60%; top: 0; height: 260%; transform-origin: 50% 0; transform: rotateX(68deg);
+  background: url("/2027/mar-causticas.webp") 0 0 / 22rem 22rem; animation: caustica 26s linear infinite;
+}
+@keyframes caustica { to { background-position: 22rem 44rem; } }
+/* raios de luz entrando pela superfície, respirando devagar */
+.seabed-rays {
+  position: absolute; z-index: 1; inset: 0 0 30%; background: url("/2027/mar-raios.webp") 50% 0 / cover no-repeat;
+  mix-blend-mode: screen; opacity: 0.22; animation: raios-mar 9s ease-in-out infinite alternate;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 25%, #000 60%, transparent); mask-image: linear-gradient(180deg, transparent, #000 25%, #000 60%, transparent);
+}
+@keyframes raios-mar { from { opacity: 0.12; } to { opacity: 0.3; } }
+/* partículas em suspensão (neve marinha) subindo bem devagar */
+.seabed-particles { position: absolute; z-index: 2; inset: 0; background: url("/2027/mar-particulas.webp") 0 0 / 32rem 32rem; opacity: 0.35; animation: neve-mar 60s linear infinite; -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%); mask-image: linear-gradient(180deg, transparent, #000 30%); }
+@keyframes neve-mar { to { background-position: 4rem -32rem; } }
+/* leitura na areia: botão com fundo de vidro escuro, texto claro com sombra */
+.seabed-footer .ig-link { background: rgb(10 10 40 / 0.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.seabed-footer .footer-content p { color: rgb(246 238 255 / 0.9); text-shadow: 0 1px 6px rgb(10 10 40 / 0.9); }
+@media (max-width: 767px) { .seabed-footer { min-height: 30rem; } .seabed-caustics { top: 30%; } }
+@media (prefers-reduced-motion: reduce) { .seabed-caustics > i, .seabed-particles { animation: none; } }
+.lite .seabed-caustics > i, .lite .seabed-particles { animation: none; }
+/* ajuste fino: luar na areia mais sutil (fundo do mar, não piscina) e o alto da cena some mais devagar no céu */
+.seabed-caustics { opacity: 0.13; }
+.seabed-scene { -webkit-mask-image: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.6) 22%, #000 38%); mask-image: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.6) 22%, #000 38%); }
+.seabed-rays { opacity: 0.16; animation-name: raios-mar-suave; }
+@keyframes raios-mar-suave { from { opacity: 0.08; } to { opacity: 0.2; } }
