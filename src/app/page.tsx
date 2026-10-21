@@ -172,10 +172,15 @@ async function EventPage() {
         <Seabed />
         <KorakiMark />
         <div className="footer-content grid justify-items-center gap-5">
-          <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3!">
-            <InstagramIcon />
-            Siga @perolaseventos
-          </a>
+          {/* vieira aberta na areia (scripts/fundo-mar/concha.py): o botão fica dentro da metade de baixo */}
+          <div className="concha-rodape">
+            {/* eslint-disable-next-line @next/next/no-img-element -- textura decorativa fixa em /public/2027 */}
+            <img src="/2027/concha-rodape.webp" alt="" width={1200} height={800} loading="lazy" decoding="async" aria-hidden />
+            <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3!">
+              <InstagramIcon />
+              Siga @perolaseventos
+            </a>
+          </div>
           <p className="text-xs text-fg-faint">Pérolas Eventos · {event.city}</p>
         </div>
       </footer>

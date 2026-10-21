@@ -97,46 +97,55 @@ def bezier_path(d):
 
 
 CURVES = [
-    ("M470 70C250 120 70 300 70 520S260 900 620 960", 16, 1.0),
-    ("M430 90C230 150 95 320 105 520S300 870 680 930", 12, 0.8),
-    ("M520 60C300 110 120 280 110 470S240 820 560 990", 10, 0.65),
-    ("M380 120C200 190 40 360 55 560S260 920 520 1000", 14, 0.9),
+    ("M470 70C250 120 70 300 70 520S260 900 620 960", 6, 1.0),
+    ("M430 90C230 150 95 320 105 520S300 870 680 930", 5, 0.8),
+    ("M520 60C300 110 120 280 110 470S240 820 560 990", 4, 0.7),
+    ("M380 120C200 190 40 360 55 560S260 920 520 1000", 5, 0.9),
 ]
 S = 1.6  # 1000 do viewBox -> 1600 px
 WF = HF = 1600
 core = np.zeros((HF, WF, 3), np.float32)
 spark = np.zeros((HF, WF, 3), np.float32)
+flare = []  # faíscas mais fortes: ganham brilho em cruz
 for d, n, power in CURVES:
     p = bezier_path(d) * S
     tg = np.gradient(p, axis=0); tg /= np.linalg.norm(tg, axis=1, keepdims=True) + 1e-9
     nm = np.stack([-tg[:, 1], tg[:, 0]], -1)
     m = len(p); t = np.linspace(0, 1, m)
-    for k in range(n):
-        # cada fio: deslocamento lateral próprio que respira ao longo do arco (abre e fecha o feixe)
-        off = rng.normal(0, 7) + rng.uniform(4, 14) * np.sin(t * rng.uniform(4, 11) + rng.uniform(0, 6))
-        a0, a1 = sorted(rng.uniform(0, 1, 2)); a0 *= 0.35; a1 = 0.65 + a1 * 0.35  # nem todo fio vai de ponta a ponta
-        env = np.clip((t - a0) / 0.12, 0, 1) * np.clip((a1 - t) / 0.12, 0, 1)
-        env *= 0.55 + 0.45 * np.sin(t * rng.uniform(8, 20) + rng.uniform(0, 6)) ** 2  # brilho que varia ao longo
-        env *= np.sin(np.pi * t) ** 0.6  # pontas do arco somem
+    # como no flyer: linhas finas e SOLTAS (bem afastadas), cada uma com sua curva, não um feixe só
+    for k, base in enumerate(np.linspace(-60, 60, n) + rng.normal(0, 8, n)):
+        off = base * (0.4 + 0.6 * t) + rng.uniform(3, 9) * np.sin(t * rng.uniform(2, 5) + rng.uniform(0, 6))
+        a0, a1 = sorted(rng.uniform(0, 1, 2)); a0 *= 0.3; a1 = 0.7 + a1 * 0.3
+        env = np.clip((t - a0) / 0.15, 0, 1) * np.clip((a1 - t) / 0.15, 0, 1)
+        env *= 0.6 + 0.4 * np.sin(t * rng.uniform(5, 12) + rng.uniform(0, 6)) ** 2
+        env *= np.sin(np.pi * t) ** 0.6
         q = p + nm * off[:, None]
-        w = power * rng.uniform(0.25, 0.7) * env
-        col = np.array([1.0, 0.84, 0.58]) * w[:, None] * 0.55  # dourado (fraco, sobre o azul, não pode virar prata)
-        splat(core, q[:, 0], q[:, 1], col)
-    # faíscas: pontinhos espalhados em volta do feixe, alguns grandes
-    ns = int(140 * power)
+        w = power * (1.0 if k == n // 2 else rng.uniform(0.3, 0.7)) * env
+        splat(core, q[:, 0], q[:, 1], np.array([1.0, 0.86, 0.7]) * w[:, None] * 0.5)
+    # faíscas espalhadas em volta das linhas (bokeh), muitas pequenas e algumas fortes
+    ns = int(300 * power)
     idx = rng.integers(0, m, ns)
-    jitter = rng.normal(0, 14, ns) + rng.normal(0, 40, ns) * (rng.random(ns) < 0.25)
+    jitter = rng.normal(0, 30, ns) + rng.normal(0, 70, ns) * (rng.random(ns) < 0.3)
     q = p[idx] + nm[idx] * jitter[:, None]
-    lum = (rng.pareto(2.0, ns) + 0.3) * np.sin(np.pi * t[idx]) ** 0.5 * power
-    splat(spark, q[:, 0], q[:, 1], np.array([1.0, 0.9, 0.72]) * lum[:, None] * 1.4)
+    lum = (rng.pareto(2.2, ns) + 0.25) * np.sin(np.pi * t[idx]) ** 0.5 * power
+    splat(spark, q[:, 0], q[:, 1], np.array([1.0, 0.88, 0.74]) * lum[:, None] * 1.3)
+    top = np.argsort(lum)[-max(3, ns // 28):]
+    flare += [(q[i, 0], q[i, 1], lum[i]) for i in top]
 
-# discreto e elegante: fios finos bem marcados, halo curto e fraco (o forte atrapalhava a leitura)
-fios = blur(core, 0.6) * 3.2 + blur(core, 3) * 0.7 + blur(core, 12) * 1.1 + blur(core, 34) * 0.6
-fios += blur(spark, 0.7) * 6 + blur(spark, 3.5) * 2.5 + blur(spark, 12) * 0.8
-# tom: núcleo quase branco, brilho em volta dourado-pêssego (como no flyer)
-warm = np.array([1.0, 0.78, 0.55])
-glow_part = blur(core, 12) * 1.1 + blur(core, 34) * 0.6
-fios = fios - glow_part + glow_part * warm
+fios = blur(core, 0.6) * 3.6 + blur(core, 2.5) * 0.8
+glow = blur(core, 6) * 1.4 + blur(core, 18) * 1.3 + blur(core, 40) * 0.6
+fios += glow * np.array([1.0, 0.74, 0.62])  # halo pêssego-rosado, como no flyer
+fios += blur(spark, 0.8) * 6 + blur(spark, 2.5) * 4 + blur(spark, 5) * 3 + blur(spark, 12) * 1.4 * np.array([1.0, 0.8, 0.68])  # bolinhas de luz (bokeh)
+# brilho em cruz nas faíscas fortes (como as estrelinhas do flyer)
+yy, xx = np.mgrid[0:HF, 0:WF].astype(np.float32)
+for fx, fy, fl in flare:
+    L = 10 + 14 * min(fl, 3)
+    X0, X1 = int(max(0, fx - L)), int(min(WF, fx + L + 1)); Y0, Y1 = int(max(0, fy - L)), int(min(HF, fy + L + 1))
+    if X0 >= X1 or Y0 >= Y1:
+        continue
+    dx = xx[Y0:Y1, X0:X1] - fx; dy = yy[Y0:Y1, X0:X1] - fy
+    cr = (np.exp(-np.abs(dy) * 1.6) * np.exp(-np.abs(dx) / (L * 0.35)) + np.exp(-np.abs(dx) * 1.6) * np.exp(-np.abs(dy) / (L * 0.35)))
+    fios[Y0:Y1, X0:X1] += cr[..., None] * np.array([1.0, 0.92, 0.82]) * 0.55 * min(fl, 3)
 save_rgba(fios, "fios-luz", q=80)
 
 
