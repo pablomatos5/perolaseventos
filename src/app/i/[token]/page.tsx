@@ -7,7 +7,7 @@ import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { formatDateTime, genderLabel } from "@/lib/format";
 import { qrDataUrl } from "@/lib/qr";
-import { ticketToken, verifyTicketLinkToken } from "@/lib/tokens";
+import { decodeToken, ticketToken, verifyTicketLinkToken } from "@/lib/tokens";
 
 export const metadata = { title: "Seu ingresso · Pérolas", robots: { index: false } };
 
@@ -22,7 +22,7 @@ export default function SingleTicketPage({ params }: PageProps<"/i/[token]">) {
 
 async function SingleTicket({ params }: { params: Promise<{ token: string }> }) {
   await connection();
-  const parsed = verifyTicketLinkToken(decodeURIComponent((await params).token));
+  const parsed = verifyTicketLinkToken(decodeToken((await params).token));
   if (!parsed) notFound();
 
   const t = await db.ticket.findUnique({

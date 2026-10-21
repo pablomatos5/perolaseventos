@@ -1,13 +1,13 @@
 import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { ticketsPdf } from "@/lib/ticket-pdf";
-import { verifyTicketLinkToken } from "@/lib/tokens";
+import { decodeToken, verifyTicketLinkToken } from "@/lib/tokens";
 import { genderLabel } from "@/lib/format";
 
 /** PDF de um ingresso só (link individual). Link de versão antiga não gera PDF. */
 export async function GET(_req: Request, ctx: { params: Promise<{ token: string }> }) {
   await connection();
-  const parsed = verifyTicketLinkToken(decodeURIComponent((await ctx.params).token));
+  const parsed = verifyTicketLinkToken(decodeToken((await ctx.params).token));
   if (!parsed) return new Response("Link inválido", { status: 404 });
 
   const t = await db.ticket.findUnique({

@@ -15,7 +15,7 @@ import { qrDataUrl } from "@/lib/qr";
 import { activePixCharge, amountFor, checkoutPublicKey, reconcilePayment, type PixKind } from "@/lib/mercadopago";
 import { firstInstallmentCents, RESERVATION_MINUTES, secondInstallmentDue, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
-import { ticketLinkToken, ticketToken, verifyOrderToken } from "@/lib/tokens";
+import { decodeToken, ticketLinkToken, ticketToken, verifyOrderToken } from "@/lib/tokens";
 import { headers } from "next/headers";
 
 export const metadata = { title: "Seu pedido · Pérolas", robots: { index: false } };
@@ -33,7 +33,7 @@ type Search = Promise<Record<string, string | string[] | undefined>>;
 async function Order({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Search }) {
   await connection();
   const { token } = await params;
-  const orderId = verifyOrderToken(decodeURIComponent(token));
+  const orderId = verifyOrderToken(decodeToken(token));
   if (!orderId) notFound();
 
   // Volta do Checkout Pro: ?payment_id=...&status=... . Em localhost não há webhook,

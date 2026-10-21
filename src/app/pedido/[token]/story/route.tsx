@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
-import { verifyOrderToken } from "@/lib/tokens";
+import { decodeToken, verifyOrderToken } from "@/lib/tokens";
 
 // "Presença confirmada" em formato de story (1080×1920) e feed (1080×1350), no visual atual do site:
 // céu de pôr do sol da capa, logotipo oficial com o 2K27 na concha, sereias recortadas e a assinatura concha + @.
@@ -38,7 +38,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
   const H = feed ? 1350 : 1920;
   const k = feed ? 0.7 : 1; // espaçamentos verticais
   await connection();
-  const orderId = verifyOrderToken(decodeURIComponent((await ctx.params).token));
+  const orderId = verifyOrderToken(decodeToken((await ctx.params).token));
   if (!orderId) return new Response("Pedido inválido", { status: 404 });
   const order = await db.order.findUnique({ where: { id: orderId }, include: { event: true, _count: { select: { tickets: true } } } });
   if (!order || order.status !== "PAID") return new Response("Pedido sem pagamento confirmado", { status: 404 });

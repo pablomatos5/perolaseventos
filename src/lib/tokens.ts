@@ -57,6 +57,19 @@ export function verifyTicketLinkToken(token: string): { id: string; version: num
   return null;
 }
 
+/**
+ * Decodifica o token vindo da URL sem quebrar. Um %-encoding malformado (ex.: /pedido/%ff) faz
+ * decodeURIComponent lançar URIError; aqui devolvemos o texto cru, e a verificação da assinatura
+ * recusa em seguida (404), em vez de virar erro 500.
+ */
+export function decodeToken(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export const orderToken = (orderId: string) => `${ORDER_PREFIX}.${orderId}.${sign(ORDER_PREFIX, orderId)}`;
 
 export function verifyOrderToken(token: string): string | null {

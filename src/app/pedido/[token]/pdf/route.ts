@@ -1,13 +1,13 @@
 import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { ticketsPdf } from "@/lib/ticket-pdf";
-import { verifyOrderToken } from "@/lib/tokens";
+import { decodeToken, verifyOrderToken } from "@/lib/tokens";
 import { genderLabel } from "@/lib/format";
 
 /** Todos os ingressos válidos do pedido num PDF (uma página por ingresso). */
 export async function GET(req: Request, ctx: { params: Promise<{ token: string }> }) {
   await connection();
-  const orderId = verifyOrderToken(decodeURIComponent((await ctx.params).token));
+  const orderId = verifyOrderToken(decodeToken((await ctx.params).token));
   if (!orderId) return new Response("Pedido inválido", { status: 404 });
 
   const order = await db.order.findUnique({
