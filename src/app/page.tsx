@@ -170,7 +170,6 @@ async function EventPage() {
 
       <footer className="cv-auto seabed-footer px-5 pt-6 text-center">
         <Seabed />
-        <KorakiMark />
         <div className="footer-content grid justify-items-center gap-5">
           {/* vieira aberta sentada na areia (render 3D: scripts/fundo-mar/concha.py); o botão fica dentro da metade de baixo */}
           <div className="concha-rodape">
@@ -180,6 +179,7 @@ async function EventPage() {
               <InstagramIcon />
               Siga @perolaseventos
             </a>
+            <KorakiMark />
           </div>
           <p className="text-xs text-fg-faint">Pérolas Eventos · {event.city}</p>
         </div>
