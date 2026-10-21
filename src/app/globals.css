@@ -3374,3 +3374,19 @@ body:has(.painel) { background: #f6f2fb; }
       #e2c09c;
   }
 }
+
+/* Leitura na areia nova (grão a grão): escrita mais funda e escura, e um "alisado" suave
+   atrás do texto, como a areia que o dedo empurra — o grão some ali e as letras saltam. */
+.tide-writing {
+  color: rgb(84 52 22 / 0.96);
+  text-shadow: 0 1.5px 0 rgb(255 240 214 / 0.75), 0 -1px 0 rgb(60 32 8 / 0.5), 0 0 1.2rem rgb(236 212 178 / 0.9);
+}
+.tide-writing::before {
+  content: ""; position: absolute; inset: -6% -4%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(232 208 172 / 0.78), rgb(232 208 172 / 0.45) 60%, transparent);
+}
+.tide-writing .sand-small, .tide-writing .sand-eyebrow { font-weight: 700; color: rgb(92 58 24); }
+.sand-link { text-decoration-color: rgb(92 58 24 / 0.55); }
+.beach-pearl { z-index: 0; }
+/* no computador o nome longo cabe numa linha só: sem isso o @ do artista passava do quadro e sumia */
+@media (min-width: 768px) { .tide-writing .sand-big.is-long { max-width: 24ch; } }

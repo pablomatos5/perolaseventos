@@ -13,12 +13,12 @@ export type TideStep = {
   cta?: { label: string; href: string };
 };
 
-// [esquerda %, topo %, tamanho rem]: deixadas pela maré, fora do texto central
+// [esquerda %, topo %, tamanho rem]: deixadas pela maré, só nas bordas (nunca em cima do texto central)
 const SAND_PEARLS = [
-  [14, 62, 1.4],
-  [79, 60, 1.5],
-  [31, 80, 1.05],
-  [92, 40, 0.95],
+  [3, 70, 1.15],
+  [92, 76, 1.25],
+  [5, 24, 0.85],
+  [93, 30, 0.8],
 ] as const;
 
 const WAVE_MS = 1800; // duração de uma ida e volta da onda (casa com @keyframes swash no CSS)
