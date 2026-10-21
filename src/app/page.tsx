@@ -175,7 +175,7 @@ async function EventPage() {
           {/* vieira aberta sentada na areia (render 3D: scripts/fundo-mar/concha.py); o botão fica dentro da metade de baixo */}
           <div className="concha-rodape">
             {/* eslint-disable-next-line @next/next/no-img-element -- render fixo em /public/2027 */}
-            <img src="/2027/concha-rodape.webp" alt="" width={929} height={1003} loading="lazy" decoding="async" aria-hidden />
+            <img src="/2027/concha-rodape.webp" alt="" width={914} height={828} loading="lazy" decoding="async" aria-hidden />
             <a href="https://www.instagram.com/perolaseventos/" target="_blank" rel="noopener noreferrer" className="btn ig-link px-6! py-3! max-md:px-3.5! max-md:py-2.5!">
               <InstagramIcon />
               Siga @perolaseventos

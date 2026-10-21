@@ -72,7 +72,8 @@ def valva(passo):
     borda = C * np.cos(phi) + np.sqrt(np.clip(RC**2 - (C * np.sin(phi)) ** 2, 0, None))
     borda = borda * (1 + 0.018 * np.cos(N * phi))  # a borda ondula com as costelas
     leque = (np.abs(phi) < A) & (rho < borda)
-    orelha = (y >= -0.004) & (y < 0.11) & (np.abs(x) < 0.15 * np.sqrt(np.clip(1 - y / 0.11, 0, 1)) + 0.01)
+    # orelhas de verdade: a linha da dobradiça tem quase metade da largura da concha, borda de fora inclinada
+    orelha = (y >= -0.004) & (y < 0.17) & (np.abs(x) < 0.3 - 0.13 * y / 0.17 - 0.03 * np.clip(-y, 0, None) / 0.004)
     mask = leque | orelha
     cup = np.clip(1 - (x**2 + (y - C) ** 2) / RC**2, 0, 1)
     rampa = np.clip(rho / 0.3, 0, 1) * leque
@@ -84,7 +85,8 @@ def valva(passo):
     h = h + 0.0018 * rampa * np.cos(3 * N * phi + 0.5)  # estrias finas
     h = h + 0.0009 * np.sin(rho * 115 + 1.6 * nz) * rampa  # linhas de crescimento (anéis a partir da dobradiça)
     so_orelha = orelha & ~leque
-    h = h + so_orelha * (0.0025 * np.cos(x * 70) + 0.0012 * np.sin(rho * 115))  # orelhas: estrias e anéis como o resto
+    # orelhas: levemente curvas (seguem a concha) com estrias que saem da dobradiça e anéis de crescimento
+    h = h + so_orelha * (0.025 * (1 - np.abs(x) / 0.32) * np.clip(y / 0.17, 0, 1) + 0.003 * np.cos(np.arctan2(x, y + 0.02) * 70) + 0.0012 * np.sin(rho * 115))
     g_y, g_x = np.gradient(h, passo)
     return dict(x=x, y=y, h=h, gx=g_x, gy=g_y, g0x=g0x, g0y=g0y, mask=mask, phi=phi, rho=rho, borda=borda, costela=costela, rampa=rampa, nz=nz)
 
@@ -99,7 +101,7 @@ def base(teta):
 
 
 DOBRA = np.array([0, 0.165, 0], f32)  # dobradiça (só a base da metade de baixo afunda na areia)
-ABRE = 70.0
+ABRE = 52.0
 INCL = np.radians(6)  # metade de baixo levemente inclinada pra frente (assentada na areia)
 
 
@@ -247,7 +249,7 @@ def ligamento(passo):
     """o ligamento escuro que une as duas metades na dobradiça (some a fresta entre elas)"""
     t, p = np.meshgrid(np.arange(0, np.pi, passo, dtype=f32), np.arange(0, 2 * np.pi, passo, dtype=f32))
     n = np.stack([np.sin(t) * np.cos(p), np.cos(t), np.sin(t) * np.sin(p)], -1).reshape(-1, 3)
-    raio = np.array([0.12, 0.011, 0.02], f32)  # linha fina ao longo da dobradiça
+    raio = np.array([0.29, 0.009, 0.016], f32)  # linha fina ao longo de toda a dobradiça
     P = DOBRA + np.array([0, 0.004, -0.008], f32) + n * raio
     return P, nrm(n / raio)
 
