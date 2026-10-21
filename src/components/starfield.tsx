@@ -25,8 +25,12 @@ export function Starfield() {
         <s key={`${x}-${y}`} className={gold ? "gold" : undefined} style={{ left: `${x}%`, top: `${y}%`, "--s": `${s}px`, animationDelay: `${d}s` } as React.CSSProperties} />
       ))}
       {/* redemoinho de luz do flyer: dezenas de fios finíssimos com faíscas (gerado por scripts/fundo-mar/ceu.py) */}
-      {/* eslint-disable-next-line @next/next/no-img-element -- textura decorativa fixa em /public/2027 */}
-      <img src="/2027/fios-luz.webp" alt="" width={1600} height={1600} decoding="async" className="sky-threads" />
+      {/* no celular, versão de 1000 px (a de 1600 px pesava ~270 KB a mais do que a tela usa) */}
+      <picture>
+        <source media="(max-width: 767px)" srcSet="/2027/fios-luz-cel.webp" width={1000} height={1000} />
+        {/* eslint-disable-next-line @next/next/no-img-element -- textura decorativa fixa em /public/2027 */}
+        <img src="/2027/fios-luz.webp" alt="" width={1600} height={1600} decoding="async" className="sky-threads" />
+      </picture>
     </div>
   );
 }

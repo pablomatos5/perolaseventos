@@ -42,12 +42,17 @@ type Engine = {
 let enginePromise: Promise<Engine> | null = null;
 let engineReady: Engine | null = null;
 
+// devolve a vez ao navegador entre as etapas pesadas: várias tarefas curtas em vez de uma de ~3 s
+// (o celular continua respondendo ao toque e à rolagem enquanto o 3D é montado)
+const pausa = () => new Promise<void>((r) => setTimeout(r, 0));
+
 async function buildEngine(): Promise<Engine> {
   const [THREE, { RoomEnvironment }, { logoValveTop, logoValveBottom, photoPearl }] = await Promise.all([
     import("three"),
     import("three/examples/jsm/environments/RoomEnvironment.js"),
     import("@/lib/sea3d"),
   ]);
+  await pausa();
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -59,6 +64,7 @@ async function buildEngine(): Promise<Engine> {
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   pmrem.dispose();
+  await pausa();
   scene.add(new THREE.HemisphereLight(0xfff3e6, 0xb9a3e6, 0.55));
   const sun = new THREE.DirectionalLight(0xfff0dc, 2.2);
   sun.position.set(1.5, 3, 2.5);
@@ -75,6 +81,7 @@ async function buildEngine(): Promise<Engine> {
   const shell = new THREE.Group();
   const bottom = new THREE.Group();
   bottom.add(logoValveBottom(THREE));
+  await pausa();
   // borda recortada (gomos) virada para quem vê, raios convergindo para a dobradiça atrás da pérola
   const top = logoValveTop(THREE);
   const hinge = new THREE.Group(); // gira em volta da dobradiça (eixo X na origem)
@@ -105,6 +112,7 @@ async function buildEngine(): Promise<Engine> {
 
   // compila os shaders agora (a primeira compilação é o que mais demora; antes travava a abertura)
   const warm = await photo("");
+  await pausa();
   scene.add(warm);
   renderer.setSize(8, 8);
   renderer.compile(scene, camera);

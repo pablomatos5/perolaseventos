@@ -42,27 +42,25 @@ export function TideReveal({ steps }: { steps: TideStep[] }) {
   const goRef = useRef<(i: number, manual?: boolean) => void>(() => {});
   const n = steps.length;
 
-  // concha 3D e fotos das atrações carregam enquanto a pessoa ainda está no topo: quando a praia
-  // aparece, a abertura começa na hora (sem esperar baixar e montar o 3D)
+  // concha 3D e fotos das atrações carregam quando a praia está a ~1 tela de distância: chega pronta
+  // sem pesar na abertura da página (antes montava 2,5 s depois de abrir e travava o celular ~3 s).
+  // Se a pessoa chegar antes do 3D ficar pronto, aquela abertura usa a concha 2D.
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
     const srcs = steps.flatMap((s) => (s.imageUrl ? [s.imageUrl] : []));
-    let done = false;
-    const go = () => {
-      if (done) return;
-      done = true;
-      // prepara o 3D só num momento ocioso (não disputa a rolagem do topo no celular)
-      const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 200));
-      ric(() => prewarmShell3D(srcs), { timeout: 3000 });
-    };
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && go(), { rootMargin: "250% 0px" });
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        // num momento ocioso (não disputa a rolagem no celular)
+        const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 200));
+        ric(() => prewarmShell3D(srcs), { timeout: 1500 });
+      },
+      { rootMargin: "120% 0px" },
+    );
     io.observe(section);
-    const idle = window.setTimeout(go, 2500); // ou logo depois da página carregar
-    return () => {
-      io.disconnect();
-      clearTimeout(idle);
-    };
+    return () => io.disconnect();
   }, [steps]);
 
   useEffect(() => {
