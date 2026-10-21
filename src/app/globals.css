@@ -3482,10 +3482,10 @@ body:has(.painel) { background: #f6f2fb; }
 
 
 /* concha grande do rodapé: render 3D sentada na areia (scripts/fundo-mar/concha.py, com a mesma luz e areia da cena).
-   O script imprime onde fica o centro da metade de baixo: x 47,8% · y 74,7% da imagem, largura útil 69% */
+   O botão do Instagram fica no lugar da pérola, perto da dobradiça (o script imprime: x 47,8% · y 60,4% da imagem) */
 .concha-rodape { position: relative; width: min(34rem, 100%); aspect-ratio: 929 / 1003; margin-top: 1rem; }
 .concha-rodape > img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; }
-.concha-rodape > .ig-link { position: absolute; left: 47.8%; top: 74.7%; translate: -50% -50%; white-space: nowrap; }
+.concha-rodape > .ig-link { position: absolute; left: 47.8%; top: 60.4%; translate: -50% -50%; white-space: nowrap; }
 @media (max-width: 767px) {
   /* a assinatura Koraki fica embaixo, centralizada: a concha termina acima dela */
   .seabed-footer { padding-bottom: 7.6rem; }

@@ -4,10 +4,10 @@
 - duas valvas com ~16 costelas, leque arredondado, orelhinhas na dobradiça, espessura da casca e linhas de crescimento
 - dentro: nácar (o reflexo muda de cor com o ângulo); fora: bege-rosado com faixas e poeira de areia
 - metade de baixo afundada na areia, com um montinho de areia (areia-real.webp) encostado e sumindo na cena
-- sombra projetada do luar e sombra de contato; pérola na dobradiça
+- sombra projetada do luar e sombra de contato; ligamento escuro na dobradiça
 
 Uso: python scripts/fundo-mar/concha.py public/2027  ->  concha-rodape.webp (transparente)
-Imprime onde fica o centro da metade de baixo (o botão do Instagram vai ali), em % da imagem.
+Imprime onde fica o botão do Instagram (no lugar da pérola, perto da dobradiça), em % da imagem.
 """
 import os
 import sys
@@ -72,7 +72,7 @@ def valva(passo):
     borda = C * np.cos(phi) + np.sqrt(np.clip(RC**2 - (C * np.sin(phi)) ** 2, 0, None))
     borda = borda * (1 + 0.018 * np.cos(N * phi))  # a borda ondula com as costelas
     leque = (np.abs(phi) < A) & (rho < borda)
-    orelha = (y >= 0) & (y < 0.1) & (np.abs(x) < 0.17 - 0.6 * y)
+    orelha = (y >= -0.004) & (y < 0.11) & (np.abs(x) < 0.15 * np.sqrt(np.clip(1 - y / 0.11, 0, 1)) + 0.01)
     mask = leque | orelha
     cup = np.clip(1 - (x**2 + (y - C) ** 2) / RC**2, 0, 1)
     rampa = np.clip(rho / 0.3, 0, 1) * leque
@@ -83,7 +83,8 @@ def valva(passo):
     h = h + 0.013 * rampa * (0.45 + 0.55 * np.clip(rho, 0, 1)) * costela  # costelas
     h = h + 0.0018 * rampa * np.cos(3 * N * phi + 0.5)  # estrias finas
     h = h + 0.0009 * np.sin(rho * 115 + 1.6 * nz) * rampa  # linhas de crescimento (anéis a partir da dobradiça)
-    h = h + 0.003 * orelha * (1 - y / 0.19) * np.cos(x * 40)  # orelhas com dobrinhas leves
+    so_orelha = orelha & ~leque
+    h = h + so_orelha * (0.0025 * np.cos(x * 70) + 0.0012 * np.sin(rho * 115))  # orelhas: estrias e anéis como o resto
     g_y, g_x = np.gradient(h, passo)
     return dict(x=x, y=y, h=h, gx=g_x, gy=g_y, g0x=g0x, g0y=g0y, mask=mask, phi=phi, rho=rho, borda=borda, costela=costela, rampa=rampa, nz=nz)
 
@@ -235,16 +236,20 @@ def geometria(passo):
             yield nome, "borda", P[bd], n[bd], np.ones(bd.sum(), f32), {k: v[bd] for k, v in g.items() if k not in ("mask",)}
 
 
-def perola(passo):
+def ninho():
+    """onde a pérola ficava: lado de dentro da metade de baixo, perto da dobradiça. O botão do Instagram fica ali."""
     g = valva(0.004)
-    i = np.argmin(np.abs(g["x"]) + np.abs(g["y"] - 0.17))
-    eixos = base(None)
-    apoio = inclina(para_mundo(eixos, g["x"].ravel()[i:i + 1], g["y"].ravel()[i:i + 1], g["h"].ravel()[i:i + 1] - ESP))[0]
-    r = 0.085
-    centro = apoio + np.array([0, r * 0.92, 0], f32)
+    i = np.argmin(np.abs(g["x"]) + np.abs(g["y"] - 0.2))
+    return inclina(para_mundo(base(None), g["x"].ravel()[i:i + 1], g["y"].ravel()[i:i + 1], g["h"].ravel()[i:i + 1] - ESP))[0]
+
+
+def ligamento(passo):
+    """o ligamento escuro que une as duas metades na dobradiça (some a fresta entre elas)"""
     t, p = np.meshgrid(np.arange(0, np.pi, passo, dtype=f32), np.arange(0, 2 * np.pi, passo, dtype=f32))
     n = np.stack([np.sin(t) * np.cos(p), np.cos(t), np.sin(t) * np.sin(p)], -1).reshape(-1, 3)
-    return centro, r, centro + n * r, n
+    raio = np.array([0.12, 0.011, 0.02], f32)  # linha fina ao longo da dobradiça
+    P = DOBRA + np.array([0, 0.004, -0.008], f32) + n * raio
+    return P, nrm(n / raio)
 
 
 def areia_monte(passo, pegada):
@@ -293,26 +298,22 @@ def main():
         d, _ = arvore.query(np.stack([x.ravel(), z.ravel()], -1), workers=-1)
         return d.reshape(x.shape)
 
-    centro_p, r_p, Pp, Np = perola(np.pi / 900)
+    seat = ninho()
 
     for nome, lado, P, n, ao, gg in geometria(passo):
         V = nrm(EYE - P)
         alb, spec, shin = (nacar if lado == "dentro" else fora)(V, n, gg)
         if lado == "borda":
             alb = np.array([0.88, 0.78, 0.78], f32) * np.ones_like(P)
-        # sombra de contato da pérola no nácar
-        dp = np.linalg.norm(P - (centro_p - np.array([0, r_p, 0], f32)), axis=-1)
-        ao = ao * (1 - 0.55 * np.exp(-((dp / (r_p * 1.1)) ** 2)))
+        # sombra suave do botão aninhado na concha
+        d = ((P[:, 0] - seat[0]) / 0.36) ** 2 + (np.hypot(P[:, 1] - seat[1], P[:, 2] - seat[2]) / 0.11) ** 2
+        ao = ao * (1 - 0.38 * np.exp(-d * 1.4))
         tela.pinta(P, sombrear(P, n, alb, spec, shin, ao))
         if lado != "dentro":
             tela.marca(tela.sombra, no_chao(P, L))
-    # pérola
-    V = nrm(EYE - Pp)
-    irid = 0.5 + 0.5 * np.cos(2 * np.pi * (1.3 * (1 - np.clip(np.sum(Np * V, -1), 0, 1))[..., None] + np.array([0, 0.33, 0.67], f32)))
-    alb = np.array([0.95, 0.93, 0.95], f32) * (0.92 + 0.08 * irid)
-    ao = 1 - 0.35 * np.clip(-Np[:, 1], 0, 1)
-    tela.pinta(Pp, sombrear(Pp, Np, alb, 0.9, 110, ao))
-    tela.marca(tela.sombra, no_chao(Pp, L))
+    # ligamento da dobradiça
+    Pg, Ng = ligamento(np.pi / 500)
+    tela.pinta(Pg, sombrear(Pg, Ng, np.array([0.38, 0.29, 0.26], f32) * np.ones_like(Pg), 0.1, 16, np.full(len(Pg), 0.75, f32)))
 
     # montinho de areia: pinta por cima (z-buffer esconde a parte da concha enterrada) e guarda o alfa
     Pa, ca, aa = areia_monte(passo * 1.3, pegada)
@@ -372,20 +373,13 @@ def main():
     bbox = final.getchannel("A").point(lambda q: 255 if q > 3 else 0).getbbox()
     final = final.crop(bbox)
 
-    # onde fica o centro da metade de baixo (lado de dentro, à frente da pérola)
-    g = valva(0.01)
-    i = np.argmin(np.abs(g["x"]) + np.abs(g["y"] - 0.56))
-    Pc = inclina(para_mundo(base(None), g["x"].ravel()[i:i + 1], g["y"].ravel()[i:i + 1], g["h"].ravel()[i:i + 1] - ESP))
-    u, v, _ = tela.px(Pc)
+    # onde fica o botão (no lugar da pérola)
+    u, v, _ = tela.px(seat[None])
     bx = (u[0] / SS - bbox[0]) / final.width * 100
     by = (v[0] / SS - bbox[1]) / final.height * 100
-    # largura útil da metade de baixo nessa altura
-    Pl = inclina(para_mundo(base(None), g["x"], g["y"], g["h"]))[g["mask"] & (np.abs(g["y"] - 0.56) < 0.01)]
-    ul, _, _ = tela.px(Pl)
-    larg_util = (ul.max() - ul.min()) / SS / final.width * 100
 
     final.save(f"{OUT}/concha-rodape.webp", "WEBP", quality=88, method=6)
-    print(f"concha-rodape {final.width}x{final.height} {os.path.getsize(f'{OUT}/concha-rodape.webp') // 1024} KB · botão em x={bx:.1f}% y={by:.1f}% · largura útil {larg_util:.0f}%")
+    print(f"concha-rodape {final.width}x{final.height} {os.path.getsize(f'{OUT}/concha-rodape.webp') // 1024} KB · botão em x={bx:.1f}% y={by:.1f}%")
 
 
 if __name__ == "__main__":
