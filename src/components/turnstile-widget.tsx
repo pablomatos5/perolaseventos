@@ -43,7 +43,9 @@ export function TurnstileWidget({ siteKey, resetKey }: { siteKey: string; resetK
     loadScript()
       .then(() => {
         if (cancelled || !box.current || !window.turnstile || widget.current) return;
-        widget.current = window.turnstile.render(box.current, { sitekey: siteKey, theme: "dark", size: "flexible", language: "pt-br" });
+        // interaction-only: invisível na grande maioria das compras; o quadro só aparece quando a Cloudflare
+        // precisa de um clique. Tema claro para combinar com o card do formulário quando aparecer.
+        widget.current = window.turnstile.render(box.current, { sitekey: siteKey, theme: "light", size: "flexible", language: "pt-br", appearance: "interaction-only" });
       })
       .catch(() => {}); // sem o script o servidor decide (deixa passar se a Cloudflare estiver fora)
     return () => {
@@ -57,5 +59,6 @@ export function TurnstileWidget({ siteKey, resetKey }: { siteKey: string; resetK
     if (widget.current) window.turnstile?.reset(widget.current);
   }, [resetKey]);
 
-  return <div ref={box} className="min-h-[65px]" />;
+  // sem altura reservada: quando o quadro não aparece, não sobra espaço vazio no formulário
+  return <div ref={box} />;
 }

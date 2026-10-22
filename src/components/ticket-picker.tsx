@@ -171,7 +171,7 @@ export function TicketPicker({ eventId, types, pausedNote }: { eventId: string; 
           </div>
         </dl>
         {TURNSTILE_SITE_KEY && (
-          <div className="mt-6">
+          <div className="mt-3">
             <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} resetKey={state} />
           </div>
         )}
