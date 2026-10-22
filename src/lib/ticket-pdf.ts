@@ -51,7 +51,7 @@ const DAY = {
   notch: hex("#efe2f6"),
   seal: hex("#fff6ea"),
 };
-/** Tema noturno: céu azul-noite, textos em creme e dourado. O QR continua escuro sobre branco (leitura na portaria). */
+/** Tema noturno: céu roxo-noite, textos em creme e dourado. O QR continua escuro sobre branco (leitura na portaria). */
 const NIGHT: typeof DAY = {
   ...DAY,
   deep: hex("#fbeedd"),
@@ -59,10 +59,11 @@ const NIGHT: typeof DAY = {
   violet: hex("#e9c27e"),
   brown: hex("#e2b469"),
   goldInk: hex("#e2b469"),
-  panel: hex("#1d1650"),
+  // roxo-noite (como a capa do site à noite): painel, picote e selo no mesmo tom do fundo
+  panel: hex("#2c1a66"),
   panelOpacity: 0.72,
-  notch: hex("#06051a"),
-  seal: hex("#1d1650"),
+  notch: hex("#1a0e3c"),
+  seal: hex("#2c1a66"),
 };
 export type TicketTheme = "dia" | "noite";
 function hex(h: string): RGB {
@@ -128,9 +129,9 @@ export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tic
       const night = theme === "noite";
       a = (async () => ({
         // fundo: degradê das artes 2027 (esticado, sem faixas)
-        glow: await doc.embedPng(await (night ? readAsset("fundo-noite.png") : (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png"))))),
+        glow: await doc.embedPng(await (night ? readAsset("fundo-noite-roxo.png") : (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png"))))),
         // topo: as sereias e o mar das artes oficiais
-        art: await doc.embedJpg(await (night ? readAsset("topo-noite.jpg") : (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg"))))),
+        art: await doc.embedJpg(await (night ? readAsset("topo-noite-roxo.jpg") : (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg"))))),
         // pé no visual atual do site (scripts/fundo-mar/ingresso.py): areia no claro, fundo do mar no escuro
         foot: await doc.embedPng(await readAsset(night ? "pe-noite.png" : "pe-dia.png")),
         colors: night ? NIGHT : DAY,
