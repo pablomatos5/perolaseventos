@@ -3008,6 +3008,13 @@ html[data-edition="2k27"] { background: #070719; }
 }
 .sales-notice > span { color: #f0cf8c; }
 
+/* convite do grupo do evento no WhatsApp (só para pedido/ingresso pago) */
+.whats-group { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.9rem 1.25rem; padding: 1.1rem 1.25rem; }
+.whats-group strong { display: block; color: #2e2466; font-size: 1rem; }
+.whats-group p { margin: 0.2rem 0 0; font-size: 0.82rem; color: rgb(46 36 102 / 0.72); max-width: 26rem; }
+.whats-group-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #1fa855; border-color: #1fa855; color: #fff; }
+.whats-group-btn:hover { background: #17924a; border-color: #17924a; color: #fff; }
+
 
 /* ───────── Formas de pagamento (Pix, cartão, Pix em 2x) e parcelas ───────── */
 .pay-options { display: grid; gap: 0.75rem; }

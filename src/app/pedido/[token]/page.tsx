@@ -8,6 +8,7 @@ import { CardPayForm } from "@/components/card-pay-form";
 import { PixCopy } from "@/components/pix-copy";
 import { TicketRules } from "@/components/ticket-rules";
 import { DemoBanner } from "@/components/demo-banner";
+import { WhatsappGroup } from "@/components/whatsapp-group";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HolderForm, ShareTicketButton, StoryShare } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
@@ -324,6 +325,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
 
       {order.status === "PAID" && (
         <section className="mt-10 grid gap-6">
+          <WhatsappGroup />
           <TicketRules />
           <div className="glass-card flex flex-wrap items-center justify-between gap-4 p-5">
             <p className="max-w-md text-sm text-fg-muted">

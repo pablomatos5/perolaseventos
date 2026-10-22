@@ -1,5 +1,6 @@
 import { TicketRules } from "@/components/ticket-rules";
 import { DemoBanner } from "@/components/demo-banner";
+import { WhatsappGroup } from "@/components/whatsapp-group";
 import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -89,6 +90,7 @@ function TicketBody(p: { pdf: string; qr: string; holder: string; used: Date | n
           </a>
         )}
       </article>
+      <WhatsappGroup className="mt-6" />
       <TicketRules className="mt-6" />
       <p className="mt-4 text-xs leading-relaxed text-fg-faint">
         Baixe o PDF: na festa pode faltar sinal. Se quem comprou trocar o nome deste ingresso, este QR deixa de valer.

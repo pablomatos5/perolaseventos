@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { formatDateTime, genderLabel } from "@/lib/format";
 import { ticketsPdf } from "@/lib/ticket-pdf";
 import { orderToken } from "@/lib/tokens";
+import { whatsappGroupUrl } from "@/lib/whatsapp-group";
 
 export const orderLink = (orderId: string) => `${process.env.APP_URL}/pedido/${orderToken(orderId)}`;
 
@@ -25,6 +26,7 @@ export async function deliverTickets(orderId: string) {
     `${formatDateTime(order.event.startsAt)} · ${order.event.venue}, ${order.event.city}`,
     ``,
     `Seus ingressos estão no PDF anexo (abre sem internet). Para ver ou baixar de novo: ${link}`,
+    ...(whatsappGroupUrl() ? [``, `Entre no grupo do evento no WhatsApp (avisos, horários e novidades): ${whatsappGroupUrl()}`] : []),
     ``,
     `Atenção:`,
     `- Não compartilhe o seu ingresso. Cada QR vale uma única entrada: depois de lido, não passa de novo.`,
