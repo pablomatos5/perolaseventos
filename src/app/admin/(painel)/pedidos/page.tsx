@@ -137,6 +137,7 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                 </div>
                 <PaymentTrail
                   status={o.status}
+                  createdAt={o.createdAt}
                   paymentRef={o.paymentRef}
                   pix={o.pixCharges}
                   card={cardBy.get(o.code) ?? []}
@@ -215,16 +216,20 @@ const CARD_REASON: Record<string, string> = {
   cc_rejected_blacklist: "cartão bloqueado",
   cc_rejected_other_reason: "recusado pelo banco",
 };
+/** A partir daqui a página do pedido registra quem abre o cartão (antes disso, só o Pix ficava salvo). */
+const CARD_TRACKING_FROM = new Date("2026-10-22T21:12:00Z");
 const PIX_KIND: Record<string, string> = { pix: "Pix", "pix2x-1": "Pix 2x (1ª)", "pix2x-2": "Pix 2x (2ª)" };
 
 /** Como o comprador tentou (ou conseguiu) pagar: Pix gerado, cartão aberto/recusado, erro no formulário. */
 function PaymentTrail({
   status,
+  createdAt,
   paymentRef,
   pix,
   card,
 }: {
   status: string;
+  createdAt: Date;
   paymentRef: string | null;
   pix: { kind: string; createdAt: Date; paymentId: string }[];
   card: { at: Date; action: string; detail: string }[];
@@ -241,7 +246,8 @@ function PaymentTrail({
     else if (l.action === "problema no formulário do cartão") steps.push({ text: `erro no formulário do cartão: ${part[1] ?? "?"} (${hhmm(l.at)})`, tone: "bad" });
   }
   if (steps.length === 0) {
-    if (status === "PENDING") steps.push({ text: "não escolheu forma de pagamento", tone: "info" });
+    if (status === "PENDING")
+      steps.push({ text: createdAt < CARD_TRACKING_FROM ? "nenhum Pix gerado (cartão sem registro antes das 18h12)" : "não escolheu forma de pagamento", tone: "info" });
     else return null;
   }
   const cls = { ok: "bg-ok/15 text-ok", bad: "bg-danger/15 text-danger", info: "bg-surface text-fg-muted" } as const;
