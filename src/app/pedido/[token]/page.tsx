@@ -155,7 +155,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           )}
           {termsMissing && (
             <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
-              Para pagar no Pix em 2x, leia os termos e marque “Li e concordo”.
+              Para pagar no Pix em 2x, marque as duas caixas: a de ciência sobre a 1ª parcela e a de “Li e concordo”.
             </p>
           )}
           {tooMany && (
@@ -232,15 +232,24 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                       <li>A 1ª parcela reserva os seus ingressos. O QR e o PDF são liberados só depois do pagamento da 2ª parcela.</li>
                       <li>A 2ª parcela ({formatBRL(order.totalCents - firstCents)}) deve ser paga até {dayMonth(splitDue)}, às 23h59 (horário de Belém). Avisamos por e-mail antes do prazo.</li>
                       <li>
-                        <b>Se a 2ª parcela não for paga até o prazo, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido</b>,
-                        salvo no direito de arrependimento (até 7 dias da compra).
+                        Se a 2ª parcela não for paga até o prazo, a reserva é cancelada e os ingressos voltam para a venda. Desistência em até 7 dias da compra:
+                        devolvemos tudo.
                       </li>
                     </ul>
+                    <p className="split-terms-warn" role="note">
+                      <b>Atenção:</b> se você não pagar a 2ª parcela até {dayMonth(splitDue)}, <b>perde os {formatBRL(firstCents)} da 1ª parcela</b>. Esse valor
+                      não é devolvido (exceto desistência em até 7 dias da compra).
+                    </p>
+                    <label className="split-terms-accept">
+                      <input type="checkbox" name="ciente" required /> Estou ciente de que, se não pagar a 2ª parcela até {dayMonth(splitDue)}, perco os{" "}
+                      {formatBRL(firstCents)} da 1ª parcela, que não são devolvidos.
+                    </label>
                     <label className="split-terms-accept">
                       <input type="checkbox" name="aceite" required /> Li e concordo com os termos do Pix em 2x e os{" "}
                       <a href="/termos" target="_blank" className="underline">
                         Termos de compra
                       </a>
+                      .
                     </label>
                   </div>
                   <button className="btn solid w-full">Pagar a 1ª parcela no Pix · {formatBRL(firstCents)}</button>
@@ -273,13 +282,17 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           </div>
           {partialOverdue ? (
             <p className="mt-5 text-sm text-fg-muted">
-              O prazo acabou sem a 2ª parcela e os ingressos voltaram para a venda. Conforme os termos do Pix em 2x aceitos na compra, o valor da 1ª parcela não é devolvido (salvo se o pedido de desistência foi feito em até 7 dias da compra). Dúvidas: Instagram <strong className="text-fg">@perolaseventos</strong>.
+              O prazo acabou sem a 2ª parcela e os ingressos voltaram para a venda. Conforme os termos do Pix em 2x aceitos na compra, os {formatBRL(order.firstPaidCents)} da 1ª parcela não são devolvidos (salvo se o pedido de desistência foi feito em até 7 dias da compra). Dúvidas: Instagram <strong className="text-fg">@perolaseventos</strong>.
             </p>
           ) : (
             <>
               <p className="mt-5 text-sm text-fg-muted">
                 {order.tickets.length > 1 ? `Seus ${order.tickets.length} ingressos estão reservados` : "Seu ingresso está reservado"} até o prazo.
                 O QR e o PDF são liberados <strong className="text-fg">assim que a 2ª parcela for paga</strong>.
+              </p>
+              <p className="split-terms-warn mt-4" role="note">
+                <b>Não perca o prazo:</b> se a 2ª parcela não for paga até {dayMonth(order.expiresAt)} às 23h59, a reserva é cancelada e{" "}
+                <b>os {formatBRL(order.firstPaidCents)} da 1ª parcela não são devolvidos</b>, conforme os termos aceitos na compra.
               </p>
               {mpProvider && paying === "pix" && pixKind === "pix2x-2" && pixCharge ? (
                 pixPanel(`/pedido/${token}`)

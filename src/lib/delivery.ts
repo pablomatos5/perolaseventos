@@ -78,7 +78,7 @@ export async function notifyFirstInstallment(orderId: string) {
     ``,
     `Falta a 2ª parcela: ${fmt(order.totalCents - order.firstPaidCents)}, até ${due}.`,
     `Seus ingressos ficam reservados até lá e são liberados (QR e PDF) assim que a 2ª parcela for paga.`,
-    `Importante (termos do Pix em 2x aceitos na compra): se a 2ª parcela não for paga até o prazo, a reserva é cancelada e o valor da 1ª parcela não é devolvido (salvo desistência em até 7 dias da compra). Vamos te lembrar por e-mail antes do vencimento.`,
+    `IMPORTANTE (termos do Pix em 2x aceitos na compra): se a 2ª parcela não for paga até ${due}, a reserva é cancelada e você PERDE os ${fmt(order.firstPaidCents)} da 1ª parcela, que não são devolvidos (exceto desistência em até 7 dias da compra). Vamos te lembrar por e-mail antes do vencimento.`,
     ``,
     `Para pagar a 2ª parcela: ${orderLink(order.id)}`,
   ].join("\n");
@@ -140,7 +140,7 @@ export async function remindSecondInstallment(orderId: string, kind: ReminderKin
     `Pague pelo link do seu pedido: ${orderLink(order.id)}`,
     ``,
     `Assim que a 2ª parcela cair, seus ingressos (QR e PDF) chegam por aqui.`,
-    `Pelos termos do Pix em 2x aceitos na compra, se o prazo passar sem o pagamento, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido (salvo desistência em até 7 dias da compra).`,
+    `ATENÇÃO: pelos termos do Pix em 2x aceitos na compra, se o prazo passar sem o pagamento, a reserva é cancelada, os ingressos voltam para a venda e você PERDE os ${fmt(order.firstPaidCents)} da 1ª parcela, que não são devolvidos.`,
     ``,
     `Se você já pagou, pode desconsiderar este e-mail.`,
   ].join("\n");

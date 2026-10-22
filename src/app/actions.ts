@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { deliverTickets, notifyFirstInstallment, sendOrderLinks } from "@/lib/delivery";
 import { createPixCharge, payWithCard, type CardInput, type CheckoutKind, type PixKind } from "@/lib/mercadopago";
-import { createReservation, firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, SaleError, splitPixAvailable } from "@/lib/orders";
+import { createReservation, firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, SaleError, secondInstallmentDue, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { allow, clientIp } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
@@ -107,9 +107,16 @@ async function canPay(orderId: string, kind: CheckoutKind) {
  */
 async function acceptSplitTerms(orderId: string, token: string, kind: PixKind, form?: FormData) {
   if (kind !== "pix2x-1") return;
-  if (form?.get("aceite") !== "on") redirect(`/pedido/${token}?erro=termos`);
-  const order = await db.order.findUnique({ where: { id: orderId }, select: { code: true, buyerName: true, cpf: true } });
-  await audit("cliente", "aceitou os termos do Pix em 2x", `pedido ${order?.code} · ${order?.buyerName} · CPF final ${order?.cpf.slice(-3)} · IP ${await clientIp()}`);
+  // duas caixas obrigatórias: ciência da perda da 1ª parcela + aceite dos termos
+  if (form?.get("aceite") !== "on" || form?.get("ciente") !== "on") redirect(`/pedido/${token}?erro=termos`);
+  const order = await db.order.findUnique({ where: { id: orderId }, include: { event: true } });
+  const due = order ? secondInstallmentDue(order.event) : null;
+  const fmt = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  await audit(
+    "cliente",
+    "aceitou os termos do Pix em 2x",
+    `pedido ${order?.code} · ${order?.buyerName} · CPF final ${order?.cpf.slice(-3)} · ciente de perder ${order ? fmt(firstInstallmentCents(order.totalCents)) : "?"} se não pagar a 2ª até ${due ? due.toLocaleDateString("pt-BR", { timeZone: "America/Belem" }) : "?"} · IP ${await clientIp()}`,
+  );
 }
 
 /** Pix no próprio site (à vista ou parcela do Pix em 2x): gera o QR e volta à página do pedido mostrando-o. */

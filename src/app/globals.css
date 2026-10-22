@@ -3053,6 +3053,8 @@ html[data-edition="2k27"] { background: #070719; }
 .split-terms > strong { display: block; margin-bottom: 0.35rem; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: #7d5424; }
 .split-terms ul { margin: 0; padding-left: 1.1rem; list-style: disc; display: grid; gap: 0.3rem; }
 .split-terms b { color: #8f2335; font-weight: 600; }
+.split-terms-warn { margin: 0.75rem 0 0; padding: 0.7rem 0.85rem; border-radius: 0.6rem; background: rgb(214 69 69 / 0.08); border: 1px solid rgb(179 38 30 / 0.35); color: #6e1a24; font-size: 0.82rem; line-height: 1.45; }
+.split-terms-warn b { color: #8f2335; }
 .split-terms-accept { display: flex; align-items: flex-start; gap: 0.55rem; margin-top: 0.75rem; font-weight: 600; cursor: pointer; }
 .split-terms-accept input { margin-top: 0.15rem; width: 1.1rem; height: 1.1rem; accent-color: #7d5424; flex: none; }
 .installments { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
