@@ -56,6 +56,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
   const tooMany = query.erro === "limite";
   const existing = query.reserva === "existente";
   const checkoutFailed = query.erro === "pagamento";
+  const termsMissing = query.erro === "termos";
 
   const order = await db.order.findUnique({
     where: { id: orderId },
@@ -144,6 +145,11 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
               Pagamento online indisponível no momento. Fale com a Pérolas pelo Instagram @perolaseventos.
             </p>
           )}
+          {termsMissing && (
+            <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
+              Para pagar no Pix em 2x, leia os termos e marque “Li e concordo”.
+            </p>
+          )}
           {tooMany && (
             <p role="alert" className="mt-4 rounded-lg bg-danger/15 px-4 py-3 text-sm text-danger">
               Muitas tentativas seguidas. Espere alguns minutos e tente de novo.
@@ -186,14 +192,6 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                       ? `Inclui ${formatBRL(cardCents - order.totalCents)} de taxa do cartão. Crédito em até 6x (juros do cartão) ou débito.`
                       : "Crédito em até 6x (juros do cartão) ou débito.",
                   },
-                  ...(canSplit && splitDue
-                    ? [{
-                        kind: "pix2x-1" as const,
-                        title: "Pix em 2x",
-                        price: `2 × ${formatBRL(firstCents)}`,
-                        note: `1ª agora e 2ª até ${dayMonth(splitDue)}. O ingresso fica reservado e é liberado depois da 2ª parcela.`,
-                      }]
-                    : []),
                 ] as const
               ).map((o) => (
                 mpProvider && o.kind === "card" ? (
@@ -212,6 +210,30 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                   </form>
                 )
               ))}
+              {canSplit && splitDue && (
+                <form
+                  action={isSimulated(mode) ? simulatePaymentAction.bind(null, token, "pix2x-1") : pixAction.bind(null, token, "pix2x-1")}
+                  className="pay-option pay-option-split"
+                >
+                  <span className="pay-option-title">Pix em 2x</span>
+                  <span className="pay-option-price">2 × {formatBRL(firstCents)}</span>
+                  <span className="pay-option-note">1ª agora e 2ª até {dayMonth(splitDue)}. O ingresso fica reservado e é liberado depois da 2ª parcela.</span>
+                  <div className="split-terms">
+                    <strong>Termos do Pix em 2x</strong>
+                    <ul>
+                      <li>A 1ª parcela reserva os seus ingressos. O QR e o PDF são liberados só depois do pagamento da 2ª parcela.</li>
+                      <li>A 2ª parcela ({formatBRL(order.totalCents - firstCents)}) deve ser paga até {dayMonth(splitDue)}, às 23h59 (horário de Belém). Avisamos por e-mail antes do prazo.</li>
+                      <li>
+                        <b>Se a 2ª parcela não for paga até o prazo, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido.</b>
+                      </li>
+                    </ul>
+                    <label className="split-terms-accept">
+                      <input type="checkbox" name="aceite" required /> Li e concordo com os termos do Pix em 2x
+                    </label>
+                  </div>
+                  <button className="btn solid w-full">Pagar a 1ª parcela no Pix · {formatBRL(firstCents)}</button>
+                </form>
+              )}
               <p className="text-center text-xs text-fg-faint">
                 {isSimulated(mode)
                   ? mode === "demo" ? "Demonstração: o pagamento é simulado." : "Desenvolvimento: o pagamento é simulado."
@@ -239,7 +261,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           </div>
           {partialOverdue ? (
             <p className="mt-5 text-sm text-fg-muted">
-              O prazo acabou sem a 2ª parcela e os ingressos voltaram para a venda. Fale com a Pérolas pelo Instagram <strong className="text-fg">@perolaseventos</strong> sobre a parcela já paga.
+              O prazo acabou sem a 2ª parcela e os ingressos voltaram para a venda. Conforme os termos do Pix em 2x aceitos na compra, o valor da 1ª parcela não é devolvido. Dúvidas: Instagram <strong className="text-fg">@perolaseventos</strong>.
             </p>
           ) : (
             <>

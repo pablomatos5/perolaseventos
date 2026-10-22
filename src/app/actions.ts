@@ -101,11 +101,23 @@ async function canPay(orderId: string, kind: CheckoutKind) {
   return kind !== "pix2x-1" || splitPixAvailable(order.event);
 }
 
+/**
+ * Pix em 2x: a 1ª parcela só é gerada com o aceite dos termos (a 1ª parcela não é devolvida se a 2ª não for paga
+ * no prazo). Conferido aqui no servidor (não dá para pular pelo navegador) e registrado na auditoria como prova.
+ */
+async function acceptSplitTerms(orderId: string, token: string, kind: PixKind, form?: FormData) {
+  if (kind !== "pix2x-1") return;
+  if (form?.get("aceite") !== "on") redirect(`/pedido/${token}?erro=termos`);
+  const order = await db.order.findUnique({ where: { id: orderId }, select: { code: true, buyerName: true, cpf: true } });
+  await audit("cliente", "aceitou os termos do Pix em 2x", `pedido ${order?.code} · ${order?.buyerName} · CPF final ${order?.cpf.slice(-3)} · IP ${await clientIp()}`);
+}
+
 /** Pix no próprio site (à vista ou parcela do Pix em 2x): gera o QR e volta à página do pedido mostrando-o. */
-export async function pixAction(token: string, kind: PixKind = "pix") {
+export async function pixAction(token: string, kind: PixKind = "pix", form?: FormData) {
   const orderId = verifyOrderToken(token);
   if (!orderId) throw new Error("Pedido inválido");
   if (!KINDS.has(kind) || paymentMode() !== "mercadopago" || !(await canPay(orderId, kind))) redirect(`/pedido/${token}`);
+  await acceptSplitTerms(orderId, token, kind, form);
   // freio: gerar Pix sem parar (cada um é uma cobrança no Mercado Pago)
   if (!allow(`pix:${orderId}`, 8, 15 * 60_000) || !allow(`pix-ip:${await clientIp()}`, 30, 15 * 60_000)) redirect(`/pedido/${token}?erro=limite`);
   try {
@@ -180,11 +192,12 @@ export async function cardPayAction(token: string, input: CardInput): Promise<Ca
 }
 
 /** Só funciona com PAYMENT_PROVIDER=mock fora de produção. Em produção, quem confirma é o webhook. */
-export async function simulatePaymentAction(token: string, kind: CheckoutKind = "pix") {
+export async function simulatePaymentAction(token: string, kind: CheckoutKind = "pix", form?: FormData) {
   if (!isSimulated()) throw new Error("Simulação desligada");
   const orderId = verifyOrderToken(token);
   if (!orderId) throw new Error("Pedido inválido");
   if (!KINDS.has(kind) || !(await canPay(orderId, kind))) redirect(`/pedido/${token}`);
+  if (kind !== "card") await acceptSplitTerms(orderId, token, kind, form);
   const order = await db.order.findUniqueOrThrow({ where: { id: orderId } });
   if (kind === "pix2x-1") {
     if (await markFirstInstallmentPaid(orderId, `mock_${order.code}_p1`, firstInstallmentCents(order.totalCents))) await notifyFirstInstallment(orderId);

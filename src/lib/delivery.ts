@@ -72,18 +72,53 @@ export async function notifyFirstInstallment(orderId: string) {
     ``,
     `Falta a 2ª parcela: ${fmt(order.totalCents - order.firstPaidCents)}, até ${due}.`,
     `Seus ingressos ficam reservados até lá e são liberados (QR e PDF) assim que a 2ª parcela for paga.`,
+    `Importante (termos do Pix em 2x aceitos na compra): se a 2ª parcela não for paga até o prazo, a reserva é cancelada e o valor da 1ª parcela não é devolvido. Vamos te lembrar por e-mail antes do vencimento.`,
     ``,
     `Para pagar a 2ª parcela: ${orderLink(order.id)}`,
   ].join("\n");
   await record(order.id, "EMAIL", () => sendEmail(order.email, `1ª parcela recebida · ${order.event.name} ${order.event.edition}`, text));
 }
 
-async function record(orderId: string, channel: "EMAIL", send: () => Promise<string>) {
+/** Rótulos gravados em Delivery.detail: servem para não mandar o mesmo lembrete duas vezes. */
+export const REMINDER_TAGS = { early: "lembrete 2ª parcela (3 dias)", last: "lembrete 2ª parcela (último dia)" } as const;
+export type ReminderKind = keyof typeof REMINDER_TAGS;
+
+/**
+ * Pix em 2x: lembrete por e-mail da 2ª parcela (3 dias antes e no último dia). Quem decide quando mandar
+ * é sendSecondInstallmentReminders (src/lib/reminders.ts), chamado de hora em hora pela VPS.
+ */
+export async function remindSecondInstallment(orderId: string, kind: ReminderKind) {
+  const order = await db.order.findUniqueOrThrow({ where: { id: orderId }, include: { event: true, _count: { select: { tickets: true } } } });
+  const fmt = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const due = order.expiresAt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Belem" });
+  const missing = fmt(order.totalCents - order.firstPaidCents);
+  const event = `${order.event.name} ${order.event.edition}`;
+  const text = [
+    `Olá, ${order.buyerName}!`,
+    ``,
+    kind === "last"
+      ? `Hoje é o último dia para pagar a 2ª parcela do seu pedido ${order.code} (${order._count.tickets} ingresso(s) para ${event}).`
+      : `Passando para lembrar: a 2ª parcela do seu pedido ${order.code} (${order._count.tickets} ingresso(s) para ${event}) vence em 3 dias.`,
+    ``,
+    `Valor: ${missing} no Pix, até ${due}.`,
+    `Pague pelo link do seu pedido: ${orderLink(order.id)}`,
+    ``,
+    `Assim que a 2ª parcela cair, seus ingressos (QR e PDF) chegam por aqui.`,
+    `Pelos termos do Pix em 2x aceitos na compra, se o prazo passar sem o pagamento, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido.`,
+    ``,
+    `Se você já pagou, pode desconsiderar este e-mail.`,
+  ].join("\n");
+  const subject = kind === "last" ? `Último dia: 2ª parcela · ${event}` : `Lembrete: 2ª parcela em 3 dias · ${event}`;
+  await record(order.id, "EMAIL", () => sendEmail(order.email, subject, text), REMINDER_TAGS[kind]);
+}
+
+async function record(orderId: string, channel: "EMAIL", send: () => Promise<string>, tag?: string) {
+  const label = (d: string) => (tag ? `${tag}: ${d}` : d);
   try {
     const detail = await send();
-    await db.delivery.create({ data: { orderId, channel, ok: true, detail } });
+    await db.delivery.create({ data: { orderId, channel, ok: true, detail: label(detail) } });
   } catch (e) {
-    await db.delivery.create({ data: { orderId, channel, ok: false, detail: String((e as Error).message) } });
+    await db.delivery.create({ data: { orderId, channel, ok: false, detail: label(String((e as Error).message)) } });
   }
 }
 
