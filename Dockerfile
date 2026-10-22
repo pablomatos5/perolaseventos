@@ -17,6 +17,10 @@ FROM deps AS build
 WORKDIR /app
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Variáveis NEXT_PUBLIC_ são gravadas no código durante o build, e o .env fica fora da imagem (.dockerignore):
+# a chave pública do Turnstile chega como argumento (docker-compose.prod.yml lê do .env da VPS).
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=""
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 # O build instancia o Prisma client sem conectar (páginas com banco são dinâmicas: connection()).
 RUN DATABASE_URL="postgresql://build@localhost/build" TICKET_SECRET="build-somente-build-somente-build-0000" npm run build
 

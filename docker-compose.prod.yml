@@ -53,7 +53,11 @@ services:
     profiles: ["tools"]
 
   app:
-    build: .
+    # NEXT_PUBLIC_* vão no build (ficam gravadas no JS do site); o compose lê o valor do .env desta pasta
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
     container_name: perolas-app
     restart: unless-stopped
     env_file: .env
