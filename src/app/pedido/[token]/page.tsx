@@ -57,6 +57,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
   const existing = query.reserva === "existente";
   const checkoutFailed = query.erro === "pagamento";
   const termsMissing = query.erro === "termos";
+  const linksSent = query.links === "enviados";
 
   const order = await db.order.findUnique({
     where: { id: orderId },
@@ -115,6 +116,12 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
         <p className="mt-3 text-fg-muted">
           {order.event.name} {order.event.edition} · {formatDateTime(order.event.startsAt)} · {order.event.venue}
         </p>
+        {/* veio do "Encontrar meu pedido" e também tem pedido pago: o link dele foi só para o e-mail */}
+        {linksSent && (
+          <p role="status" className="glass-card mt-6 px-5 py-4 text-sm">
+            Encontramos este pedido. O link dos seus pedidos já pagos (com os ingressos) foi enviado para o seu e-mail.
+          </p>
+        )}
       </div>
 
       {order.status === "PENDING" && !expired && (

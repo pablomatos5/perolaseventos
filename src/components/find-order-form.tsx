@@ -24,7 +24,7 @@ export function FindOrderForm() {
       <div className="glass-card grid gap-3 p-6 text-center" role="status">
         <h2 className="font-display text-2xl">Confira o seu e-mail</h2>
         <p className="text-sm text-fg-muted">
-          Se existir um pedido com esse CPF e esse e-mail, acabamos de enviar o link para o e-mail usado na compra. Olhe também a caixa de spam e a aba Promoções.
+          Se existir um pedido pago com esse CPF e esse e-mail, acabamos de enviar o link dos ingressos para o e-mail usado na compra. Olhe também a caixa de spam e a aba Promoções.
         </p>
         <p className="text-xs text-fg-faint">Não chegou em alguns minutos? Confira se digitou o mesmo e-mail da compra ou fale com a Pérolas pelo Instagram @perolaseventos.</p>
       </div>
@@ -51,7 +51,7 @@ export function FindOrderForm() {
       <button className="btn solid w-full" disabled={pending}>
         {pending ? "Enviando…" : "Enviar o link para o meu e-mail"}
       </button>
-      <p className="text-xs text-fg-faint">Por segurança, o link vai só para o e-mail cadastrado no pedido. Nada aparece nesta tela.</p>
+      <p className="text-xs text-fg-faint">Pedido aguardando pagamento (ou a 2ª parcela do Pix) abre na hora. Pedido pago, com os ingressos, vai só para o e-mail cadastrado, por segurança.</p>
     </form>
   );
 }

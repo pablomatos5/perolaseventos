@@ -265,9 +265,20 @@ export async function findOrderAction(_prev: FindState, form: FormData): Promise
       email: parsed.data.email,
       OR: [{ status: { in: ["PAID", "PARTIAL"] } }, { status: "PENDING", expiresAt: { gt: new Date() } }],
     },
-    select: { id: true },
+    select: { id: true, code: true, status: true },
+    orderBy: { createdAt: "desc" },
   });
-  await sendOrderLinks(orders.map((o) => o.id));
-  await audit("cliente", "pediu o link do pedido", `CPF final ${parsed.data.cpf.slice(-3)} · ${orders.length} pedido(s) · IP ${ip}`);
+  // Pedido PAGO tem QR: o link vai só para o e-mail (quem sabe CPF + e-mail de alguém não pega o ingresso dele).
+  const paid = orders.filter((o) => o.status === "PAID");
+  await sendOrderLinks(paid.map((o) => o.id));
+  // Pedido SEM ingresso liberado (aguardando pagamento ou Pix em 2x sem a 2ª parcela) não mostra QR, só o Pix
+  // para pagar: abre direto, priorizando o Pix em 2x (o caso de quem perdeu o link da 2ª parcela).
+  const open = orders.find((o) => o.status === "PARTIAL") ?? orders.find((o) => o.status === "PENDING");
+  await audit(
+    "cliente",
+    "pediu o link do pedido",
+    `CPF final ${parsed.data.cpf.slice(-3)} · ${paid.length} pago(s) por e-mail${open ? ` · abriu ${open.code} direto` : ""} · IP ${ip}`,
+  );
+  if (open) redirect(`/pedido/${orderToken(open.id)}${paid.length ? "?links=enviados" : ""}`);
   return { sent: true };
 }

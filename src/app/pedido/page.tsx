@@ -16,7 +16,7 @@ export default function FindOrderPage() {
         Encontrar meu <em>pedido</em>
       </h1>
       <p className="mt-3 mb-8 text-sm text-fg-muted">
-        Perdeu o link dos seus ingressos ou do Pix em 2x? Informe o CPF e o e-mail que você usou na compra: mandamos o link de novo para esse e-mail.
+        Perdeu o link dos seus ingressos ou do Pix em 2x? Informe o CPF e o e-mail que você usou na compra. Se faltar pagar, o pedido abre na hora; se já estiver pago, mandamos o link dos ingressos para o seu e-mail.
       </p>
       <FindOrderForm />
       <p className="mt-6 text-center text-xs text-fg-faint">
