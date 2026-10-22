@@ -1,10 +1,20 @@
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { LegalPage, SupportContacts } from "@/components/legal-page";
 import { seller } from "@/lib/seller";
 
 export const metadata = { title: "Privacidade · Pérolas", description: "Como o site do Réveillon Pérolas usa e protege os seus dados pessoais (LGPD)." };
 
-export default async function PrivacidadePage() {
+// a página lê o .env a cada acesso (connection): com cacheComponents isso precisa ficar dentro de <Suspense>
+export default function PrivacidadePage() {
+  return (
+    <Suspense fallback={<div className="grid min-h-svh place-items-center text-fg-faint">Carregando…</div>}>
+      <PrivacidadeContent />
+    </Suspense>
+  );
+}
+
+async function PrivacidadeContent() {
   await connection(); // dados do vendedor vêm do .env, lidos a cada acesso
   const s = seller();
   return (

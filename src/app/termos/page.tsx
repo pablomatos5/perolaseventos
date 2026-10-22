@@ -1,11 +1,21 @@
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { LegalPage, SupportContacts } from "@/components/legal-page";
 import { formatBRL, SERVICE_FEE_CENTS } from "@/lib/format";
 import { seller } from "@/lib/seller";
 
 export const metadata = { title: "Termos de compra · Pérolas", description: "Regras de compra, uso e reembolso dos ingressos do Réveillon Pérolas." };
 
-export default async function TermosPage() {
+// a página lê o .env a cada acesso (connection): com cacheComponents isso precisa ficar dentro de <Suspense>
+export default function TermosPage() {
+  return (
+    <Suspense fallback={<div className="grid min-h-svh place-items-center text-fg-faint">Carregando…</div>}>
+      <TermosContent />
+    </Suspense>
+  );
+}
+
+async function TermosContent() {
   await connection(); // dados do vendedor vêm do .env, lidos a cada acesso
   const s = seller();
   return (
