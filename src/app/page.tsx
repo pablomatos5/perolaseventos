@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { TideReveal, type TideStep } from "@/components/tide-reveal";
@@ -167,6 +168,12 @@ async function EventPage() {
           <div className="mt-12">
             <TicketPicker eventId={event.id} types={types} pausedNote={salesNotice || undefined} />
           </div>
+          <p className="mt-8 text-center text-sm text-fg-muted">
+            Já comprou e perdeu o link dos ingressos ou do Pix em 2x?{" "}
+            <Link href="/pedido" className="font-semibold text-accent underline underline-offset-4">
+              Encontre seu pedido
+            </Link>
+          </p>
         </div>
       </section>
 
@@ -190,7 +197,12 @@ async function EventPage() {
             </a>
             <KorakiMark />
           </div>
-          <p className="text-xs text-fg-faint">Pérolas Eventos · {event.city}</p>
+          <p className="text-xs text-fg-faint">
+            Pérolas Eventos · {event.city} ·{" "}
+            <Link href="/pedido" className="underline underline-offset-2">
+              Encontrar meu pedido
+            </Link>
+          </p>
         </div>
       </footer>
     </main>

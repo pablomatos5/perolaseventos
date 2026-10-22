@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { deliverTickets, notifyFirstInstallment } from "@/lib/delivery";
+import { deliverTickets, notifyFirstInstallment, sendOrderLinks } from "@/lib/delivery";
 import { createPixCharge, payWithCard, type CardInput, type CheckoutKind, type PixKind } from "@/lib/mercadopago";
 import { createReservation, firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, SaleError, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
@@ -231,4 +231,43 @@ export async function updateHolderAction(token: string, ticketId: string, _prev:
   await audit("cliente", "trocou o titular", `pedido ${ticket.order.code}: ${ticket.holderName} → ${name}`);
   revalidatePath(`/pedido/${token}`);
   return { ok: `Agora em nome de ${name}. QR novo gerado ✓` };
+}
+
+// ───────── Encontrar meu pedido ─────────
+
+export type FindState = { sent?: boolean; error?: string } | undefined;
+
+/**
+ * Comprador perdeu o link: informa CPF + e-mail e recebe o link no e-mail CADASTRADO no pedido.
+ * A resposta é sempre a mesma, achando ou não (ninguém descobre se um CPF comprou), com limite de
+ * tentativas por conexão e por CPF, e o anti-robô quando estiver ligado.
+ */
+export async function findOrderAction(_prev: FindState, form: FormData): Promise<FindState> {
+  const parsed = z
+    .object({
+      cpf: z.string().refine(validCpf, "CPF inválido: confira os 11 números.").transform(onlyDigits),
+      email: z.email("E-mail inválido.").trim().toLowerCase(),
+    })
+    .safeParse({ cpf: form.get("cpf") ?? "", email: form.get("email") ?? "" });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Confira os dados." };
+
+  const ip = await clientIp();
+  if (!allow(`achar-ip:${ip}`, 10, 60 * 60_000) || !allow(`achar-cpf:${parsed.data.cpf}`, 3, 60 * 60_000)) {
+    return { error: "Muitas tentativas. Espere um pouco e tente de novo." };
+  }
+  if (!(await verifyTurnstile(String(form.get("cf-turnstile-response") ?? ""), ip))) {
+    return { error: "Não conseguimos confirmar que você não é um robô. Recarregue a página e tente de novo." };
+  }
+
+  const orders = await db.order.findMany({
+    where: {
+      cpf: parsed.data.cpf,
+      email: parsed.data.email,
+      OR: [{ status: { in: ["PAID", "PARTIAL"] } }, { status: "PENDING", expiresAt: { gt: new Date() } }],
+    },
+    select: { id: true },
+  });
+  await sendOrderLinks(orders.map((o) => o.id));
+  await audit("cliente", "pediu o link do pedido", `CPF final ${parsed.data.cpf.slice(-3)} · ${orders.length} pedido(s) · IP ${ip}`);
+  return { sent: true };
 }

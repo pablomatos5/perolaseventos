@@ -79,6 +79,36 @@ export async function notifyFirstInstallment(orderId: string) {
   await record(order.id, "EMAIL", () => sendEmail(order.email, `1ª parcela recebida · ${order.event.name} ${order.event.edition}`, text));
 }
 
+/**
+ * "Encontrar meu pedido": manda o link de cada pedido ativo para o e-mail CADASTRADO no pedido (nunca para
+ * outro). Quem pediu não vê nada na tela; quem sabe só o CPF de outra pessoa não consegue abrir o pedido dela.
+ */
+export async function sendOrderLinks(orderIds: string[]) {
+  if (orderIds.length === 0) return;
+  const orders = await db.order.findMany({ where: { id: { in: orderIds } }, include: { event: true, _count: { select: { tickets: true } } }, orderBy: { createdAt: "desc" } });
+  const fmt = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const situacao = (o: (typeof orders)[number]) =>
+    o.status === "PAID" ? "pago, ingressos liberados" : o.status === "PARTIAL" ? `Pix em 2x, falta a 2ª parcela (${fmt(o.totalCents - o.firstPaidCents)})` : "aguardando pagamento";
+  const first = orders[0];
+  const text = [
+    `Olá, ${first.buyerName}!`,
+    ``,
+    `Você pediu para encontrar ${orders.length > 1 ? "os seus pedidos" : "o seu pedido"} no site da Pérolas. ${orders.length > 1 ? "Aqui estão os links:" : "Aqui está o link:"}`,
+    ``,
+    ...orders.flatMap((o) => [`Pedido ${o.code} · ${o._count.tickets} ingresso(s) · ${o.event.name} ${o.event.edition} · ${situacao(o)}`, orderLink(o.id), ``]),
+    `O link é pessoal: quem tiver ele consegue ver os seus ingressos. Não compartilhe.`,
+    `Se não foi você que pediu, pode ignorar este e-mail.`,
+  ].join("\n");
+  const subject = `Link do seu pedido · ${first.event.name} ${first.event.edition}`;
+  let result = "";
+  try {
+    result = await sendEmail(first.email, subject, text);
+  } catch (e) {
+    result = `falhou: ${(e as Error).message}`;
+  }
+  await db.delivery.createMany({ data: orders.map((o) => ({ orderId: o.id, channel: "EMAIL" as const, ok: !result.startsWith("falhou"), detail: `link do pedido (encontrar meu pedido): ${result}` })) });
+}
+
 /** Rótulos gravados em Delivery.detail: servem para não mandar o mesmo lembrete duas vezes. */
 export const REMINDER_TAGS = { early: "lembrete 2ª parcela (3 dias)", last: "lembrete 2ª parcela (último dia)" } as const;
 export type ReminderKind = keyof typeof REMINDER_TAGS;
