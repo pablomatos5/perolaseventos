@@ -15,8 +15,13 @@ import {
   type TicketList,
 } from "./offline";
 
+/** Saídas por ingresso (igual ao servidor: MAX_EXITS em src/lib/checkin.ts). */
+const MAX_EXITS = 2;
+
 type Result = {
-  result: "ok" | "used" | "invalid" | "unauthorized" | "error";
+  result: "ok" | "used" | "invalid" | "unauthorized" | "error" | "exit";
+  reentry?: boolean;
+  exitsLeft?: number;
   message: string;
   usedAt?: string;
   usedBy?: string;
@@ -47,6 +52,7 @@ const COLORS: Record<Result["result"], string> = {
   invalid: "bg-danger text-white",
   unauthorized: "bg-danger text-white",
   error: "bg-yellow-400 text-black",
+  exit: "bg-violet-500 text-white",
 };
 
 let audio: AudioContext | null = null;
@@ -128,6 +134,12 @@ export function Scanner() {
   const [list, setList] = useState<TicketList | null>(() => (typeof window === "undefined" ? null : loadList()));
   const [queue, setQueue] = useState<Pending[]>(() => (typeof window === "undefined" ? [] : loadQueue()));
   const [tab, setTab] = useState<"ler" | "buscar">("ler");
+  // Entrada (padrão) ou Saída temporária: na saída, ler o QR registra que o convidado saiu e vai voltar
+  const [mode, setMode] = useState<"entrada" | "saida">("entrada");
+  const modeRef = useRef(mode);
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[] | null>(null);
 
@@ -152,6 +164,19 @@ export function Scanner() {
     if (t && !t.usedAt) {
       t.usedAt = usedAt;
       t.usedBy = usedBy;
+      saveList(l);
+    }
+  }, []);
+
+  const updateLocalExit = useCallback((ticketId: string, at: string) => {
+    const l = listRef.current;
+    if (!l) return;
+    const t = l.tickets.find((x) => x.id === ticketId);
+    if (t) {
+      t.usedAt = null;
+      t.usedBy = null;
+      t.x = (t.x ?? 0) + 1;
+      t.xa = at;
       saveList(l);
     }
   }, []);
@@ -214,17 +239,17 @@ export function Scanner() {
   }, [token, refresh]);
 
   const show = useCallback((r: Result) => {
-    if (r.result === "ok")
+    if (r.result === "ok" && !r.reentry)
       setCount((c) => {
         pref.set(countKey(), String(c + 1));
         return c + 1;
       });
-    beep(r.result === "ok");
+    beep(r.result === "ok" || r.result === "exit");
     setLast(r);
     // a tela volta ao normal sozinha: a próxima pessoa não vê o resultado da anterior
     clearTimeout(clearTimer.current);
     // verde some rápido (fila andando); erro fica mais, mas o porteiro fecha na hora com um toque
-    clearTimer.current = window.setTimeout(() => setLast(null), r.result === "ok" ? 2500 : 6000);
+    clearTimer.current = window.setTimeout(() => setLast(null), r.result === "ok" || r.result === "exit" ? 2500 : 6000);
   }, []);
 
   /** Fecha o aviso na hora. Depois de erro, libera ler o mesmo QR de novo ("tentar de novo"). */
@@ -255,7 +280,7 @@ export function Scanner() {
           ? { result: "error", message: "Não confirmado: fora da lista offline. Confira pela busca ou aguarde o sinal", offline: true }
           : { result: "invalid", message: "QR inválido: não é um ingresso Pérolas", offline: true };
       }
-      return admitOffline(t, false);
+      return modeRef.current === "saida" ? exitOffline(t, false) : admitOffline(t, false);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- admitOffline é estável (só usa refs/setters)
     [],
@@ -267,7 +292,34 @@ export function Scanner() {
     const at = new Date().toISOString();
     updateLocal(t.id, at, device);
     enqueue({ ticketId: t.id, version: manual ? null : t.v, at, manual });
+    if (t.xa) return { result: "ok", reentry: true, message: `Reentrada (offline) · saiu às ${hhmm(t.xa)}`, ...base, exitsLeft: MAX_EXITS - (t.x ?? 0) };
     return { result: "ok", message: "Liberado (offline)", ...base };
+  }
+
+  function exitOffline(t: ListTicket, manual: boolean): Result {
+    const base = { ticketId: t.id, holder: t.holder, type: t.type, batch: t.batch, gender: t.gender, offline: true };
+    if (!t.usedAt && t.xa) return { result: "invalid", message: `Saída já registrada às ${hhmm(t.xa)}: ainda não voltou`, ...base };
+    if (!t.usedAt) return { result: "invalid", message: "Este ingresso ainda não entrou: não há saída para registrar", ...base };
+    if ((t.x ?? 0) >= MAX_EXITS) return { result: "invalid", message: `Limite de ${MAX_EXITS} saídas atingido: se sair, não volta com este ingresso`, ...base, exitsLeft: 0 };
+    const at = new Date().toISOString();
+    updateLocalExit(t.id, at);
+    enqueue({ ticketId: t.id, version: manual ? null : t.v, at, manual, kind: "exit" });
+    return { result: "exit", message: "Saída registrada (offline) · pode voltar com o mesmo QR", ...base, exitsLeft: MAX_EXITS - (t.x ?? 0) };
+  }
+
+  /** Saída pelo botão (depois de "já utilizado") ou pela busca: sem QR, pelo id do ingresso. */
+  async function exitById(ticketId: string) {
+    let r: Result;
+    try {
+      const res = await fetch("/api/portaria/saida", { method: "POST", headers: authHeaders(), body: JSON.stringify({ ticketId }), signal: AbortSignal.timeout(5000) });
+      if (res.status === 401) return unauthorized();
+      r = await res.json();
+      if (r.result === "exit") updateLocalExit(ticketId, new Date().toISOString());
+    } catch {
+      const t = listRef.current?.tickets.find((x) => x.id === ticketId);
+      r = t ? exitOffline(t, true) : { result: "error", message: "Sem internet e ingresso fora da lista" };
+    }
+    show(r);
   }
 
   const check = useCallback(
@@ -284,11 +336,13 @@ export function Scanner() {
       setLast(null); // limpa o resultado anterior enquanto confere (nunca mostra o verde de outra pessoa)
 
       let r: Result;
+      const saida = modeRef.current === "saida";
       try {
-        const res = await fetch("/api/checkin", { method: "POST", headers: authHeaders(), body: JSON.stringify({ code }), signal: AbortSignal.timeout(5000) });
+        const res = await fetch(saida ? "/api/portaria/saida" : "/api/checkin", { method: "POST", headers: authHeaders(), body: JSON.stringify({ code }), signal: AbortSignal.timeout(5000) });
         r = await res.json();
         if (res.status === 401) return unauthorized();
         setOnline(true);
+        if (r.result === "exit" && r.ticketId) updateLocalExit(r.ticketId, new Date().toISOString());
         // mesma pessoa lida de novo neste aparelho logo depois (ex.: resposta lenta e nova leitura):
         // amarelo com o tempo, para o porteiro conferir, em vez de vermelho "já utilizado"
         const usedAt = r.result === "used" && r.usedBy === device && r.usedAt ? Date.parse(r.usedAt) : NaN;
@@ -303,7 +357,7 @@ export function Scanner() {
       }
       show(r);
     },
-    [token, authHeaders, unauthorized, updateLocal, device, checkOffline, show],
+    [token, authHeaders, unauthorized, updateLocal, updateLocalExit, device, checkOffline, show],
   );
 
   // ── busca e liberação manual ──
@@ -443,7 +497,7 @@ export function Scanner() {
         >
           {last ? (
             <div className="grid justify-items-center">
-              <div className="text-7xl font-semibold md:text-8xl">{last.result === "ok" ? "✓" : last.result === "error" ? "!" : "✕"}</div>
+              <div className="text-7xl font-semibold md:text-8xl">{last.result === "ok" ? "✓" : last.result === "exit" ? "↩" : last.result === "error" ? "!" : "✕"}</div>
               <div className="mt-3 text-2xl font-semibold md:text-4xl">{last.message}</div>
               {last.holder && (
                 <div className="mt-4 grid justify-items-center gap-3 text-lg">
@@ -454,6 +508,11 @@ export function Scanner() {
                     {last.type && ` · ${last.type}`}
                     {last.batch && ` · ${last.batch}`}
                   </span>
+                  {(last.result === "exit" || last.reentry) && last.exitsLeft !== undefined && (
+                    <span className="text-base opacity-90">
+                      {last.exitsLeft > 0 ? `Pode sair mais ${last.exitsLeft} vez(es) e voltar` : "Não pode mais sair e voltar com este ingresso"}
+                    </span>
+                  )}
                 </div>
               )}
               {/* ações grandes: um toque e já lê o próximo */}
@@ -466,9 +525,22 @@ export function Scanner() {
                     dismiss();
                   }}
                 >
-                  {last.result === "ok" ? "Próximo" : "Tentar de novo"}
+                  {last.result === "ok" || last.result === "exit" ? "Próximo" : "Tentar de novo"}
                 </button>
-                {last.result !== "ok" && (
+                {last.result === "used" && last.ticketId && (
+                  <button
+                    type="button"
+                    className="portaria-act is-ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const id = last.ticketId!;
+                      if (window.confirm(`Registrar a saída de ${last.holder}? Poderá voltar com o mesmo QR (até ${MAX_EXITS} saídas por noite).`)) void exitById(id);
+                    }}
+                  >
+                    Registrar saída
+                  </button>
+                )}
+                {last.result !== "ok" && last.result !== "exit" && (
                   <button
                     type="button"
                     className="portaria-act is-ghost"
@@ -484,7 +556,9 @@ export function Scanner() {
               <p className="mt-3 text-xs opacity-70">ou toque em qualquer lugar</p>
             </div>
           ) : (
-            <p className="text-fg-muted">{tab === "ler" ? "Aponte para o QR ou use o leitor" : "Procure pelo nome, código do pedido ou CPF"}</p>
+            <p className="text-fg-muted">
+              {tab === "buscar" ? "Procure pelo nome, código do pedido ou CPF" : mode === "saida" ? "MODO SAÍDA: leia o QR de quem vai sair e voltar" : "Aponte para o QR ou use o leitor"}
+            </p>
           )}
         </div>
       </div>
@@ -500,6 +574,19 @@ export function Scanner() {
 
         {tab === "ler" ? (
           <>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Modo da leitura">
+              <button type="button" role="radio" aria-checked={mode === "entrada"} className={`btn ${mode === "entrada" ? "solid" : ""}`} onClick={() => setMode("entrada")}>
+                Entrada
+              </button>
+              <button type="button" role="radio" aria-checked={mode === "saida"} className={`btn ${mode === "saida" ? "portaria-saida-on" : ""}`} onClick={() => setMode("saida")}>
+                Saída (vai voltar)
+              </button>
+            </div>
+            {mode === "saida" && (
+              <p className="rounded-lg bg-violet-500/20 px-3 py-2 text-center text-xs text-violet-200">
+                Modo saída ligado: cada QR lido registra a saída (até {MAX_EXITS} por ingresso). Volte para “Entrada” depois.
+              </p>
+            )}
             {/* Leitor tipo pistola funciona como teclado: "digita" o código e manda Enter. */}
             <form
               onSubmit={(e) => {
@@ -546,7 +633,23 @@ export function Scanner() {
                   {h.status === "CANCELED" ? (
                     <span className="shrink-0 text-xs text-danger">cancelado</span>
                   ) : h.usedAt ? (
-                    <span className="shrink-0 text-xs text-danger">usado {hhmm(h.usedAt)}</span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-xs text-danger">entrou {hhmm(h.usedAt)}</span>
+                      <button
+                        type="button"
+                        className="btn px-3! py-2!"
+                        onClick={() => {
+                          if (window.confirm(`Registrar a saída de ${h.holder}? Poderá voltar com o mesmo QR (até ${MAX_EXITS} saídas por noite).`)) {
+                            void exitById(h.ticketId);
+                            setTab("ler");
+                            setQuery("");
+                            setHits(null);
+                          }
+                        }}
+                      >
+                        Saída
+                      </button>
+                    </div>
                   ) : (
                     <button type="button" className="btn solid shrink-0 px-4! py-2!" onClick={() => admitManual(h)}>
                       Liberar

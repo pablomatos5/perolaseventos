@@ -37,6 +37,8 @@ export async function GET(req: Request) {
         gender: genderLabel(t.gender),
         usedAt: t.usedAt,
         usedBy: t.usedBy,
+        x: t.exitCount,
+        xa: t.lastExitAt,
       })),
     },
     { headers: { "Cache-Control": "private, no-store" } },

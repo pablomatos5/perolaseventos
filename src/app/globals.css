@@ -3008,6 +3008,9 @@ html[data-edition="2k27"] { background: #070719; }
 }
 .sales-notice > span { color: #f0cf8c; }
 
+/* portaria: botão do modo saída ligado (roxo, diferente do verde da entrada) */
+.portaria-saida-on { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+
 /* páginas legais (termos e privacidade): texto corrido legível no card claro */
 .legal { color: #2e2466; font-size: 0.92rem; line-height: 1.65; }
 .legal h2 { margin: 1.6rem 0 0.5rem; font-family: var(--font-cormorant), Georgia, serif; font-size: 1.35rem; color: #2e2466; }

@@ -1,8 +1,8 @@
 import { audit } from "@/lib/audit";
-import { checkIn, type CheckinResult } from "@/lib/checkin";
+import { checkIn, registerExit, type CheckinResult } from "@/lib/checkin";
 import { deviceFromRequest } from "@/lib/portaria-auth";
 
-type Pending = { ticketId: string; version: number | null; at: string; manual?: boolean };
+type Pending = { ticketId: string; version: number | null; at: string; manual?: boolean; kind?: "exit" };
 
 /**
  * Entradas feitas sem internet chegam aqui quando a conexão volta. Cada uma passa pela mesma trava
@@ -19,6 +19,12 @@ export async function POST(req: Request) {
   for (const p of list) {
     if (typeof p?.ticketId !== "string") continue;
     const at = new Date(p.at);
+    if (p.kind === "exit") {
+      const r = await registerExit({ ticketId: p.ticketId, version: p.manual ? null : typeof p.version === "number" ? p.version : 0, device: auth.name, at: Number.isNaN(at.getTime()) ? undefined : at });
+      if (r.result === "exit") await audit(`portaria: ${auth.name}`, "registrou saída (offline)", `${r.holder} · pedido ${r.code}`);
+      results.push({ ...r, result: r.result === "exit" ? "ok" : r.result, localAt: p.at });
+      continue;
+    }
     const r = await checkIn({
       ticketId: p.ticketId,
       version: p.manual ? null : typeof p.version === "number" ? p.version : 0,

@@ -3,7 +3,9 @@ import type { Prisma } from "@/generated/prisma/client";
 import { genderLabel } from "@/lib/format";
 
 export type CheckinResult = {
-  result: "ok" | "used" | "invalid";
+  result: "ok" | "used" | "invalid" | "exit";
+  reentry?: boolean; // "ok" de quem já tinha saído (não conta como nova entrada)
+  exitsLeft?: number;
   message: string;
   ticketId?: string;
   holder?: string;
@@ -57,13 +59,51 @@ export async function checkIn(opts: {
 
   const t = await db.ticket.findUnique({ where: { id: opts.ticketId }, include: ticketInclude });
   if (!t) return { result: "invalid", message: "Ingresso não encontrado" };
-  if (count === 1) return { result: "ok", message: "Liberado", ...info(t) };
+  if (count === 1) {
+    if (t.lastExitAt) return { result: "ok", reentry: true, message: `Reentrada · saiu às ${hhmm(t.lastExitAt)}`, ...info(t), exitsLeft: MAX_EXITS - t.exitCount };
+    return { result: "ok", message: "Liberado", ...info(t) };
+  }
   if (t.order.paymentRef?.startsWith(DEMO_REF)) return { result: "invalid", message: "Ingresso de demonstração: não vale para o evento", ...info(t) };
   if (t.status !== "VALID") return { result: "invalid", message: "Ingresso não pago ou cancelado", ...info(t) };
   if (opts.version !== null && t.qrVersion !== opts.version) {
     return { result: "invalid", message: "QR antigo: este ingresso foi reemitido ou transferido", ...info(t) };
   }
   return { result: "used", message: `Já utilizado às ${hhmm(t.usedAt!)} (${t.usedBy})`, ...info(t), usedAt: t.usedAt!.toISOString(), usedBy: t.usedBy ?? "" };
+}
+
+/** Quantas vezes um convidado pode sair e voltar com o mesmo ingresso. */
+export const MAX_EXITS = 2;
+
+/**
+ * Saída temporária: o convidado quer sair e voltar. O ingresso precisa estar DENTRO (já usado); a saída
+ * zera a entrada para o mesmo QR passar UMA vez de novo. Atômico como a entrada: dois aparelhos não
+ * registram a mesma saída duas vezes. Continua valendo uma pessoa dentro por ingresso. Limite MAX_EXITS.
+ * `version: null` = pela busca por nome (sem QR).
+ */
+export async function registerExit(opts: { ticketId: string; version: number | null; device: string; at?: Date }): Promise<CheckinResult> {
+  const at = opts.at && opts.at < new Date() ? opts.at : new Date();
+  const { count } = await db.ticket.updateMany({
+    where: {
+      id: opts.ticketId,
+      status: "VALID",
+      usedAt: { not: null },
+      exitCount: { lt: MAX_EXITS },
+      ...(opts.version !== null ? { qrVersion: opts.version } : {}),
+      order: REAL_ORDER,
+    },
+    data: { usedAt: null, usedBy: null, exitCount: { increment: 1 }, lastExitAt: at },
+  });
+  const t = await db.ticket.findUnique({ where: { id: opts.ticketId }, include: ticketInclude });
+  if (!t) return { result: "invalid", message: "Ingresso não encontrado" };
+  if (count === 1) {
+    const left = MAX_EXITS - t.exitCount;
+    return { result: "exit", message: `Saída registrada · pode voltar com o mesmo QR`, ...info(t), exitsLeft: left };
+  }
+  if (t.status !== "VALID" || t.order.paymentRef?.startsWith(DEMO_REF)) return { result: "invalid", message: "Ingresso não pago ou cancelado", ...info(t) };
+  if (opts.version !== null && t.qrVersion !== opts.version) return { result: "invalid", message: "QR antigo: este ingresso foi reemitido ou transferido", ...info(t) };
+  if (!t.usedAt && t.lastExitAt) return { result: "invalid", message: `Saída já registrada às ${hhmm(t.lastExitAt)}: ainda não voltou`, ...info(t) };
+  if (!t.usedAt) return { result: "invalid", message: "Este ingresso ainda não entrou: não há saída para registrar", ...info(t) };
+  return { result: "invalid", message: `Limite de ${MAX_EXITS} saídas atingido: se sair, não volta com este ingresso`, ...info(t), exitsLeft: 0 };
 }
 
 /** Evento da portaria: o publicado mais próximo, valendo até 36 h depois do início (a festa vira a noite). */

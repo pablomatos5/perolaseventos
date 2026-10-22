@@ -13,9 +13,11 @@ export type ListTicket = {
   gender: string;
   usedAt: string | null;
   usedBy: string | null;
+  x?: number; // saídas já registradas
+  xa?: string | null; // última saída
 };
 export type TicketList = { event: string | null; at: string; tickets: ListTicket[] };
-export type Pending = { ticketId: string; version: number | null; at: string; manual?: boolean };
+export type Pending = { ticketId: string; version: number | null; at: string; manual?: boolean; kind?: "exit" };
 
 const KEYS = { token: "portaria-token", name: "portaria-nome", list: "portaria-lista", queue: "portaria-fila" } as const;
 

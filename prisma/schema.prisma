@@ -181,6 +181,9 @@ model Ticket {
   usedAt       DateTime?
   usedBy       String? // qual aparelho da portaria validou
   checkinMethod String? // "qr", "manual" (busca por nome) ou "offline" (sincronizado depois)
+  /// Saída temporária: o porteiro registra a saída, o mesmo QR volta a valer para UMA reentrada (até MAX_EXITS)
+  exitCount    Int           @default(0)
+  lastExitAt   DateTime?
   // Versão do QR: reemitir/transferir soma 1 e o QR (e o link individual) anterior para de valer.
   qrVersion    Int          @default(0)
   createdAt    DateTime     @default(now())
