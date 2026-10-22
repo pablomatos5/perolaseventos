@@ -123,11 +123,6 @@ export function TicketPicker({ eventId, types, pausedNote }: { eventId: string; 
                       <p className="mt-2 max-w-[14rem] text-[0.7rem] leading-snug text-fg-faint">Só para mulheres: conferido na entrada.</p>
                     </div>
                   </div>
-                  {t.next && (
-                    <p className="mt-5 text-xs text-fg-faint">
-                      Próximo: {t.next.name} por {formatBRL(t.next.priceCents)}
-                    </p>
-                  )}
                 </>
               ) : (
                 <p className="mt-6 border-t border-line pt-6 text-sm text-fg-muted">
