@@ -7,6 +7,7 @@ import { pixAction, simulatePaymentAction } from "@/app/actions";
 import { CardPayForm } from "@/components/card-pay-form";
 import { PixCopy } from "@/components/pix-copy";
 import { TicketRules } from "@/components/ticket-rules";
+import { DemoBanner } from "@/components/demo-banner";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HolderForm, ShareTicketButton, StoryShare } from "@/components/ticket-actions";
 import { db } from "@/lib/db";
@@ -309,7 +310,8 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
               const qr = await qrDataUrl(ticketToken(t.id, t.qrVersion));
               const editable = !t.usedAt && t.status === "VALID" && order.event.startsAt > new Date();
               return (
-                <article key={t.id} className="glass-card grid items-center gap-6 p-6 sm:grid-cols-[auto_1fr]">
+                <article key={t.id} className="glass-card grid items-center gap-x-6 gap-y-4 p-6 sm:grid-cols-[auto_1fr]">
+                  <DemoBanner className="sm:col-span-2" />
                   {/* fundo branco: leitor lê melhor com contraste máximo, inclusive com brilho baixo */}
                   {/* eslint-disable-next-line @next/next/no-img-element -- data URL gerada no servidor, não há o que otimizar */}
                   <img src={qr} alt={`QR code do ingresso ${i + 1}`} className={`size-56 rounded-xl bg-white ${t.usedAt ? "opacity-30" : ""}`} />

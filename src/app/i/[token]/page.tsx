@@ -1,4 +1,5 @@
 import { TicketRules } from "@/components/ticket-rules";
+import { DemoBanner } from "@/components/demo-banner";
 import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -74,6 +75,7 @@ function TicketBody(p: { pdf: string; qr: string; holder: string; used: Date | n
       </h1>
       <p className="mt-2 text-sm text-fg-muted">{p.when}</p>
       <article className="glass-card mt-8 grid justify-items-center gap-5 p-6 text-center">
+        <DemoBanner />
         {/* eslint-disable-next-line @next/next/no-img-element -- data URL gerada no servidor */}
         <img src={p.qr} alt="QR code do ingresso" className={`size-72 rounded-xl bg-white ${p.used ? "opacity-30" : ""}`} />
         <div>

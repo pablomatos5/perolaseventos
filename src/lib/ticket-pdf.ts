@@ -254,16 +254,22 @@ function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: P
   text(p, sig, sigX + 30, 40, F.sansBold, sigSize, C.brown, 1.2);
   center(p, "perolaseventos.store", 26, F.sans, 7, C.soft, 1.5);
 
-  // ── modo demonstração: marca d'água, para ninguém confundir com ingresso de verdade ──
+  // ── modo demonstração: marca d'água diagonal + faixa vermelha, para ninguém confundir com ingresso de verdade ──
   if (isDemo()) {
     const label = "DEMONSTRAÇÃO";
     const size = 46;
     const w = F.sansBold.widthOfTextAtSize(label, size);
     const a = (32 * Math.PI) / 180;
     for (const cy of [H * 0.66, H * 0.3]) {
-      p.drawText(label, { x: W / 2 - (w / 2) * Math.cos(a), y: cy - (w / 2) * Math.sin(a), size, font: F.sansBold, color: C.violet, opacity: 0.12, rotate: degrees(32) });
+      p.drawText(label, { x: W / 2 - (w / 2) * Math.cos(a), y: cy - (w / 2) * Math.sin(a), size, font: F.sansBold, color: C.violet, opacity: 0.14, rotate: degrees(32) });
     }
-    center(p, "INGRESSO DE DEMONSTRAÇÃO · NÃO VALE PARA O EVENTO", 48, F.sansBold, 7, hex("#d64545"), 1.2);
+    // faixa vermelha no topo, dentro da moldura (a "faixa de demonstração")
+    const red = hex("#d64545");
+    const band = "INGRESSO DE DEMONSTRAÇÃO · NÃO VALE PARA O EVENTO";
+    const bandH = 22;
+    const bandY = H - fm - 4 - bandH;
+    roundRect(p, fm + 4, bandY, W - 2 * (fm + 4), bandH, 6, red, 1);
+    center(p, band, bandY + 7.5, F.sansBold, 7.2, C.white, 1.1);
   }
 
   // ── carimbo de usado ──
