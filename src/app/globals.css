@@ -3008,6 +3008,15 @@ html[data-edition="2k27"] { background: #070719; }
 }
 .sales-notice > span { color: #f0cf8c; }
 
+/* páginas legais (termos e privacidade): texto corrido legível no card claro */
+.legal { color: #2e2466; font-size: 0.92rem; line-height: 1.65; }
+.legal h2 { margin: 1.6rem 0 0.5rem; font-family: var(--font-cormorant), Georgia, serif; font-size: 1.35rem; color: #2e2466; }
+.legal h2:first-child { margin-top: 0; }
+.legal p { margin: 0 0 0.6rem; }
+.legal ul { margin: 0 0 0.6rem; padding-left: 1.2rem; list-style: disc; display: grid; gap: 0.35rem; }
+.legal a { color: #7d5424; text-decoration: underline; text-underline-offset: 2px; }
+.legal strong { color: #241b5a; }
+
 /* convite do grupo do evento no WhatsApp (só para pedido/ingresso pago) */
 .whats-group { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.9rem 1.25rem; padding: 1.1rem 1.25rem; }
 .whats-group strong { display: block; color: #2e2466; font-size: 1rem; }

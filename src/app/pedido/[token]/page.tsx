@@ -232,11 +232,15 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
                       <li>A 1ª parcela reserva os seus ingressos. O QR e o PDF são liberados só depois do pagamento da 2ª parcela.</li>
                       <li>A 2ª parcela ({formatBRL(order.totalCents - firstCents)}) deve ser paga até {dayMonth(splitDue)}, às 23h59 (horário de Belém). Avisamos por e-mail antes do prazo.</li>
                       <li>
-                        <b>Se a 2ª parcela não for paga até o prazo, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido.</b>
+                        <b>Se a 2ª parcela não for paga até o prazo, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido</b>,
+                        salvo no direito de arrependimento (até 7 dias da compra).
                       </li>
                     </ul>
                     <label className="split-terms-accept">
-                      <input type="checkbox" name="aceite" required /> Li e concordo com os termos do Pix em 2x
+                      <input type="checkbox" name="aceite" required /> Li e concordo com os termos do Pix em 2x e os{" "}
+                      <a href="/termos" target="_blank" className="underline">
+                        Termos de compra
+                      </a>
                     </label>
                   </div>
                   <button className="btn solid w-full">Pagar a 1ª parcela no Pix · {formatBRL(firstCents)}</button>
@@ -269,7 +273,7 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
           </div>
           {partialOverdue ? (
             <p className="mt-5 text-sm text-fg-muted">
-              O prazo acabou sem a 2ª parcela e os ingressos voltaram para a venda. Conforme os termos do Pix em 2x aceitos na compra, o valor da 1ª parcela não é devolvido. Dúvidas: Instagram <strong className="text-fg">@perolaseventos</strong>.
+              O prazo acabou sem a 2ª parcela e os ingressos voltaram para a venda. Conforme os termos do Pix em 2x aceitos na compra, o valor da 1ª parcela não é devolvido (salvo se o pedido de desistência foi feito em até 7 dias da compra). Dúvidas: Instagram <strong className="text-fg">@perolaseventos</strong>.
             </p>
           ) : (
             <>

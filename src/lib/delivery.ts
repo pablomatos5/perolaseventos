@@ -3,6 +3,7 @@ import { formatDateTime, genderLabel } from "@/lib/format";
 import { ticketsPdf } from "@/lib/ticket-pdf";
 import { orderToken } from "@/lib/tokens";
 import { whatsappGroupUrl } from "@/lib/whatsapp-group";
+import { supportLine } from "@/lib/seller";
 
 export const orderLink = (orderId: string) => `${process.env.APP_URL}/pedido/${orderToken(orderId)}`;
 
@@ -31,6 +32,9 @@ export async function deliverTickets(orderId: string) {
     `Atenção:`,
     `- Não compartilhe o seu ingresso. Cada QR vale uma única entrada: depois de lido, não passa de novo.`,
     `- Masculino e feminino são conferidos na entrada. O ingresso feminino só vale para mulheres.`,
+    `- Evento para maiores de 18 anos: leve documento oficial com foto.`,
+    ``,
+    `Dúvidas: ${supportLine()}. Termos de compra: ${process.env.APP_URL}/termos`,
   ].join("\n");
 
   // PDF dos ingressos anexado; se a geração falhar, o e-mail sai mesmo assim com o link
@@ -74,7 +78,7 @@ export async function notifyFirstInstallment(orderId: string) {
     ``,
     `Falta a 2ª parcela: ${fmt(order.totalCents - order.firstPaidCents)}, até ${due}.`,
     `Seus ingressos ficam reservados até lá e são liberados (QR e PDF) assim que a 2ª parcela for paga.`,
-    `Importante (termos do Pix em 2x aceitos na compra): se a 2ª parcela não for paga até o prazo, a reserva é cancelada e o valor da 1ª parcela não é devolvido. Vamos te lembrar por e-mail antes do vencimento.`,
+    `Importante (termos do Pix em 2x aceitos na compra): se a 2ª parcela não for paga até o prazo, a reserva é cancelada e o valor da 1ª parcela não é devolvido (salvo desistência em até 7 dias da compra). Vamos te lembrar por e-mail antes do vencimento.`,
     ``,
     `Para pagar a 2ª parcela: ${orderLink(order.id)}`,
   ].join("\n");
@@ -136,7 +140,7 @@ export async function remindSecondInstallment(orderId: string, kind: ReminderKin
     `Pague pelo link do seu pedido: ${orderLink(order.id)}`,
     ``,
     `Assim que a 2ª parcela cair, seus ingressos (QR e PDF) chegam por aqui.`,
-    `Pelos termos do Pix em 2x aceitos na compra, se o prazo passar sem o pagamento, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido.`,
+    `Pelos termos do Pix em 2x aceitos na compra, se o prazo passar sem o pagamento, a reserva é cancelada, os ingressos voltam para a venda e o valor da 1ª parcela não é devolvido (salvo desistência em até 7 dias da compra).`,
     ``,
     `Se você já pagou, pode desconsiderar este e-mail.`,
   ].join("\n");

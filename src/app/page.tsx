@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { seller } from "@/lib/seller";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { TideReveal, type TideStep } from "@/components/tide-reveal";
@@ -70,6 +71,8 @@ async function EventPage() {
   // Aviso de abertura das vendas (ex.: "Vendas liberadas hoje, 22/10, a partir das 17h"): vem do .env da VPS
   // (SALES_NOTICE) e é lido a cada acesso, então dá para trocar ou tirar sem novo build. Vazio = sem aviso.
   const salesNotice = process.env.SALES_NOTICE?.trim() ?? "";
+  // quem vende (identificação exigida no comércio eletrônico), também lida do .env
+  const vendedor = seller();
 
   // Maré de atrações: data → cada atração anunciada → "em breve" → convite para os ingressos.
   const announced = event.attractions.filter((a) => a.announced);
@@ -192,9 +195,18 @@ async function EventPage() {
             <KorakiMark />
           </div>
           <p className="text-xs text-fg-faint">
-            Pérolas Eventos · {event.city} ·{" "}
+            {vendedor.name}
+            {vendedor.doc && ` · ${vendedor.doc}`} · {vendedor.city} ·{" "}
             <Link href="/pedido" className="underline underline-offset-2">
               Encontrar meu pedido
+            </Link>{" "}
+            ·{" "}
+            <Link href="/termos" className="underline underline-offset-2">
+              Termos de compra
+            </Link>{" "}
+            ·{" "}
+            <Link href="/privacidade" className="underline underline-offset-2">
+              Privacidade
             </Link>
           </p>
         </div>
