@@ -83,10 +83,13 @@ export async function updateQuantityAction(batchId: string, _prev: FormState, fo
   const qty = Number(form.get("quantity"));
   if (!Number.isInteger(qty) || qty < 0 || qty > 100_000) return { error: "Quantidade inválida." };
   const now = new Date();
-  const taken = await db.ticket.count({
-    where: { batchId, OR: [{ status: "VALID" }, { status: "RESERVED", order: holdingOrder(now) }] },
-  });
-  if (qty < taken) return { error: `Mínimo ${taken}: já vendidos/reservados.` };
+  const offline = (await db.batch.findUniqueOrThrow({ where: { id: batchId }, select: { soldOffline: true } })).soldOffline;
+  const taken =
+    offline +
+    (await db.ticket.count({
+      where: { batchId, OR: [{ status: "VALID" }, { status: "RESERVED", order: holdingOrder(now) }] },
+    }));
+  if (qty < taken) return { error: `Mínimo ${taken}: já vendidos/reservados${offline ? ` (inclui ${offline} vendidos fora do site)` : ""}.` };
   const b = await db.batch.update({ where: { id: batchId }, data: { quantity: qty }, include: { ticketType: true } });
   await audit("painel", "mudou a quantidade do lote", `${b.ticketType.name} · ${b.name}: ${qty}`);
   revalidatePath("/admin");

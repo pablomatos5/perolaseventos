@@ -15,6 +15,7 @@ export type BatchRow = {
   quantity: number;
   hidden: boolean;
   sold: number;
+  soldOffline: number; // vendidos fora do site: ocupam vaga, não entram na receita
   reserved: number;
   checkedIn: number;
   revenueCents: number;
@@ -55,7 +56,7 @@ export async function batchReport(eventId: string) {
         else if (b.closedAt) state = "encerrado";
         else if (current.state === "open" && current.batch.id === b.id) state = "à venda";
         else if (b.startsAt && b.startsAt > now) state = "agendado";
-        else if (s + r >= b.quantity) state = "esgotado";
+        else if (s + r + b.soldOffline >= b.quantity) state = "esgotado";
         else state = "na fila";
         return {
           id: b.id,
@@ -65,10 +66,11 @@ export async function batchReport(eventId: string) {
           quantity: b.quantity,
           hidden: b.hidden,
           sold: s,
+          soldOffline: b.soldOffline,
           reserved: r,
           checkedIn: usedM.get(b.id)?.n ?? 0,
           revenueCents: soldM.get(b.id)?.sum ?? 0,
-          remaining: Math.max(0, b.quantity - s - r),
+          remaining: Math.max(0, b.quantity - s - r - b.soldOffline),
           state,
           closedAt: b.closedAt,
         };

@@ -123,7 +123,7 @@ export async function markOrderPaid(orderId: string, paymentRef: string) {
     for (const { batchId } of batchIds) {
       const batch = await tx.batch.findUniqueOrThrow({ where: { id: batchId } });
       const sold = await tx.ticket.count({ where: { batchId, status: "VALID" } });
-      if (sold >= batch.quantity && !batch.closedAt) {
+      if (sold + batch.soldOffline >= batch.quantity && !batch.closedAt) {
         await tx.batch.update({ where: { id: batchId }, data: { closedAt: now } });
       }
     }
@@ -149,7 +149,7 @@ export async function createCourtesy(input: {
     const batch = await tx.batch.findUnique({ where: { id: input.batchId }, include: { ticketType: true } });
     if (!batch || batch.ticketType.eventId !== input.eventId) throw new SaleError("Lote de cortesia inválido.");
     await tx.$queryRaw`SELECT id FROM "TicketType" WHERE id = ${batch.ticketTypeId} FOR UPDATE`;
-    const used = await occupiedCount(tx, batch.id, now);
+    const used = (await occupiedCount(tx, batch.id, now)) + batch.soldOffline;
     if (used + input.qty > batch.quantity) {
       throw new SaleError(`Restam só ${Math.max(0, batch.quantity - used)} cortesia(s) no lote "${batch.name}".`);
     }

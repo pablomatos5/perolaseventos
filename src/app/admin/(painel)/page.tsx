@@ -142,7 +142,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           {/* celular: um cartão por lote (a tabela larga fica para o computador) */}
           <ul className="lot-cards md:hidden">
             {t.rows.map((r) => {
-              const pct = r.quantity ? Math.min(100, ((r.sold + r.reserved) / r.quantity) * 100) : 0;
+              const pct = r.quantity ? Math.min(100, ((r.sold + r.soldOffline + r.reserved) / r.quantity) * 100) : 0;
               return (
                 <li key={r.id} className="lot-card">
                   <div className="lot-card-head">
@@ -156,6 +156,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                     <div>
                       <dt>Vendidos</dt>
                       <dd>{r.sold}</dd>
+                      {r.soldOffline > 0 && <small>+ {r.soldOffline} fora do site</small>}
                       {r.checkedIn > 0 && <small>{r.checkedIn} entraram</small>}
                     </div>
                     <div>
@@ -209,7 +210,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
               </thead>
               <tbody>
                 {t.rows.map((r) => {
-                  const pct = r.quantity ? Math.min(100, ((r.sold + r.reserved) / r.quantity) * 100) : 0;
+                  const pct = r.quantity ? Math.min(100, ((r.sold + r.soldOffline + r.reserved) / r.quantity) * 100) : 0;
                   return (
                     <tr key={r.id} className="border-t border-line-soft">
                       <td className="px-6 py-3">
@@ -227,6 +228,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                       </td>
                       <td className="px-3 py-3 tabular-nums">
                         {r.sold}
+                        {r.soldOffline > 0 && <span className="text-fg-faint"> + {r.soldOffline} fora do site</span>}
                         {r.checkedIn > 0 && <span className="text-fg-faint"> ({r.checkedIn} entraram)</span>}
                       </td>
                       <td className="px-3 py-3 tabular-nums">{r.reserved}</td>

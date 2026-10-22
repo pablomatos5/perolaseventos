@@ -61,8 +61,8 @@ async function EventPage() {
       femaleCents: open ? femalePrice(open.batch) : 0,
       remaining: open?.remaining ?? 0,
       lowStock: open ? open.remaining / open.batch.quantity <= 0.2 : false,
-      // barra do lote: % vendido (arredondado de 5 em 5, sem número exato de ingressos)
-      soldPct: open ? Math.min(100, Math.round(((1 - open.remaining / Math.max(1, open.batch.quantity)) * 100) / 5) * 5) : 0,
+      // barra do lote: % vendido (inclui os vendidos fora do site), em número inteiro
+      soldPct: open ? Math.min(100, Math.round((1 - open.remaining / Math.max(1, open.batch.quantity)) * 100)) : 0,
       next: open?.nextBatch ? { name: open.nextBatch.name, priceCents: open.nextBatch.priceCents } : null,
     });
   }

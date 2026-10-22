@@ -87,6 +87,9 @@ model Batch {
   endsAt         DateTime?
   closedAt       DateTime?
   hidden         Boolean    @default(false) // cortesia/lista: não aparece no site
+  /// Vendidos fora do site (presencial, antes do site): ocupam vaga e contam na barra "% vendido",
+  /// mas não entram na receita do painel (não passaram pelo site).
+  soldOffline    Int        @default(0)
   tickets        Ticket[]
 
   @@unique([ticketTypeId, sortOrder])

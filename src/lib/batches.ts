@@ -47,7 +47,8 @@ export async function currentBatch(
     }
     if (b.startsAt && b.startsAt > now) return { state: "soon", batch: b };
 
-    const occupied = await occupiedCount(tx, b.id, now);
+    // vendidos fora do site também ocupam vaga: o site só vende o que sobra
+    const occupied = (await occupiedCount(tx, b.id, now)) + b.soldOffline;
     if (occupied >= b.quantity) continue; // cheio (talvez só por reservas pendentes): passa para o próximo
 
     return { state: "open", batch: b, remaining: b.quantity - occupied, nextBatch: batches[i + 1] ?? null };
