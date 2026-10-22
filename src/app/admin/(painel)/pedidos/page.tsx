@@ -100,6 +100,18 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                     {o.status === "PARTIAL" && ` (${formatBRL(o.firstPaidCents)}) · 2ª ${o.expiresAt < new Date() ? "vencida em" : "até"} ${formatDateTime(o.expiresAt)}`}
                     {o.status === "PAID" && o.paymentPlan === "PIX_2X" && " · Pix 2x"}
                   </span>
+                  {(() => {
+                    // direito de arrependimento: 7 dias da compra (1º pagamento), e só antes do evento
+                    if (o.status !== "PAID" && o.status !== "PARTIAL") return null;
+                    const bought = o.firstPaidAt ?? o.paidAt ?? o.createdAt;
+                    const until = new Date(Math.min(bought.getTime() + 7 * 86_400_000, event.startsAt.getTime()));
+                    if (until <= new Date()) return null;
+                    return (
+                      <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent" title="Dentro do prazo de arrependimento (art. 49 do CDC): pedido de desistência dá reembolso integral">
+                        arrependimento até {formatDateTime(until)}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="text-fg-muted">
                   {o.email} · {o.phone || "sem celular"} · {o._count.tickets} ingresso(s) · {o.totalCents ? formatBRL(o.totalCents) : "cortesia"}
@@ -109,6 +121,21 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                   {lastEmail && ` · e-mail: ${lastEmail.ok ? "enviado" : `falhou (${lastEmail.detail})`}`}
                 </div>
               </div>
+              {o.status === "PARTIAL" && dev && o.firstPaymentRef && /^\d+$/.test(o.firstPaymentRef) && (
+                <div className="flex flex-wrap gap-2">
+                  <a href={orderLink(o.id)} target="_blank" rel="noopener noreferrer" className="btn px-4! py-2!">
+                    Ver pedido
+                  </a>
+                  <form action={refundOrderAction.bind(null, o.id)}>
+                    <ConfirmButton
+                      className="btn btn-danger px-4! py-2!"
+                      message={`Estornar o pedido ${o.code} (Pix em 2x, 1ª parcela de ${formatBRL(o.firstPaidCents)}) pelo Mercado Pago? O dinheiro volta para ${o.buyerName}, a reserva é cancelada e os ingressos voltam para a venda. Não dá para desfazer.`}
+                    >
+                      Estornar 1ª parcela
+                    </ConfirmButton>
+                  </form>
+                </div>
+              )}
               {o.status === "PAID" && (
                 <div className="flex flex-wrap gap-2">
                   <a href={orderLink(o.id)} target="_blank" rel="noopener noreferrer" className="btn px-4! py-2!">
@@ -125,7 +152,7 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                       Reemitir QR
                     </ConfirmButton>
                   </form>
-                  {dev && o.paymentRef && /^\d+$/.test(o.paymentRef) && (
+                  {dev && [o.paymentRef, o.firstPaymentRef].some((x) => x && /^\d+$/.test(x)) && (
                     <form action={refundOrderAction.bind(null, o.id)}>
                       <ConfirmButton
                         className="btn btn-danger px-4! py-2!"
