@@ -7,7 +7,7 @@ const csp = [
   // Mercado Pago: SDK, campos seguros do cartão e script de segurança do aparelho (pagamento dentro do site)
   "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://sdk.mercadopago.com https://www.mercadopago.com https://*.mlstatic.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.mlstatic.com https://*.mercadopago.com https://*.mercadolibre.com",
+  "img-src 'self' data: blob: https://*.mlstatic.com https://*.mercadopago.com https://*.mercadolibre.com https://*.mercadolivre.com",
   "media-src 'self'",
   "font-src 'self'",
   "connect-src 'self' https://challenges.cloudflare.com https://*.mercadopago.com https://*.mercadolibre.com https://*.mercadolivre.com https://*.mlstatic.com",

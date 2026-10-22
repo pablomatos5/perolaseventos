@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { cardPayAction, type CardField } from "@/app/actions";
+import { cardPayAction, reportCardIssue, type CardField } from "@/app/actions";
 
 // Pagamento com cartão dentro do site, no visual da página do pedido.
 // Número, validade e CVV são "Secure Fields" do Mercado Pago (caixas seguras embutidas): o número do cartão
@@ -81,6 +81,9 @@ const FIELD_ID: Record<CardField, string> = { number: "mp-card-number", expiry: 
 const ORDER: CardField[] = ["number", "expiry", "cvv", "name", "cpf"];
 
 /** Descobre a que campo um erro do Mercado Pago se refere (pelos códigos e nomes de campo que ele devolve). */
+/** Só os códigos de erro do Mercado Pago (nunca o que foi digitado), para o registro de problemas do cartão. */
+const errCodes = (err: unknown) => (JSON.stringify(err ?? "").match(/"(?:code|cause)":"?([A-Za-z0-9_]{2,30})/g) ?? []).join(",").slice(0, 80);
+
 function fieldOf(err: unknown): CardField | null {
   const t = JSON.stringify(err ?? "").toLowerCase();
   if (/cardnumber|card_number|"(205|e301)"/.test(t)) return "number";
@@ -146,7 +149,10 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
           try {
             const { results } = await mp.getPaymentMethods({ bin });
             const pm = results[0];
-            if (!pm) return setFieldError("number", "Cartão não aceito. Use Visa, Mastercard, Elo, Hipercard ou Amex.");
+            if (!pm) {
+              void reportCardIssue(token, "bandeira", "BIN sem bandeira no Mercado Pago");
+              return setFieldError("number", "Cartão não aceito. Use Visa, Mastercard, Elo, Hipercard ou Amex.");
+            }
             setFieldError("number", null);
             let issuerId: string | undefined;
             if (pm.additional_info_needed?.includes("issuer_id")) issuerId = (await mp.getIssuers({ paymentMethodId: pm.id, bin }))[0]?.id;
@@ -164,7 +170,10 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
         });
         setReady(true);
       } catch {
-        if (!cancelled) setLoadError(true);
+        if (!cancelled) {
+          setLoadError(true);
+          void reportCardIssue(token, "carregar", "SDK ou campos do Mercado Pago não carregaram");
+        }
       }
     })();
     return () => {
@@ -175,7 +184,7 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
         } catch {}
       }
     };
-  }, [publicKey, amountCents]);
+  }, [publicKey, amountCents, token]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -191,7 +200,10 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
     else delete local.cpf;
     setErrors(local);
     const first = ORDER.find((f) => local[f]);
-    if (first || !method) return focusField(first ?? "number");
+    if (first || !method) {
+      void reportCardIssue(token, "local", `campos: ${ORDER.filter((f) => local[f]).join(",") || "sem bandeira"}`);
+      return focusField(first ?? "number");
+    }
 
     setPending(true);
     try {
@@ -201,6 +213,7 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
       } catch (err) {
         // o Mercado Pago diz qual campo está errado; se não disser, marca os três dados do cartão
         const f = fieldOf(err);
+        void reportCardIssue(token, "token", `${f ?? "sem campo"} ${errCodes(err)}`);
         if (f) {
           setFieldError(f, FIELD_MSG[f]);
           focusField(f);

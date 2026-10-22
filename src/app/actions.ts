@@ -187,6 +187,10 @@ export async function cardPayAction(token: string, input: CardInput): Promise<Ca
   }
   try {
     const r = await payWithCard(orderId, parsed.data);
+    // visibilidade: toda tentativa no cartão fica no log e no Registro do painel (motivo do Mercado Pago, nunca o cartão)
+    const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? orderId;
+    console.log(`[mercadopago] cartão pedido ${code}: ${r.status} ${r.detail} (${parsed.data.paymentMethodId}, ${parsed.data.installments}x)`);
+    await audit("cliente", r.status === "approved" ? "pagou com cartão" : "cartão recusado", `pedido ${code} · ${r.detail || r.status} · ${parsed.data.paymentMethodId} ${parsed.data.installments}x`);
     if (r.status === "approved") {
       revalidatePath(`/pedido/${token}`);
       return { ok: true };
@@ -196,6 +200,21 @@ export async function cardPayAction(token: string, input: CardInput): Promise<Ca
     console.error("[mercadopago] falha no pagamento com cartão:", e);
     return { error: "Não foi possível falar com o Mercado Pago agora. Tente de novo em instantes." };
   }
+}
+
+/**
+ * O formulário do cartão avisa aqui quando algo falha no navegador (cartão não reconhecido, dado inválido,
+ * campos do Mercado Pago sem carregar): sem isso, essas falhas não deixavam rastro. Nunca recebe dado do cartão:
+ * só um tipo fixo e o código de erro do Mercado Pago. Limite de envios por pedido.
+ */
+const CARD_ISSUES = new Set(["bandeira", "token", "carregar", "local"]);
+export async function reportCardIssue(token: string, kind: string, detail: string) {
+  const orderId = verifyOrderToken(token);
+  if (!orderId || !CARD_ISSUES.has(kind) || !allow(`cartao-log:${orderId}`, 20, 15 * 60_000)) return;
+  const clean = String(detail).replace(/[^\w ,.:/-]/g, "").slice(0, 80);
+  const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? "?";
+  console.warn(`[cartão-navegador] pedido ${code}: ${kind} ${clean}`);
+  await audit("cliente", "problema no formulário do cartão", `pedido ${code} · ${kind} · ${clean}`);
 }
 
 /** Só funciona com PAYMENT_PROVIDER=mock fora de produção. Em produção, quem confirma é o webhook. */
