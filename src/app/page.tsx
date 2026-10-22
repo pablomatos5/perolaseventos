@@ -66,6 +66,10 @@ async function EventPage() {
     });
   }
 
+  // Aviso de abertura das vendas (ex.: "Vendas liberadas hoje, 22/10, a partir das 17h"): vem do .env da VPS
+  // (SALES_NOTICE) e é lido a cada acesso, então dá para trocar ou tirar sem novo build. Vazio = sem aviso.
+  const salesNotice = process.env.SALES_NOTICE?.trim() ?? "";
+
   // Maré de atrações: data → cada atração anunciada → "em breve" → convite para os ingressos.
   const announced = event.attractions.filter((a) => a.announced);
   const soonCount = event.attractions.length - announced.length;
@@ -81,7 +85,7 @@ async function EventPage() {
     ...(soonCount > 0
       ? [{ key: "em-breve", mystery: true, big: `+${soonCount} ${soonCount === 1 ? "atração" : "atrações"} em breve`, small: ["Os anúncios saem no @perolaseventos"] }]
       : []),
-    { key: "convite", eyebrow: "Lotes abertos", big: "A virada que você merece", cta: { label: "Garantir meu ingresso", href: "#ingressos" } },
+    { key: "convite", eyebrow: salesNotice ? "Vendas em breve" : "Lotes abertos", big: "A virada que você merece", cta: { label: "Garantir meu ingresso", href: "#ingressos" } },
   ];
 
   return (
@@ -155,8 +159,13 @@ async function EventPage() {
             Escolha o seu <em>lugar</em> na virada
           </h2>
           <p className="mt-4 max-w-xl text-fg-muted">{event.description}</p>
+          {salesNotice && (
+            <p className="sales-notice mt-8" role="status">
+              <span aria-hidden>✦</span> {salesNotice}
+            </p>
+          )}
           <div className="mt-12">
-            <TicketPicker eventId={event.id} types={types} />
+            <TicketPicker eventId={event.id} types={types} pausedNote={salesNotice || undefined} />
           </div>
         </div>
       </section>

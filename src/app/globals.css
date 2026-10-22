@@ -2991,6 +2991,23 @@ html[data-edition="2k27"] { background: #070719; }
 }
 .demo-banner > span { font-size: 0.6em; }
 
+/* aviso de abertura das vendas na seção de ingressos (SALES_NOTICE no .env) */
+.sales-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.4rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2e2466, #4a2f7a);
+  border: 1px solid rgb(240 207 140 / 0.7);
+  box-shadow: 0 12px 30px -14px rgb(46 36 102 / 0.6);
+  color: #fbeedd;
+  font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.sales-notice > span { color: #f0cf8c; }
+
 /* ───────── Formas de pagamento (Pix, cartão, Pix em 2x) e parcelas ───────── */
 .pay-options { display: grid; gap: 0.75rem; }
 .pay-option {

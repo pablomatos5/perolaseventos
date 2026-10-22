@@ -39,7 +39,7 @@ function Stepper({ value, onChange, max, label }: { value: number; onChange: (v:
   );
 }
 
-export function TicketPicker({ eventId, types }: { eventId: string; types: PickerType[] }) {
+export function TicketPicker({ eventId, types, pausedNote }: { eventId: string; types: PickerType[]; pausedNote?: string }) {
   const [qty, setQty] = useState<Qty>({});
   const [state, action, pending] = useActionState(reserveAction, undefined);
   // dados do comprador guardados aqui: o envio do formulário não apaga o que foi digitado
@@ -132,7 +132,7 @@ export function TicketPicker({ eventId, types }: { eventId: string; types: Picke
                 <p className="mt-6 border-t border-line pt-6 text-sm text-fg-muted">
                   {t.status === "soon" && "Próximo lote abre em breve."}
                   {t.status === "soldout" && "Esgotado."}
-                  {t.status === "paused" && "Vendas pausadas no momento."}
+                  {t.status === "paused" && (pausedNote ?? "Vendas pausadas no momento.")}
                 </p>
               )}
             </article>
