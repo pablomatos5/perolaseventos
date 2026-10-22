@@ -168,12 +168,6 @@ async function EventPage() {
           <div className="mt-12">
             <TicketPicker eventId={event.id} types={types} pausedNote={salesNotice || undefined} />
           </div>
-          <div className="find-order-cta mt-10">
-            <p>Já comprou e perdeu o link dos ingressos ou do Pix em 2x?</p>
-            <Link href="/pedido" className="btn solid">
-              Encontrar meu pedido
-            </Link>
-          </div>
         </div>
       </section>
 

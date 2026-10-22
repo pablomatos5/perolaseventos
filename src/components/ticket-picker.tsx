@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { reserveAction, type BuyerField } from "@/app/actions";
 import { TurnstileWidget } from "@/components/turnstile-widget";
@@ -185,6 +186,12 @@ export function TicketPicker({ eventId, types, pausedNote }: { eventId: string; 
         </button>
         <p className="mt-3 text-center text-xs text-fg-faint">
           Seus ingressos ficam reservados por 15 minutos. Depois do pagamento, baixe o PDF na hora e receba também por e-mail.
+        </p>
+        <p className="mt-3 border-t border-line pt-3 text-center text-xs text-fg-faint">
+          Já comprou e perdeu o link?{" "}
+          <Link href="/pedido" className="font-medium underline underline-offset-2 hover:text-accent">
+            Encontrar meu pedido
+          </Link>
         </p>
       </aside>
     </form>
