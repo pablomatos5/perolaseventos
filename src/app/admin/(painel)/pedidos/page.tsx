@@ -88,6 +88,8 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
       <ul className="grid gap-3">
         {orders.map((o) => {
           const lastEmail = o.deliveries.find((d) => d.channel === "EMAIL");
+          // reserva que passou do prazo sem pagar continua PENDING no banco (não segura estoque): mostra como expirada
+          const lapsed = o.status === "PENDING" && o.expiresAt < new Date();
           return (
             <li key={o.id} className="glass-card grid gap-3 p-5 md:grid-cols-[1fr_auto] md:items-center">
               <div className="grid gap-1 text-sm">
@@ -95,7 +97,7 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                   <span className="font-mono text-accent">{o.code}</span>
                   <span className="font-medium">{o.buyerName}</span>
                   <span className={`rounded-full px-2 py-0.5 text-xs ${o.status === "PAID" ? "bg-ok/15 text-ok" : "bg-surface text-fg-muted"}`}>
-                    {STATUS[o.status]}
+                    {lapsed ? "reserva expirada" : STATUS[o.status]}
                     {o.paidLate && " · pago após expirar"}
                     {o.status === "PARTIAL" && ` (${formatBRL(o.firstPaidCents)}) · 2ª ${o.expiresAt < new Date() ? "vencida em" : "até"} ${formatDateTime(o.expiresAt)}`}
                     {o.status === "PAID" && o.paymentPlan === "PIX_2X" && " · Pix 2x"}
