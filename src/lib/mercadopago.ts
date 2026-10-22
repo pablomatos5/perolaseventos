@@ -1,4 +1,4 @@
-import MercadoPagoConfig, { Payment } from "mercadopago";
+import MercadoPagoConfig, { Payment, PaymentRefund } from "mercadopago";
 import { db } from "@/lib/db";
 import { cardTotalCents } from "@/lib/format";
 import { deliverTickets, notifyFirstInstallment } from "@/lib/delivery";
@@ -23,6 +23,22 @@ async function client() {
   const accessToken = seller ?? process.env.MP_ACCESS_TOKEN;
   if (!accessToken) throw new Error("Nenhuma conta Mercado Pago: conecte a do evento no painel (ou configure MP_ACCESS_TOKEN)");
   return { config: new MercadoPagoConfig({ accessToken, options: { timeout: 15_000 } }), marketplace: !!seller };
+}
+
+/**
+ * Estorno total pelo Mercado Pago (botão do painel, só para os desenvolvedores). Devolve cada pagamento do
+ * pedido: o à vista, ou as duas parcelas do Pix em 2x. A comissão dos desenvolvedores (application_fee) volta
+ * junto. O pedido vira REFUNDED aqui mesmo (QRs param de valer); o webhook do estorno depois só confirma.
+ */
+export async function refundPayments(orderId: string) {
+  const order = await db.order.findUniqueOrThrow({ where: { id: orderId } });
+  // só ids numéricos do Mercado Pago (pedido de demonstração tem "mock_…"; cortesia não tem pagamento)
+  const ids = [...new Set([order.firstPaymentRef, order.paymentRef])].filter((x): x is string => !!x && /^\d+$/.test(x));
+  if (ids.length === 0) throw new Error("Este pedido não tem pagamento no Mercado Pago (cortesia ou demonstração).");
+  const refund = new PaymentRefund((await client()).config);
+  for (const id of ids) await refund.total({ payment_id: id, requestOptions: { idempotencyKey: `estorno-${id}` } });
+  await refundOrder(orderId);
+  return { order, payments: ids };
 }
 
 /** Chave pública para os campos do cartão no navegador (da conta conectada; senão MP_PUBLIC_KEY). */

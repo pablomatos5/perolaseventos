@@ -1,11 +1,11 @@
 import { connection } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
-import { requireAdmin } from "@/lib/admin-auth";
+import { isDev, requireAdmin } from "@/lib/admin-auth";
 import { activeEvent } from "@/lib/admin-data";
 import { db } from "@/lib/db";
 import { orderLink } from "@/lib/delivery";
 import { formatBRL, formatDateTime } from "@/lib/format";
-import { reissueAction, resendAction } from "../../actions";
+import { refundOrderAction, reissueAction, resendAction } from "../../actions";
 import { ConfirmButton } from "../../forms";
 
 const STATUS: Record<string, string> = {
@@ -27,6 +27,9 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
   const q = (typeof sp.q === "string" ? sp.q : "").trim();
   const status = typeof sp.status === "string" ? sp.status : "";
   const digits = q.replace(/\D/g, "");
+  // botão de estorno: só para os desenvolvedores (a ação também confere no servidor)
+  const dev = await isDev();
+  const refundResult = sp.estorno === "ok" ? "ok" : sp.estorno === "erro" ? (typeof sp.msg === "string" ? sp.msg : "erro desconhecido") : null;
 
   const where: Prisma.OrderWhereInput = { eventId: event.id };
   if (status && status in STATUS) where.status = status as Prisma.OrderWhereInput["status"];
@@ -57,6 +60,12 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
           <em>Pedidos</em>
         </h1>
       </div>
+
+      {refundResult && (
+        <p role="status" className={`rounded-xl px-4 py-3 text-sm ${refundResult === "ok" ? "bg-ok/15 text-ok" : "bg-danger/15 text-danger"}`}>
+          {refundResult === "ok" ? "Estorno feito: o dinheiro volta ao comprador e os QRs do pedido não valem mais." : `O estorno não foi feito: ${refundResult}`}
+        </p>
+      )}
 
       <form className="flex flex-wrap gap-3" role="search">
         <input
@@ -116,6 +125,16 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                       Reemitir QR
                     </ConfirmButton>
                   </form>
+                  {dev && o.paymentRef && /^\d+$/.test(o.paymentRef) && (
+                    <form action={refundOrderAction.bind(null, o.id)}>
+                      <ConfirmButton
+                        className="btn btn-danger px-4! py-2!"
+                        message={`Estornar o pedido ${o.code} (${formatBRL(o.totalCents)}) pelo Mercado Pago? O dinheiro volta para ${o.buyerName}, a taxa de serviço volta junto e os QR codes param de valer. Não dá para desfazer.`}
+                      >
+                        Estornar
+                      </ConfirmButton>
+                    </form>
+                  )}
                 </div>
               )}
             </li>

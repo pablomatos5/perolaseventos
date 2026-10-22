@@ -3272,6 +3272,9 @@ body:has(.painel) { background: #f6f2fb; }
 .painel .text-accent { color: var(--accent); }
 .painel .bg-ok\/15 { background: rgb(47 122 75 / 0.12); }
 .painel .bg-danger\/15 { background: rgb(176 42 67 / 0.1); }
+/* botão de estorno (só aparece para os desenvolvedores): vermelho, ação sem volta */
+.painel .btn.btn-danger { border-color: rgb(176 42 67 / 0.55); color: #b02a43; background: rgb(176 42 67 / 0.06); }
+.painel .btn.btn-danger:hover { background: #b02a43; color: #fff; }
 .painel .bg-accent\/15 { background: rgb(154 106 47 / 0.12); }
 .painel label, .painel label.text-fg-faint, .painel .uppercase.tracking-widest { color: var(--fg-faint); }
 .painel form label { color: var(--fg-muted); }

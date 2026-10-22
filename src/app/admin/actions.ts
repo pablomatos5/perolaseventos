@@ -6,15 +6,17 @@ import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { checkPassword, endSession, requireAdmin, startSession } from "@/lib/admin-auth";
+import { checkPassword, endSession, requireAdmin, requireDev, startSession } from "@/lib/admin-auth";
 import { activeEvent } from "@/lib/admin-data";
 import { db } from "@/lib/db";
 import { deliverTickets } from "@/lib/delivery";
 import { createCourtesy, SaleError } from "@/lib/orders";
 import { blocked, clientIp, fail } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
+import { formatBRL } from "@/lib/format";
 import { createDevice } from "@/lib/portaria-auth";
 import { connectedAccount, disconnectAccount } from "@/lib/mp-account";
+import { refundPayments } from "@/lib/mercadopago";
 
 export type FormState = { ok?: string; error?: string } | undefined;
 
@@ -193,6 +195,27 @@ export async function resendAction(orderId: string) {
   await deliverTickets(orderId);
   await audit("painel", "reenviou ingressos", `pedido ${order.code}`);
   revalidatePath("/admin/pedidos");
+}
+
+/**
+ * Estorno total pelo Mercado Pago. Só para os desenvolvedores: a equipe não vê o botão, e um POST direto
+ * com a sessão da equipe também é recusado aqui (requireDev). Devolve o dinheiro ao comprador, a comissão
+ * volta junto e os QRs do pedido param de valer.
+ */
+export async function refundOrderAction(orderId: string) {
+  await requireDev();
+  let to = "/admin/pedidos?estorno=ok";
+  try {
+    const { order, payments } = await refundPayments(orderId);
+    await audit("dev", "estornou o pedido", `pedido ${order.code} · ${formatBRL(order.totalCents)} · pagamento(s) ${payments.join(", ")}`);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[mercadopago] estorno falhou:", e);
+    await audit("dev", "estorno falhou", `pedido ${orderId}: ${msg}`);
+    to = `/admin/pedidos?estorno=erro&msg=${encodeURIComponent(msg.slice(0, 160))}`;
+  }
+  revalidatePath("/admin/pedidos");
+  redirect(to);
 }
 
 /**
