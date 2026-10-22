@@ -96,9 +96,14 @@ const dateLong = (d: Date) => d.toLocaleDateString("pt-BR", { day: "numeric", mo
 const weekday = (d: Date) => d.toLocaleDateString("pt-BR", { weekday: "long", timeZone: TZ });
 const hour = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ }).replace(":00", "h").replace(":", "h");
 
+/**
+ * Tema de cada ingresso: o FEMININO sai no tema claro ("dia") e o MASCULINO no escuro ("noite"), cada página
+ * com o seu. Cortesia (sem gênero) sai no claro. `theme` força o mesmo tema para todos (ex.: ?tema=noite).
+ */
+const themeFor = (t: PdfTicket, forced?: TicketTheme): TicketTheme => forced ?? (t.gender === "Masculino" ? "noite" : "dia");
+
 /** Gera o PDF com um ingresso por página. */
 export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tickets: PdfTicket[]; totalInOrder?: number; startIndex?: number; theme?: TicketTheme }) {
-  const night = opts.theme === "noite";
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   doc.setTitle(`Ingressos · ${opts.event.name} ${opts.event.edition}`);
@@ -115,31 +120,60 @@ export async function ticketsPdf(opts: { event: PdfEvent; orderCode: string; tic
     sansBold: await doc.embedFont(b.sansBold, { subset: true }),
   };
   const total = opts.totalInOrder ?? opts.tickets.length;
-  // fundo: degradê das artes 2027 (assets/pdf/fundo-2027.png esticado, sem faixas)
-  const glow = await doc.embedPng(await (night ? readAsset("fundo-noite.png") : (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png")))));
-  // topo: as sereias e o mar das artes oficiais (assets/pdf/topo-ingresso.jpg, ~40 KB, uma vez por PDF)
-  const art = await doc.embedJpg(await (night ? readAsset("topo-noite.jpg") : (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg")))));
+  // artes de cada tema, embutidas uma vez por PDF e só se algum ingresso usar aquele tema
+  const themes = new Map<TicketTheme, Promise<ThemeArt>>();
+  const artFor = (theme: TicketTheme) => {
+    let a = themes.get(theme);
+    if (!a) {
+      const night = theme === "noite";
+      a = (async () => ({
+        // fundo: degradê das artes 2027 (esticado, sem faixas)
+        glow: await doc.embedPng(await (night ? readAsset("fundo-noite.png") : (bgBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "fundo-2027.png"))))),
+        // topo: as sereias e o mar das artes oficiais
+        art: await doc.embedJpg(await (night ? readAsset("topo-noite.jpg") : (topBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "topo-ingresso.jpg"))))),
+        // pé no visual atual do site (scripts/fundo-mar/ingresso.py): areia no claro, fundo do mar no escuro
+        foot: await doc.embedPng(await readAsset(night ? "pe-noite.png" : "pe-dia.png")),
+        colors: night ? NIGHT : DAY,
+        night,
+      }))();
+      themes.set(theme, a);
+    }
+    return a;
+  };
   // logotipo oficial (arte aprovada, public/2027/logo) + linha 2K27, exportado do próprio site com a margem livre
   const logo = await doc.embedPng(await (logoBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "logo-2027.png"))));
   // concha Pérolas (identidade 2027): selo, marca d'água e assinatura — assets/pdf/concha-dourada.png
   // (gerada da arte oficial por scripts/concha-dourada.py)
   const shell = await doc.embedPng(await (shellBytes ??= readFile(path.join(process.cwd(), "assets", "pdf", "concha-dourada.png"))));
-  opts.tickets.forEach((t, i) => drawTicket(doc.addPage([W, H]), F, glow, art, logo, shell, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total, night ? NIGHT : DAY));
+  // fios de luz dourados do céu do site, por cima do topo (nos dois temas)
+  const threads = await doc.embedPng(await readAsset("fios-luz.png"));
+  for (const [i, t] of opts.tickets.entries()) {
+    const a = await artFor(themeFor(t, opts.theme));
+    drawTicket(doc.addPage([W, H]), F, a, threads, logo, shell, opts.event, opts.orderCode, t, (opts.startIndex ?? 0) + i + 1, total);
+  }
   return doc.save();
 }
 
+type ThemeArt = { glow: PDFImage; art: PDFImage; foot: PDFImage; colors: typeof DAY; night: boolean };
+
 type Fonts = Record<"display" | "serif" | "serifItalic" | "sans" | "sansMedium" | "sansBold", PDFFont>;
 
-function drawTicket(p: PDFPage, F: Fonts, glow: PDFImage, art: PDFImage, logo: PDFImage, shell: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number, C: typeof DAY) {
+function drawTicket(p: PDFPage, F: Fonts, theme: ThemeArt, threads: PDFImage, logo: PDFImage, shell: PDFImage, ev: PdfEvent, orderCode: string, t: PdfTicket, n: number, total: number) {
+  const { glow, art, foot, colors: C, night } = theme;
   const conch = (cx: number, cy: number, w: number, opacity = 1) => {
     const h = (w * shell.height) / shell.width;
     p.drawImage(shell, { x: cx - w / 2, y: cy - h / 2, width: w, height: h, opacity });
   };
   // ── fundo: céu da campanha 2027 (violeta no alto → pêssego embaixo) ──
   p.drawImage(glow, { x: 0, y: 0, width: W, height: H });
+  // ── pé: areia (claro) ou fundo do mar (escuro), como no site; sobe esfumado atrás das regras e da assinatura ──
+  const footH = (W * foot.height) / foot.width;
+  p.drawImage(foot, { x: 0, y: 0, width: W, height: footH });
   // ── topo: sereias e mar das artes oficiais ──
   const artH = 350;
   p.drawImage(art, { x: 0, y: H - artH, width: W, height: artH });
+  // fios de luz dourados do céu do site, do canto esquerdo (como na página)
+  p.drawImage(threads, { x: -60, y: H - 360, width: 400, height: 400, opacity: night ? 1 : 0.9 });
   const stars = [[40, 50, 1.1], [92, 76, 0.7], [318, 34, 0.9], [372, 78, 1.2], [210, 22, 0.8], [150, 40, 0.6], [270, 64, 0.7]];
   for (const [x, dy, r] of stars) p.drawCircle({ x, y: H - dy, size: r, color: C.white, opacity: 0.85 });
   drawStar(p, 334, H - 50, 7, C.cream, 0.95);

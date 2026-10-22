@@ -17,8 +17,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
   if (!order || order.status !== "PAID") return new Response("Pedido sem ingressos emitidos", { status: 404 });
 
   const valid = order.tickets.filter((t) => t.status === "VALID");
-  // ?tema=noite: versão noturna do mesmo ingresso
-  const theme = new URL(req.url).searchParams.get("tema") === "noite" ? "noite" : "dia";
+  // tema por ingresso (feminino claro, masculino escuro); ?tema=dia|noite força um só para todos
+  const tema = new URL(req.url).searchParams.get("tema");
+  const theme = tema === "noite" || tema === "dia" ? tema : undefined;
   const bytes = await ticketsPdf({
     theme,
     event: order.event,
