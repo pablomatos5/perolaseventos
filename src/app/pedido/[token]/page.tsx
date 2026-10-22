@@ -19,6 +19,7 @@ import { firstInstallmentCents, RESERVATION_MINUTES, secondInstallmentDue, split
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { decodeToken, ticketLinkToken, ticketToken, verifyOrderToken } from "@/lib/tokens";
 import { headers } from "next/headers";
+import { audit } from "@/lib/audit";
 
 export const metadata = { title: "Seu pedido · Pérolas", robots: { index: false } };
 
@@ -65,6 +66,12 @@ async function Order({ params, searchParams }: { params: Promise<{ token: string
     include: { event: true, tickets: { include: { ticketType: true, batch: true }, orderBy: { createdAt: "asc" } } },
   });
   if (!order) notFound();
+
+  // painel "Pedidos": mostra que o comprador chegou a abrir o cartão (uma vez por pedido)
+  if (paying === "cartao" && order.status === "PENDING") {
+    const seen = await db.auditLog.findFirst({ where: { action: "abriu o pagamento com cartão", detail: `pedido ${order.code}` }, select: { id: true } });
+    if (!seen) await audit("cliente", "abriu o pagamento com cartão", `pedido ${order.code}`);
+  }
 
   const expired = order.status === "EXPIRED" || (order.status === "PENDING" && order.expiresAt < new Date());
   // Pix em 2x: 1ª parcela paga; vencida = prazo da 2ª passou sem pagamento

@@ -49,8 +49,25 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
     include: {
       _count: { select: { tickets: true } },
       deliveries: { orderBy: { createdAt: "desc" }, take: 4 },
+      pixCharges: { select: { kind: true, createdAt: true, paymentId: true }, orderBy: { createdAt: "asc" } },
     },
   });
+
+  // tentativas de pagamento no cartão (o Registro guarda "pedido CÓDIGO · …"): abriu, recusas e erros do formulário
+  const cardLogs = orders.length
+    ? await db.auditLog.findMany({
+        where: {
+          action: { in: ["abriu o pagamento com cartão", "cartão recusado", "pagou com cartão", "problema no formulário do cartão"] },
+          OR: orders.map((o) => ({ detail: { startsWith: `pedido ${o.code}` } })),
+        },
+        orderBy: { at: "asc" },
+      })
+    : [];
+  const cardBy = new Map<string, typeof cardLogs>();
+  for (const l of cardLogs) {
+    const code = l.detail.slice(7, 13);
+    cardBy.set(code, [...(cardBy.get(code) ?? []), l]);
+  }
 
   return (
     <div className="grid gap-8">
@@ -118,6 +135,12 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                 <div className="text-fg-muted">
                   {o.email} · {o.phone || "sem celular"} · {o._count.tickets} ingresso(s) · {o.totalCents ? formatBRL(o.totalCents) : "cortesia"}
                 </div>
+                <PaymentTrail
+                  status={o.status}
+                  paymentRef={o.paymentRef}
+                  pix={o.pixCharges}
+                  card={cardBy.get(o.code) ?? []}
+                />
                 <div className="text-xs text-fg-faint">
                   {formatDateTime(o.createdAt)}
                   {lastEmail && ` · e-mail: ${lastEmail.ok ? "enviado" : `falhou (${lastEmail.detail})`}`}
@@ -174,3 +197,62 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
     </div>
   );
 }
+
+const hhmm = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Belem" });
+
+/** Motivos de recusa do cartão (status_detail do Mercado Pago) em português curto. */
+const CARD_REASON: Record<string, string> = {
+  cc_rejected_high_risk: "antifraude (risco)",
+  cc_rejected_insufficient_amount: "sem saldo/limite",
+  cc_rejected_call_for_authorize: "banco pediu autorização",
+  cc_rejected_card_disabled: "cartão desativado",
+  cc_rejected_bad_filled_card_number: "número errado",
+  cc_rejected_bad_filled_date: "validade errada",
+  cc_rejected_bad_filled_security_code: "CVV errado",
+  cc_rejected_bad_filled_other: "dado errado",
+  cc_rejected_duplicated_payment: "pagamento duplicado",
+  cc_rejected_max_attempts: "tentativas demais",
+  cc_rejected_blacklist: "cartão bloqueado",
+  cc_rejected_other_reason: "recusado pelo banco",
+};
+const PIX_KIND: Record<string, string> = { pix: "Pix", "pix2x-1": "Pix 2x (1ª)", "pix2x-2": "Pix 2x (2ª)" };
+
+/** Como o comprador tentou (ou conseguiu) pagar: Pix gerado, cartão aberto/recusado, erro no formulário. */
+function PaymentTrail({
+  status,
+  paymentRef,
+  pix,
+  card,
+}: {
+  status: string;
+  paymentRef: string | null;
+  pix: { kind: string; createdAt: Date; paymentId: string }[];
+  card: { at: Date; action: string; detail: string }[];
+}) {
+  const steps: { text: string; tone: "ok" | "bad" | "info" }[] = [];
+  if (status === "PAID" && paymentRef && /^\d+$/.test(paymentRef)) {
+    steps.push({ text: pix.some((p) => p.paymentId === paymentRef) ? "pago no Pix" : "pago no cartão", tone: "ok" });
+  }
+  for (const p of pix) if (!(status === "PAID" && p.paymentId === paymentRef)) steps.push({ text: `${PIX_KIND[p.kind] ?? "Pix"} gerado ${hhmm(p.createdAt)}`, tone: "info" });
+  for (const l of card) {
+    const part = l.detail.split(" · ");
+    if (l.action === "abriu o pagamento com cartão") steps.push({ text: `abriu o cartão ${hhmm(l.at)}`, tone: "info" });
+    else if (l.action === "cartão recusado") steps.push({ text: `cartão recusado: ${CARD_REASON[part[1]] ?? part[1] ?? "?"} (${hhmm(l.at)})`, tone: "bad" });
+    else if (l.action === "problema no formulário do cartão") steps.push({ text: `erro no formulário do cartão: ${part[1] ?? "?"} (${hhmm(l.at)})`, tone: "bad" });
+  }
+  if (steps.length === 0) {
+    if (status === "PENDING") steps.push({ text: "não escolheu forma de pagamento", tone: "info" });
+    else return null;
+  }
+  const cls = { ok: "bg-ok/15 text-ok", bad: "bg-danger/15 text-danger", info: "bg-surface text-fg-muted" } as const;
+  return (
+    <div className="flex flex-wrap gap-1.5 text-xs">
+      {steps.map((s, i) => (
+        <span key={i} className={`rounded-full px-2 py-0.5 ${cls[s.tone]}`}>
+          {s.text}
+        </span>
+      ))}
+    </div>
+  );
+}
+
