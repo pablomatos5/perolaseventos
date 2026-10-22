@@ -15,7 +15,9 @@ const maskCpf = (v: string) => {
 /** "Encontrar meu pedido": CPF + e-mail da compra → o link vai para o e-mail cadastrado (nada aparece na tela). */
 export function FindOrderForm() {
   const [state, action, pending] = useActionState(findOrderAction, undefined);
+  // campos controlados: depois de um erro o formulário não apaga o que a pessoa digitou
   const [cpf, setCpf] = useState("");
+  const [email, setEmail] = useState("");
 
   if (state?.sent) {
     return (
@@ -38,7 +40,7 @@ export function FindOrderForm() {
       </label>
       <label className="grid gap-1.5 text-xs uppercase tracking-widest text-fg-faint">
         E-mail usado na compra
-        <input name="email" type="email" required autoComplete="email" placeholder="voce@email.com" className={input} />
+        <input name="email" type="email" required autoComplete="email" placeholder="voce@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
       </label>
       {TURNSTILE_SITE_KEY && <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} resetKey={state} />}
       {state?.error && (
