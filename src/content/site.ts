@@ -101,7 +101,6 @@ export const pastVideos: { src: string; poster: string; alt: string; quote?: str
  */
 export const sponsors2026: { name: string; instagram?: string; image?: string; light?: boolean }[] = [
   { name: "FB Import & Perfumaria", instagram: "fb.import__", image: "/patrocinadores/fb-import.jpg" },
-  { name: "Maju Modas & Maria Bonita", image: "/patrocinadores/maju-maria-bonita.jpg" },
   { name: "Lucas Amorim Advocacia", instagram: "adv.lucaamoriim", image: "/patrocinadores/lucas-amorim.jpg" },
   { name: "Sr Drink", instagram: "sr.drink_oficial", image: "/patrocinadores/sr-drink.jpg", light: true },
   { name: "Dr. André Luiz · Odontologia", instagram: "dr.andre_luizc", image: "/patrocinadores/dr-andre-luiz.jpg" },
