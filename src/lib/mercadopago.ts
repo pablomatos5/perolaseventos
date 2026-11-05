@@ -174,10 +174,10 @@ async function antifraudInfo(order: OrderForPay & { phone: string; createdAt: Da
     category_id: "tickets",
     quantity: g.quantity,
     unit_price: g.cents / 100,
-    category_descriptor: { event_date: eventDate, type: "event" },
+    category_descriptor: { event_date: eventDate },
   }));
   const ticketsCents = tickets.reduce((s, t) => s + t.priceCents, 0);
-  const extra = (id: string, title: string, cents: number) => cents > 0 && items.push({ id, title, description: title, category_id: "services", quantity: 1, unit_price: cents / 100, category_descriptor: { event_date: eventDate, type: "event" } });
+  const extra = (id: string, title: string, cents: number) => cents > 0 && items.push({ id, title, description: title, category_id: "services", quantity: 1, unit_price: cents / 100, category_descriptor: { event_date: eventDate } });
   extra("taxa-servico", "Taxa de serviço", order.feeCents);
   extra("taxa-cartao", "Taxa do cartão", chargedCents - ticketsCents - order.feeCents);
   const phone = phoneOf(order.phone);
