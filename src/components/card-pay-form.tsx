@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { cardPayAction, reportCardIssue, type CardField } from "@/app/actions";
+import { cardCancelChallengeAction, cardPayAction, cardStatusAction, reportCardIssue, type CardField, type CardState } from "@/app/actions";
 
 // Pagamento com cartão dentro do site, no visual da página do pedido.
 // Número, validade e CVV são "Secure Fields" do Mercado Pago (caixas seguras embutidas): o número do cartão
@@ -123,6 +123,10 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
   const [errors, setErrors] = useState<Partial<Record<CardField, string>>>({});
   const [paid, setPaid] = useState(false);
   const [declines, setDeclines] = useState(0);
+  // 3D Secure: confirmação do banco aberta (janela por cima da página) e pagamento em análise no Mercado Pago
+  const [challenge, setChallenge] = useState<{ url: string; creq: string; paymentId: string } | null>(null);
+  const [review, setReview] = useState<{ paymentId: string; msg: string } | null>(null);
+  const challengeForm = useRef<HTMLFormElement | null>(null);
   // erro do Mercado Pago guardado enquanto a pessoa digita; só aparece quando ela sai do campo
   const pendingMsg = useRef<Partial<Record<CardField, string>>>({});
 
@@ -214,6 +218,94 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
     };
   }, [publicKey, amountCents, token]);
 
+  /** Resposta do servidor (pagamento novo ou conferência): aprovado, desafio do banco, em análise ou recusado. */
+  function handleReply(r: CardState) {
+    if (r?.ok) {
+      setChallenge(null);
+      setReview(null);
+      setPaid(true);
+      router.refresh();
+      return;
+    }
+    if (r?.challenge && r.paymentId) {
+      setError(null);
+      setChallenge({ ...r.challenge, paymentId: r.paymentId });
+      return;
+    }
+    if (r?.review && r.paymentId) {
+      setChallenge(null);
+      setError(null);
+      setReview({ paymentId: r.paymentId, msg: r.error ?? "Pagamento em análise." });
+      return;
+    }
+    setChallenge(null);
+    if (r?.field) {
+      setFieldError(r.field, r.error ?? FIELD_MSG[r.field]);
+      focusField(r.field);
+      return;
+    }
+    if (r?.declined) setDeclines((n) => n + 1);
+    setError(r?.error ?? "Pagamento recusado. Tente de novo.");
+  }
+
+  // abre a confirmação do banco: o formulário com o creq é enviado para dentro do iframe (receita do Mercado Pago)
+  useEffect(() => {
+    if (challenge) challengeForm.current?.submit();
+  }, [challenge]);
+
+  // acompanha o pagamento enquanto o banco confirma (o Mercado Pago avisa com "COMPLETE" pelo iframe, mas a
+  // situação só muda depois: confere a cada poucos segundos) ou enquanto está em análise
+  useEffect(() => {
+    const watching = challenge ?? review;
+    if (!watching) return;
+    const { paymentId } = watching;
+    const inChallenge = !!challenge;
+    let stop = false;
+    let busy = false;
+    const started = Date.now();
+    const check = async () => {
+      if (stop || busy) return;
+      busy = true;
+      try {
+        const r = await cardStatusAction(token, paymentId);
+        if (stop) return;
+        // ainda esperando a confirmação do banco
+        if (r?.paymentId && !r.ok && !r.review && !r.error) {
+          if (inChallenge && Date.now() - started > 6 * 60_000) {
+            stop = true;
+            setChallenge(null);
+            setError("A confirmação do banco expirou. Tente pagar de novo ou pague no Pix.");
+          }
+          return;
+        }
+        if (!inChallenge && r?.review) return; // continua em análise
+        stop = true;
+        handleReply(r);
+      } finally {
+        busy = false;
+      }
+    };
+    const onMessage = (e: MessageEvent) => {
+      if ((e.data as { status?: string } | null)?.status === "COMPLETE") void check();
+    };
+    window.addEventListener("message", onMessage);
+    const t = setInterval(check, inChallenge ? 3000 : 10_000);
+    return () => {
+      stop = true;
+      clearInterval(t);
+      window.removeEventListener("message", onMessage);
+    };
+    // handleReply só usa setters e o router (estáveis)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [challenge, review, token]);
+
+  async function cancelChallenge() {
+    const c = challenge;
+    setChallenge(null);
+    setError("Confirmação do banco cancelada. Você pode tentar de novo ou pagar no Pix.");
+    if (c) await cardCancelChallengeAction(token, c.paymentId);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const mp = mpRef.current;
@@ -263,22 +355,19 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
         holderName: name.trim(),
         holderCpf: doc.replace(/\D/g, ""),
       });
-      if (r?.ok) {
-        setPaid(true);
-        router.refresh();
-      } else if (r?.field) {
-        setFieldError(r.field, r.error ?? FIELD_MSG[r.field]);
-        focusField(r.field);
-      } else {
-        if (r?.declined) setDeclines((n) => n + 1);
-        setError(r?.error ?? "Pagamento recusado. Tente de novo.");
-      }
+      handleReply(r);
     } finally {
       setPending(false);
     }
   }
 
   if (paid) return <p className="pay-result is-ok">Pagamento aprovado! Seus ingressos estão chegando…</p>;
+  if (review)
+    return (
+      <p role="status" className="pay-result is-wait">
+        {review.msg}
+      </p>
+    );
 
   const hint = (f: CardField) =>
     errors[f] ? (
@@ -289,6 +378,22 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
   const bad = (f: CardField) => (errors[f] ? " is-invalid" : "");
 
   return (
+    <>
+    {challenge && (
+      <div className="tds-overlay" role="dialog" aria-modal="true" aria-labelledby="tds-title">
+        <div className="tds-box">
+          <p id="tds-title" className="tds-title">Confirme a compra com o seu banco</p>
+          <p className="tds-text">O banco pediu uma confirmação de segurança (código por SMS, app do banco ou senha). Não feche esta página.</p>
+          <form ref={challengeForm} method="post" action={challenge.url} target="mp-3ds" hidden>
+            <input type="hidden" name="creq" value={challenge.creq} />
+          </form>
+          <iframe name="mp-3ds" title="Confirmação do banco" className="tds-frame" />
+          <button type="button" className="tds-cancel" onClick={cancelChallenge}>
+            Cancelar e escolher outra forma
+          </button>
+        </div>
+      </div>
+    )}
     <form onSubmit={submit} className="card-form" noValidate>
       {loadError && <p className="pay-result is-error card-field-full">Não foi possível carregar o pagamento com cartão. Atualize a página ou pague no Pix.</p>}
       <div className="card-field card-field-full">
@@ -377,5 +482,6 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
       </button>
       <p className="card-hint card-field-full">🔒 Os dados do cartão vão direto para o Mercado Pago, com criptografia. A Pérolas não vê nem guarda o número do cartão.</p>
     </form>
+    </>
   );
 }

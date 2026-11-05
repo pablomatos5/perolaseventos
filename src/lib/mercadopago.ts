@@ -205,11 +205,73 @@ export async function payWithCard(orderId: string, input: CardInput, ip?: string
       payment_method_id: input.paymentMethodId,
       ...(input.issuerId && { issuer_id: Number(input.issuerId) }),
       installments: input.installments,
-      binary_mode: true, // sem "em análise": aprovado ou recusado, para não segurar ingresso indefinidamente
+      // 3D Secure: quando o antifraude fica em dúvida, o banco pede confirmação (SMS, app, senha) em vez de recusar.
+      // Exige binary_mode false; por isso o pagamento pode ficar "pending" (desafio) ou "in_process" (análise).
+      // CARD_3DS=off no .env desliga (volta ao aprovado/recusado na hora) sem precisar de build.
+      ...(process.env.CARD_3DS === "off" ? { binary_mode: true } : { three_d_secure_mode: "optional", capture: true, binary_mode: false }),
     },
     requestOptions: { idempotencyKey: `card-${order.id}-${input.token}`, ...(input.deviceId && { meliSessionId: input.deviceId }) },
   });
-  if (p.id && p.status === "approved") await reconcilePayment(String(p.id));
+  const id = p.id ? String(p.id) : "";
+  if (id && p.status === "approved") await reconcilePayment(id);
+  const tds = p.three_ds_info;
+  const challenge = p.status === "pending" && p.status_detail === "pending_challenge" && tds?.external_resource_url && tds.creq
+    ? { url: tds.external_resource_url, creq: tds.creq }
+    : undefined;
+  // segura a vaga enquanto a pessoa confirma no banco (o desafio expira em ~5 min) ou o Mercado Pago analisa
+  if (challenge) await holdReservation(orderId, 10);
+  else if (p.status === "in_process" || p.status === "pending") await holdReservation(orderId, IN_REVIEW_MINUTES);
+  return { status: p.status ?? "unknown", detail: p.status_detail ?? "", paymentId: id, challenge };
+}
+
+/** Quanto tempo a vaga fica guardada para um cartão "em análise" no Mercado Pago (se aprovar depois, sai como pago com atraso). */
+const IN_REVIEW_MINUTES = 120;
+/** Desafio do 3D Secure sem resposta: depois disso a pessoa pode tentar de novo (o Mercado Pago encerra em ~5 min). */
+const CHALLENGE_MS = 6 * 60_000;
+
+/** Estende a reserva (nunca encurta) de um pedido ainda pendente. */
+async function holdReservation(orderId: string, minutes: number) {
+  const until = new Date(Date.now() + minutes * 60_000);
+  await db.order.updateMany({ where: { id: orderId, status: "PENDING", expiresAt: { lt: until } }, data: { expiresAt: until } });
+}
+
+/**
+ * Pagamento no cartão deste pedido que ainda está andando no Mercado Pago (em análise, ou desafio do banco
+ * recente). Enquanto existir, o site não cobra de novo: evita cobrar duas vezes quem recarregou a página.
+ * Um aprovado que ainda não tinha sido conferido é conferido aqui.
+ */
+export async function openCardPayment(orderId: string) {
+  const mp = await client();
+  const r = await new Payment(mp.config).search({ options: { external_reference: reference(orderId, "card"), sort: "date_created", criteria: "desc", limit: 10 } });
+  for (const p of r.results ?? []) {
+    if (!p.id || !["credit_card", "debit_card"].includes(p.payment_type_id ?? "")) continue;
+    if (p.status === "approved") {
+      await reconcilePayment(String(p.id));
+      return { status: "approved" as const, paymentId: String(p.id) };
+    }
+    if (p.status === "in_process") return { status: "in_process" as const, paymentId: String(p.id) };
+    if (p.status === "pending" && p.status_detail === "pending_challenge" && Date.now() - new Date(p.date_created ?? 0).getTime() < CHALLENGE_MS) {
+      return { status: "challenge" as const, paymentId: String(p.id) };
+    }
+  }
+  return null;
+}
+
+/** A pessoa fechou a confirmação do banco: cancela o pagamento pendente deste pedido para poder tentar de novo na hora. */
+export async function cancelCardChallenge(orderId: string, paymentId: string) {
+  const payments = new Payment((await client()).config);
+  const p = await payments.get({ id: paymentId });
+  if ((p.external_reference ?? "").split(":")[0] !== orderId || p.status !== "pending") return false;
+  await payments.cancel({ id: paymentId, requestOptions: { idempotencyKey: `cancelar-${paymentId}` } });
+  return true;
+}
+
+/** Situação de um pagamento no cartão deste pedido (depois do desafio do banco). Confere se é mesmo deste pedido. */
+export async function checkCardPayment(orderId: string, paymentId: string) {
+  const p = await new Payment((await client()).config).get({ id: paymentId });
+  if ((p.external_reference ?? "").split(":")[0] !== orderId) return null;
+  if (p.status === "approved") await reconcilePayment(paymentId);
+  else if (p.status === "in_process") await holdReservation(orderId, IN_REVIEW_MINUTES);
   return { status: p.status ?? "unknown", detail: p.status_detail ?? "" };
 }
 

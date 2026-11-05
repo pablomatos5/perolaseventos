@@ -11,7 +11,8 @@ const csp = [
   "media-src 'self'",
   "font-src 'self'",
   "connect-src 'self' https://challenges.cloudflare.com https://*.mercadopago.com https://*.mercadolibre.com https://*.mercadolivre.com https://*.mlstatic.com",
-  "frame-src https://challenges.cloudflare.com https://*.mercadopago.com https://*.mercadolibre.com https://*.mercadolivre.com",
+  // 3D Secure: a confirmação do banco abre num iframe com a página do banco emissor (domínio de cada banco)
+  "frame-src https:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",

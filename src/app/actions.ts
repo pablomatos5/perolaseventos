@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { deliverTickets, notifyFirstInstallment, sendOrderLinks } from "@/lib/delivery";
-import { createPixCharge, payWithCard, type CardInput, type CheckoutKind, type PixKind } from "@/lib/mercadopago";
+import { cancelCardChallenge, checkCardPayment, createPixCharge, openCardPayment, payWithCard, type CardInput, type CheckoutKind, type PixKind } from "@/lib/mercadopago";
 import { createReservation, firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, SaleError, secondInstallmentDue, splitPixAvailable } from "@/lib/orders";
 import { isSimulated, paymentMode } from "@/lib/payment-mode";
 import { allow, clientIp } from "@/lib/rate-limit";
@@ -140,7 +140,19 @@ export async function pixAction(token: string, kind: PixKind = "pix", form?: For
 const MAX_INSTALLMENTS = 6;
 
 export type CardField = "number" | "expiry" | "cvv" | "name" | "cpf";
-export type CardState = { ok?: boolean; error?: string; field?: CardField; declined?: boolean } | undefined;
+export type CardState =
+  | {
+      ok?: boolean;
+      error?: string;
+      field?: CardField;
+      declined?: boolean;
+      /** 3D Secure: o banco pediu confirmação; o navegador abre o desafio (formulário POST com creq na url) */
+      challenge?: { url: string; creq: string };
+      /** pagamento ainda andando no Mercado Pago (desafio ou análise): o navegador acompanha por este id */
+      paymentId?: string;
+      review?: boolean;
+    }
+  | undefined;
 
 // recusa por dado errado: aponta o campo do formulário que a pessoa precisa corrigir
 const CARD_FIELD: Record<string, CardField> = {
@@ -161,7 +173,25 @@ const CARD_REJECTED: Record<string, string> = {
   cc_rejected_duplicated_payment: "Você já fez um pagamento igual agora há pouco. Confira o seu extrato antes de tentar de novo.",
   cc_rejected_max_attempts: "Tentativas demais com este cartão. Use outro cartão ou pague no Pix.",
   cc_rejected_high_risk: "A análise de segurança do Mercado Pago recusou este cartão. Tentar de novo com o mesmo cartão não resolve: pague no Pix (aprovação na hora) ou use outro cartão.",
+  cc_rejected_3ds_challenge: "O banco não confirmou a compra. Tente de novo e confirme no app ou no SMS do banco, ou pague no Pix.",
+  cc_rejected_3ds_mandatory: "Este cartão exige confirmação do banco que não foi concluída. Tente de novo ou pague no Pix.",
 };
+
+const IN_REVIEW_MSG = "Pagamento em análise pelo Mercado Pago. Sua vaga está guardada: quando aprovar, os ingressos chegam no seu e-mail. Não precisa pagar de novo.";
+
+/** Resposta do cartão para o navegador (aprovado, desafio do banco, em análise ou recusado). */
+function cardReply(token: string, r: { status: string; detail: string; paymentId?: string; challenge?: { url: string; creq: string } }): CardState {
+  if (r.status === "approved") {
+    revalidatePath(`/pedido/${token}`);
+    return { ok: true };
+  }
+  if (r.challenge) return { challenge: r.challenge, paymentId: r.paymentId };
+  if (r.status === "in_process" || r.status === "pending") return { review: true, paymentId: r.paymentId, error: IN_REVIEW_MSG };
+  return { error: CARD_REJECTED[r.detail] ?? "Pagamento recusado pelo cartão. Tente outro cartão ou pague no Pix.", field: CARD_FIELD[r.detail], declined: !CARD_FIELD[r.detail] };
+}
+
+const cardAuditAction = (r: { status: string; challenge?: unknown }) =>
+  r.status === "approved" ? "pagou com cartão" : r.challenge ? "cartão: banco pediu confirmação" : r.status === "in_process" || r.status === "pending" ? "cartão em análise" : "cartão recusado";
 
 /** Cartão no próprio site: recebe só o token gerado pelos campos seguros do Mercado Pago (nunca o número do cartão). */
 export async function cardPayAction(token: string, input: CardInput): Promise<CardState> {
@@ -190,21 +220,71 @@ export async function cardPayAction(token: string, input: CardInput): Promise<Ca
   if (!allow(`card:${orderId}`, 6, 15 * 60_000) || !allow(`card-ip:${await clientIp()}`, 12, 15 * 60_000)) {
     return { error: "Tentativas demais. Espere alguns minutos ou pague no Pix." };
   }
+  // não cobra de novo se já há um cartão andando neste pedido (quem recarregou a página no meio da confirmação)
+  try {
+    const open = await openCardPayment(orderId);
+    if (open?.status === "approved") return cardReply(token, { status: "approved", detail: "" });
+    if (open?.status === "in_process") return { review: true, paymentId: open.paymentId, error: IN_REVIEW_MSG };
+    if (open?.status === "challenge") {
+      return { paymentId: open.paymentId, error: "Há uma confirmação do banco aberta para este pedido. Termine a confirmação ou espere 5 minutos para tentar de novo." };
+    }
+  } catch (e) {
+    console.warn("[mercadopago] não consegui conferir pagamentos anteriores do cartão:", e);
+  }
   try {
     const r = await payWithCard(orderId, parsed.data, await clientIp());
     // visibilidade: toda tentativa no cartão fica no log e no Registro do painel (motivo do Mercado Pago, nunca o cartão)
     const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? orderId;
     const device = parsed.data.deviceId ? "com aparelho" : "SEM aparelho";
     console.log(`[mercadopago] cartão pedido ${code}: ${r.status} ${r.detail} (${parsed.data.paymentMethodId}, ${parsed.data.installments}x, ${device})`);
-    await audit("cliente", r.status === "approved" ? "pagou com cartão" : "cartão recusado", `pedido ${code} · ${r.detail || r.status} · ${parsed.data.paymentMethodId} ${parsed.data.installments}x · ${device}`);
-    if (r.status === "approved") {
-      revalidatePath(`/pedido/${token}`);
-      return { ok: true };
-    }
-    return { error: CARD_REJECTED[r.detail] ?? "Pagamento recusado pelo cartão. Tente outro cartão ou pague no Pix.", field: CARD_FIELD[r.detail], declined: !CARD_FIELD[r.detail] };
+    await audit("cliente", cardAuditAction(r), `pedido ${code} · ${r.detail || r.status} · ${parsed.data.paymentMethodId} ${parsed.data.installments}x · ${device}`);
+    return cardReply(token, r);
   } catch (e) {
     console.error("[mercadopago] falha no pagamento com cartão:", e);
+    // o Mercado Pago recusou a requisição (400): vai para o painel, senão um erro nosso passa sem ninguém ver
+    const err = e as { status?: number; message?: string };
+    const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? orderId;
+    await audit("cliente", "cartão recusado", `pedido ${code} · erro do Mercado Pago ${err.status ?? "?"}: ${String(err.message ?? e).slice(0, 120)}`).catch(() => {});
+    if (err.status === 400) return { error: "O Mercado Pago não aceitou os dados deste cartão. Confira o número, a validade e o CVV, use outro cartão ou pague no Pix.", declined: true };
     return { error: "Não foi possível falar com o Mercado Pago agora. Tente de novo em instantes." };
+  }
+}
+
+/** Cliente fechou a janela de confirmação do banco: cancela aquela cobrança pendente (nunca uma aprovada). */
+export async function cardCancelChallengeAction(token: string, paymentId: string) {
+  const orderId = verifyOrderToken(token);
+  if (!orderId || !/^\d{1,20}$/.test(paymentId) || !allow(`card-cancel:${orderId}`, 10, 15 * 60_000)) return;
+  try {
+    if (await cancelCardChallenge(orderId, paymentId)) {
+      const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? orderId;
+      await audit("cliente", "cartão recusado", `pedido ${code} · confirmação do banco cancelada pelo cliente`);
+    }
+  } catch (e) {
+    console.warn("[mercadopago] não consegui cancelar o desafio do cartão:", e);
+  }
+}
+
+/**
+ * Depois do desafio do banco (3D Secure) ou durante a análise, o navegador pergunta aqui como ficou o pagamento.
+ * Sempre consulta o Mercado Pago e confere que o pagamento é deste pedido. Só registra no painel o resultado final.
+ */
+export async function cardStatusAction(token: string, paymentId: string): Promise<CardState> {
+  const orderId = verifyOrderToken(token);
+  if (!orderId || !/^\d{1,20}$/.test(paymentId)) return { error: "Pedido inválido." };
+  if (!allow(`card-status:${orderId}`, 120, 15 * 60_000)) return { paymentId, review: true, error: IN_REVIEW_MSG };
+  try {
+    const r = await checkCardPayment(orderId, paymentId);
+    if (!r) return { error: "Pedido inválido." };
+    if (r.status === "pending" && r.detail === "pending_challenge") return { paymentId };
+    if (r.status !== "in_process" && r.status !== "pending") {
+      const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? orderId;
+      console.log(`[mercadopago] cartão pedido ${code} depois da confirmação do banco: ${r.status} ${r.detail}`);
+      await audit("cliente", cardAuditAction(r), `pedido ${code} · ${r.detail || r.status} · depois da confirmação do banco`);
+    }
+    return cardReply(token, { ...r, paymentId });
+  } catch (e) {
+    console.error("[mercadopago] falha ao conferir o cartão:", e);
+    return { paymentId };
   }
 }
 

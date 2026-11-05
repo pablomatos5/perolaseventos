@@ -57,7 +57,7 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
   const cardLogs = orders.length
     ? await db.auditLog.findMany({
         where: {
-          action: { in: ["abriu o pagamento com cartão", "cartão recusado", "pagou com cartão", "problema no formulário do cartão"] },
+          action: { in: ["abriu o pagamento com cartão", "cartão recusado", "pagou com cartão", "problema no formulário do cartão", "cartão: banco pediu confirmação", "cartão em análise"] },
           OR: orders.map((o) => ({ detail: { startsWith: `pedido ${o.code}` } })),
         },
         orderBy: { at: "asc" },
@@ -204,6 +204,8 @@ const hhmm = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minut
 /** Motivos de recusa do cartão (status_detail do Mercado Pago) em português curto. */
 const CARD_REASON: Record<string, string> = {
   cc_rejected_high_risk: "antifraude (risco)",
+  cc_rejected_3ds_challenge: "banco não confirmou",
+  cc_rejected_3ds_mandatory: "confirmação do banco não feita",
   cc_rejected_insufficient_amount: "sem saldo/limite",
   cc_rejected_call_for_authorize: "banco pediu autorização",
   cc_rejected_card_disabled: "cartão desativado",
@@ -243,6 +245,8 @@ function PaymentTrail({
     const part = l.detail.split(" · ");
     if (l.action === "abriu o pagamento com cartão") steps.push({ text: `abriu o cartão ${hhmm(l.at)}`, tone: "info" });
     else if (l.action === "cartão recusado") steps.push({ text: `cartão recusado: ${CARD_REASON[part[1]] ?? part[1] ?? "?"} (${hhmm(l.at)})`, tone: "bad" });
+    else if (l.action === "cartão: banco pediu confirmação") steps.push({ text: `banco pediu confirmação (${hhmm(l.at)})`, tone: "info" });
+    else if (l.action === "cartão em análise") steps.push({ text: `cartão em análise no Mercado Pago (${hhmm(l.at)})`, tone: "info" });
     else if (l.action === "problema no formulário do cartão") steps.push({ text: `erro no formulário do cartão: ${part[1] ?? "?"} (${hhmm(l.at)})`, tone: "bad" });
   }
   if (steps.length === 0) {
