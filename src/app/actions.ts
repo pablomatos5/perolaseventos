@@ -140,7 +140,7 @@ export async function pixAction(token: string, kind: PixKind = "pix", form?: For
 const MAX_INSTALLMENTS = 6;
 
 export type CardField = "number" | "expiry" | "cvv" | "name" | "cpf";
-export type CardState = { ok?: boolean; error?: string; field?: CardField } | undefined;
+export type CardState = { ok?: boolean; error?: string; field?: CardField; declined?: boolean } | undefined;
 
 // recusa por dado errado: aponta o campo do formulário que a pessoa precisa corrigir
 const CARD_FIELD: Record<string, CardField> = {
@@ -160,7 +160,7 @@ const CARD_REJECTED: Record<string, string> = {
   cc_rejected_card_disabled: "Cartão desativado. Ligue para o banco ou use outro cartão.",
   cc_rejected_duplicated_payment: "Você já fez um pagamento igual agora há pouco. Confira o seu extrato antes de tentar de novo.",
   cc_rejected_max_attempts: "Tentativas demais com este cartão. Use outro cartão ou pague no Pix.",
-  cc_rejected_high_risk: "O pagamento foi recusado pela análise de segurança. Tente outro cartão ou pague no Pix.",
+  cc_rejected_high_risk: "A análise de segurança do Mercado Pago recusou este cartão. Tentar de novo com o mesmo cartão não resolve: pague no Pix (aprovação na hora) ou use outro cartão.",
 };
 
 /** Cartão no próprio site: recebe só o token gerado pelos campos seguros do Mercado Pago (nunca o número do cartão). */
@@ -175,9 +175,14 @@ export async function cardPayAction(token: string, input: CardInput): Promise<Ca
       issuerId: z.string().regex(/^\d{1,12}$/).optional(),
       installments: z.number().int().min(1).max(MAX_INSTALLMENTS),
       deviceId: z.string().max(4000).optional(),
+      holderName: z.string().trim().min(2).max(120),
+      holderCpf: z.string().transform((s) => s.replace(/\D/g, "")).pipe(z.string().length(11)),
     })
     .safeParse(input);
   if (!parsed.success) {
+    const bad = parsed.error.issues[0]?.path[0];
+    if (bad === "holderName") return { error: "Digite o nome e o sobrenome como estão impressos no cartão.", field: "name" };
+    if (bad === "holderCpf") return { error: "CPF inválido. Confira os 11 números do CPF do dono do cartão.", field: "cpf" };
     console.warn("[mercadopago] dados do cartão recusados na conferência:", parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
     return { error: "Dados do cartão incompletos. Confira e tente de novo." };
   }
@@ -186,16 +191,17 @@ export async function cardPayAction(token: string, input: CardInput): Promise<Ca
     return { error: "Tentativas demais. Espere alguns minutos ou pague no Pix." };
   }
   try {
-    const r = await payWithCard(orderId, parsed.data);
+    const r = await payWithCard(orderId, parsed.data, await clientIp());
     // visibilidade: toda tentativa no cartão fica no log e no Registro do painel (motivo do Mercado Pago, nunca o cartão)
     const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? orderId;
-    console.log(`[mercadopago] cartão pedido ${code}: ${r.status} ${r.detail} (${parsed.data.paymentMethodId}, ${parsed.data.installments}x)`);
-    await audit("cliente", r.status === "approved" ? "pagou com cartão" : "cartão recusado", `pedido ${code} · ${r.detail || r.status} · ${parsed.data.paymentMethodId} ${parsed.data.installments}x`);
+    const device = parsed.data.deviceId ? "com aparelho" : "SEM aparelho";
+    console.log(`[mercadopago] cartão pedido ${code}: ${r.status} ${r.detail} (${parsed.data.paymentMethodId}, ${parsed.data.installments}x, ${device})`);
+    await audit("cliente", r.status === "approved" ? "pagou com cartão" : "cartão recusado", `pedido ${code} · ${r.detail || r.status} · ${parsed.data.paymentMethodId} ${parsed.data.installments}x · ${device}`);
     if (r.status === "approved") {
       revalidatePath(`/pedido/${token}`);
       return { ok: true };
     }
-    return { error: CARD_REJECTED[r.detail] ?? "Pagamento recusado pelo cartão. Tente outro cartão ou pague no Pix.", field: CARD_FIELD[r.detail] };
+    return { error: CARD_REJECTED[r.detail] ?? "Pagamento recusado pelo cartão. Tente outro cartão ou pague no Pix.", field: CARD_FIELD[r.detail], declined: !CARD_FIELD[r.detail] };
   } catch (e) {
     console.error("[mercadopago] falha no pagamento com cartão:", e);
     return { error: "Não foi possível falar com o Mercado Pago agora. Tente de novo em instantes." };

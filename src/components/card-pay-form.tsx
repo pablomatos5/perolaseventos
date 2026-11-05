@@ -71,12 +71,26 @@ function validCpf(raw: string) {
 }
 
 const FIELD_MSG: Record<CardField, string> = {
-  number: "Número do cartão inválido.",
-  expiry: "Validade inválida ou vencida.",
-  cvv: "Código de segurança (CVV) inválido.",
-  name: "Digite o nome como está impresso no cartão.",
-  cpf: "CPF inválido.",
+  number: "Número do cartão inválido. Confira os dígitos.",
+  expiry: "Validade inválida ou vencida. Use o formato MM/AA, como está no cartão.",
+  cvv: "CVV inválido: são os 3 números do verso do cartão (4 na frente, no Amex).",
+  name: "Digite o nome e o sobrenome como estão impressos no cartão.",
+  cpf: "CPF inválido. Confira os 11 números do CPF do dono do cartão.",
 };
+// quando o campo está só incompleto (o Mercado Pago avisa "invalid_length"), a mensagem diz o que falta
+const FIELD_SHORT: Partial<Record<CardField, string>> = {
+  number: "Número incompleto: faltam dígitos do cartão.",
+  expiry: "Validade incompleta: digite mês e ano (MM/AA).",
+  cvv: "CVV incompleto: são 3 números no verso (4 no Amex).",
+};
+const FIELD_LABEL: Record<CardField, string> = { number: "número do cartão", expiry: "validade", cvv: "CVV", name: "nome", cpf: "CPF" };
+const mpMessage = (f: CardField, errs: MPError[]) => {
+  const t = JSON.stringify(errs).toLowerCase();
+  if (f === "expiry" && /past|expired|venc/.test(t)) return "Este cartão está vencido. Use outro cartão ou pague no Pix.";
+  return (/length|incomplete/.test(t) && FIELD_SHORT[f]) || FIELD_MSG[f];
+};
+// nome do titular: pelo menos nome e sobrenome, sem números
+const validName = (v: string) => /^\p{L}[\p{L}'.-]*(\s+\p{L}[\p{L}'.-]*)+$/u.test(v.trim());
 const FIELD_ID: Record<CardField, string> = { number: "mp-card-number", expiry: "mp-card-expiry", cvv: "mp-card-cvv", name: "card-name", cpf: "card-cpf" };
 const ORDER: CardField[] = ["number", "expiry", "cvv", "name", "cpf"];
 
@@ -108,6 +122,9 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<Record<CardField, string>>>({});
   const [paid, setPaid] = useState(false);
+  const [declines, setDeclines] = useState(0);
+  // erro do Mercado Pago guardado enquanto a pessoa digita; só aparece quando ela sai do campo
+  const pendingMsg = useRef<Partial<Record<CardField, string>>>({});
 
   const setFieldError = (f: CardField, msg: string | null) =>
     setErrors((e) => {
@@ -132,8 +149,19 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
         mpRef.current = mp;
         const make = (type: string, id: string, placeholder: string, f: CardField) => {
           const el = mp.fields.create(type, { placeholder, style: FIELD_STYLE }).mount(id);
-          // o Mercado Pago avisa quando o que foi digitado deixa de ser válido (ou volta a ser)
-          el.on("validityChange", ({ errorMessages }) => setFieldError(f, errorMessages?.length ? FIELD_MSG[f] : null));
+          // o Mercado Pago avisa quando o que foi digitado deixa de ser válido (ou volta a ser): o erro some na hora
+          // em que o campo fica certo, mas só aparece quando a pessoa sai do campo (para não brigar enquanto digita)
+          el.on("validityChange", ({ errorMessages }) => {
+            if (errorMessages?.length) pendingMsg.current[f] = mpMessage(f, errorMessages);
+            else {
+              delete pendingMsg.current[f];
+              setFieldError(f, null);
+            }
+          });
+          el.on("blur", () => {
+            const msg = pendingMsg.current[f];
+            if (msg) setFieldError(f, msg);
+          });
           fields.push(el);
           return el;
         };
@@ -151,7 +179,7 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
             const pm = results[0];
             if (!pm) {
               void reportCardIssue(token, "bandeira", "BIN sem bandeira no Mercado Pago");
-              return setFieldError("number", "Cartão não aceito. Use Visa, Mastercard, Elo, Hipercard ou Amex.");
+              return setFieldError("number", "Não reconhecemos este cartão. Confira os primeiros números ou use Visa, Mastercard, Elo, Hipercard ou Amex.");
             }
             setFieldError("number", null);
             let issuerId: string | undefined;
@@ -192,14 +220,15 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
     if (!mp || pending) return;
     setError(null);
     // conferência local antes de falar com o Mercado Pago
-    const local: Partial<Record<CardField, string>> = { ...errors };
+    const local: Partial<Record<CardField, string>> = { ...errors, ...pendingMsg.current };
     if (!method && !local.number) local.number = "Digite o número do cartão.";
-    if (name.trim().length < 2) local.name = FIELD_MSG.name;
+    if (!validName(name)) local.name = FIELD_MSG.name;
     else delete local.name;
     if (!validCpf(doc)) local.cpf = FIELD_MSG.cpf;
     else delete local.cpf;
     setErrors(local);
     const first = ORDER.find((f) => local[f]);
+    if (first) setError(`Falta corrigir: ${ORDER.filter((f) => local[f]).map((f) => FIELD_LABEL[f]).join(", ")}. Os campos estão marcados em vermelho.`);
     if (first || !method) {
       void reportCardIssue(token, "local", `campos: ${ORDER.filter((f) => local[f]).join(",") || "sem bandeira"}`);
       return focusField(first ?? "number");
@@ -223,14 +252,27 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
         }
         return;
       }
-      const r = await cardPayAction(token, { token: card.id, paymentMethodId: method.id, issuerId: method.issuerId, installments, deviceId: window.MP_DEVICE_SESSION_ID });
+      // o id do aparelho (script de segurança) pesa na aprovação: espera até 3 s se ainda não ficou pronto
+      for (let i = 0; i < 15 && !window.MP_DEVICE_SESSION_ID; i++) await new Promise((ok) => setTimeout(ok, 200));
+      const r = await cardPayAction(token, {
+        token: card.id,
+        paymentMethodId: method.id,
+        issuerId: method.issuerId,
+        installments,
+        deviceId: window.MP_DEVICE_SESSION_ID,
+        holderName: name.trim(),
+        holderCpf: doc.replace(/\D/g, ""),
+      });
       if (r?.ok) {
         setPaid(true);
         router.refresh();
       } else if (r?.field) {
         setFieldError(r.field, r.error ?? FIELD_MSG[r.field]);
         focusField(r.field);
-      } else setError(r?.error ?? "Pagamento recusado. Tente de novo.");
+      } else {
+        if (r?.declined) setDeclines((n) => n + 1);
+        setError(r?.error ?? "Pagamento recusado. Tente de novo.");
+      }
     } finally {
       setPending(false);
     }
@@ -272,13 +314,17 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
           value={name}
           onChange={(e) => {
             setName(e.target.value);
-            if (errors.name && e.target.value.trim().length >= 2) setFieldError("name", null);
+            if (errors.name && validName(e.target.value)) setFieldError("name", null);
+          }}
+          onBlur={() => {
+            if (name.trim() && !validName(name)) setFieldError("name", FIELD_MSG.name);
           }}
           autoComplete="cc-name"
           aria-invalid={errors.name ? true : undefined}
           aria-describedby={errors.name ? "card-name-err" : undefined}
         />
         {hint("name")}
+        {!errors.name && <span className="card-tip">O cartão é de outra pessoa? Troque o nome e o CPF pelos do dono do cartão.</span>}
       </label>
       <label className="card-field card-field-full">
         <span>CPF do dono do cartão</span>
@@ -314,10 +360,17 @@ export function CardPayForm({ token, publicKey, amountCents, buyerName, cpf }: {
         </label>
       )}
       {method?.type === "debit_card" && <p className="card-hint card-field-full">Cartão de débito: pagamento à vista.</p>}
+      {!ready && !loadError && <p className="card-hint card-field-full">Carregando os campos seguros do cartão…</p>}
       {error && (
-        <p role="alert" className="pay-result is-error card-field-full">
-          {error}
-        </p>
+        <div role="alert" className="pay-result is-error card-field-full">
+          <p>{error}</p>
+          {declines >= 2 && <p className="mt-1 font-semibold">Este cartão já foi recusado {declines} vezes. Novas tentativas costumam ser recusadas também.</p>}
+          {declines > 0 && (
+            <a href={`/pedido/${token}`} className="pay-switch">
+              Pagar no Pix agora (aprovação na hora)
+            </a>
+          )}
+        </div>
       )}
       <button className="btn solid card-field-full w-full" disabled={!ready || pending}>
         {pending ? "Processando…" : `Pagar ${(amountCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`}

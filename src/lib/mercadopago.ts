@@ -137,15 +137,70 @@ export type CardInput = {
   installments: number;
   /** id do aparelho gerado pelo script de segurança do Mercado Pago (melhora a aprovação) */
   deviceId?: string;
+  /** titular do cartão (o mesmo nome e CPF usados no token; pode não ser quem comprou) */
+  holderName: string;
+  holderCpf: string;
 };
 
+/** Celular do pedido no formato do Mercado Pago (DDD + número), sem o 55 do país. */
+function phoneOf(raw: string) {
+  let d = raw.replace(/\D/g, "");
+  if (d.length >= 12 && d.startsWith("55")) d = d.slice(2);
+  return d.length >= 10 ? { area_code: d.slice(0, 2), number: d.slice(2) } : undefined;
+}
+
+/**
+ * Dados para a análise antifraude do Mercado Pago (additional_info): o que está sendo comprado (ingressos, data
+ * do evento), quem compra (telefone, quando fez o pedido) e de onde (IP). Sem isso, o cartão cai muito em
+ * "cc_rejected_high_risk". Os itens somam o valor cobrado (ingressos + taxa de serviço + taxa do cartão).
+ */
+async function antifraudInfo(order: OrderForPay & { phone: string; createdAt: Date; event: { startsAt: Date } }, chargedCents: number, ip: string | undefined, holder: { first: string; last: string }) {
+  const tickets = await db.ticket.findMany({
+    where: { orderId: order.id },
+    select: { priceCents: true, gender: true, batchId: true, batch: { select: { name: true } }, ticketType: { select: { name: true } } },
+  });
+  const groups = new Map<string, { title: string; quantity: number; cents: number }>();
+  for (const t of tickets) {
+    const key = `${t.batchId}-${t.gender ?? "c"}-${t.priceCents}`;
+    const g = groups.get(key);
+    if (g) g.quantity++;
+    else groups.set(key, { title: `${t.ticketType.name} · ${t.batch.name}${t.gender === "FEMININO" ? " · Feminino" : t.gender === "MASCULINO" ? " · Masculino" : ""}`, quantity: 1, cents: t.priceCents });
+  }
+  const eventDate = order.event.startsAt.toISOString();
+  const items = [...groups.entries()].map(([id, g]) => ({
+    id,
+    title: g.title.slice(0, 250),
+    description: `Ingresso ${order.event.name} ${order.event.edition}`,
+    category_id: "tickets",
+    quantity: g.quantity,
+    unit_price: g.cents / 100,
+    category_descriptor: { event_date: eventDate, type: "event" },
+  }));
+  const ticketsCents = tickets.reduce((s, t) => s + t.priceCents, 0);
+  const extra = (id: string, title: string, cents: number) => cents > 0 && items.push({ id, title, description: title, category_id: "services", quantity: 1, unit_price: cents / 100, category_descriptor: { event_date: eventDate, type: "event" } });
+  extra("taxa-servico", "Taxa de serviço", order.feeCents);
+  extra("taxa-cartao", "Taxa do cartão", chargedCents - ticketsCents - order.feeCents);
+  const phone = phoneOf(order.phone);
+  return {
+    ...(ip && ip !== "local" && { ip_address: ip }),
+    items,
+    payer: { first_name: holder.first, last_name: holder.last, ...(phone && { phone }), registration_date: order.createdAt.toISOString() },
+  };
+}
+
 /** Cobra no cartão com o token gerado pelos campos seguros do Mercado Pago e já confere o resultado. */
-export async function payWithCard(orderId: string, input: CardInput) {
+export async function payWithCard(orderId: string, input: CardInput, ip?: string) {
   const order = await loadOrder(orderId);
   const mp = await client();
+  const base = commonBody(order, "card", mp.marketplace);
+  // o pagador do cartão é o TITULAR (nome e CPF iguais aos do token); o e-mail segue o do pedido
+  const [first, ...rest] = input.holderName.trim().split(/\s+/);
+  const holder = { first, last: rest.join(" ") || first };
   const p = await new Payment(mp.config).create({
     body: {
-      ...commonBody(order, "card", mp.marketplace),
+      ...base,
+      payer: { email: order.email, first_name: holder.first, last_name: holder.last, identification: { type: "CPF", number: input.holderCpf } },
+      additional_info: await antifraudInfo(order, amountFor(order, "card"), ip, holder),
       token: input.token,
       payment_method_id: input.paymentMethodId,
       ...(input.issuerId && { issuer_id: Number(input.issuerId) }),

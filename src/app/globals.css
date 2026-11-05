@@ -3219,6 +3219,8 @@ a.pay-option { text-decoration: none; }
 /* campo do pagamento com erro: borda vermelha + mensagem embaixo */
 .card-input.is-invalid { border-color: #c4364f; box-shadow: 0 0 0 3px rgb(196 54 79 / 0.15); background: #fff7f8; }
 .card-error { font-size: 0.75rem; font-weight: 500; letter-spacing: normal; text-transform: none; color: #a3263c; }
+.card-tip { font-size: 0.72rem; font-weight: 400; letter-spacing: normal; text-transform: none; color: rgb(40 30 96 / 0.65); }
+.pay-switch { display: inline-flex; align-items: center; min-height: 2.75rem; margin-top: 0.6rem; padding: 0 1rem; border-radius: 999px; background: #a3263c; color: #fff; font-weight: 600; font-size: 0.82rem; text-decoration: none; }
 
 
 /* ───────── Painel (/admin): visual próprio, claro e legível na paleta da Pérolas ─────────
