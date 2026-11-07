@@ -40,7 +40,7 @@ function Stepper({ value, onChange, max, label }: { value: number; onChange: (v:
   );
 }
 
-export function TicketPicker({ eventId, types, pausedNote }: { eventId: string; types: PickerType[]; pausedNote?: string }) {
+export function TicketPicker({ eventId, types, pausedNote, splitPix = false }: { eventId: string; types: PickerType[]; pausedNote?: string; splitPix?: boolean }) {
   const [qty, setQty] = useState<Qty>({});
   const [state, action, pending] = useActionState(reserveAction, undefined);
   // dados do comprador guardados aqui: o envio do formulário não apaga o que foi digitado
@@ -199,6 +199,11 @@ export function TicketPicker({ eventId, types, pausedNote }: { eventId: string; 
             Encontrar meu pedido
           </Link>
         </p>
+        {splitPix && (
+          <Link href="/segunda-parcela" className="btn mt-3 w-full justify-center px-5! py-3! text-sm">
+            Pagar 2ª parcela do Pix
+          </Link>
+        )}
       </aside>
     </form>
   );

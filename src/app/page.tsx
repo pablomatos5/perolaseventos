@@ -169,7 +169,7 @@ async function EventPage() {
             </p>
           )}
           <div className="mt-12">
-            <TicketPicker eventId={event.id} types={types} pausedNote={salesNotice || undefined} />
+            <TicketPicker eventId={event.id} types={types} pausedNote={salesNotice || undefined} splitPix={event.splitPixEnabled} />
           </div>
         </div>
       </section>
