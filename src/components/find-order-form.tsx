@@ -13,11 +13,24 @@ const maskCpf = (v: string) => {
 };
 
 /** "Encontrar meu pedido": CPF + e-mail da compra → o link vai para o e-mail cadastrado (nada aparece na tela). */
-export function FindOrderForm() {
+export function FindOrderForm({ parcela = false }: { parcela?: boolean }) {
   const [state, action, pending] = useActionState(findOrderAction, undefined);
   // campos controlados: depois de um erro o formulário não apaga o que a pessoa digitou
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
+
+  if (state?.sent && parcela) {
+    // nenhum Pix em 2x com a 2ª parcela em aberto (se havia pedido pago, o link dos ingressos foi para o e-mail)
+    return (
+      <div className="glass-card grid gap-3 p-6 text-center" role="status">
+        <h2 className="font-display text-2xl">Nenhuma 2ª parcela em aberto</h2>
+        <p className="text-sm text-fg-muted">
+          Não encontramos um Pix em 2x esperando a 2ª parcela com esse CPF e esse e-mail. Se ela já foi paga, acabamos de mandar o link dos ingressos para o e-mail da compra (olhe também o spam e a aba Promoções).
+        </p>
+        <p className="text-xs text-fg-faint">Confira se digitou os mesmos dados da compra ou fale com a Pérolas pelo Instagram @perolaseventos.</p>
+      </div>
+    );
+  }
 
   if (state?.sent) {
     return (
@@ -49,9 +62,13 @@ export function FindOrderForm() {
         </p>
       )}
       <button className="btn solid w-full" disabled={pending}>
-        {pending ? "Enviando…" : "Enviar o link para o meu e-mail"}
+        {parcela ? (pending ? "Procurando…" : "Pagar a 2ª parcela") : pending ? "Enviando…" : "Enviar o link para o meu e-mail"}
       </button>
-      <p className="text-xs text-fg-faint">Pedido aguardando pagamento (ou a 2ª parcela do Pix) abre na hora. Pedido pago, com os ingressos, vai só para o e-mail cadastrado, por segurança.</p>
+      <p className="text-xs text-fg-faint">
+        {parcela
+          ? "Seu pedido abre na hora com o Pix da 2ª parcela. Depois de pago, os ingressos são liberados na mesma página."
+          : "Pedido aguardando pagamento (ou a 2ª parcela do Pix) abre na hora. Pedido pago, com os ingressos, vai só para o e-mail cadastrado, por segurança."}
+      </p>
     </form>
   );
 }

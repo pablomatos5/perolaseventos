@@ -19,7 +19,7 @@ export default function SecondInstallmentPage() {
       <p className="mt-3 mb-8 text-sm text-fg-muted">
         Informe o CPF e o e-mail que você usou na compra. Seu pedido abre na hora com o Pix da 2ª parcela; assim que ela for paga, os ingressos são liberados.
       </p>
-      <FindOrderForm />
+      <FindOrderForm parcela />
       <p className="mt-6 text-center text-xs text-fg-faint">
         <Link href="/" className="underline">
           Voltar para o site
