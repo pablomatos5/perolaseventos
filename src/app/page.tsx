@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { seller } from "@/lib/seller";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -84,7 +86,7 @@ async function EventPage() {
       eyebrow: a.genre || "Atração confirmada",
       big: a.name,
       small: a.instagram ? [`@${a.instagram}`] : [],
-      imageUrl: a.imageUrl || undefined,
+      imageUrl: fotoDaPerola(a.imageUrl),
     })),
     ...(soonCount > 0
       ? [{ key: "em-breve", mystery: true, big: `+${soonCount} ${soonCount === 1 ? "atração" : "atrações"} em breve`, small: ["Os anúncios saem no @perolaseventos"] }]
@@ -213,4 +215,13 @@ async function EventPage() {
       </footer>
     </main>
   );
+}
+
+/** Na pérola da concha a foto é redonda e pequena: usa o recorte do rosto
+ * ("<nome>-perola.jpg") quando existir; senão, a capa do card. */
+function fotoDaPerola(imageUrl: string | null | undefined) {
+  if (!imageUrl) return undefined;
+  const perola = imageUrl.replace(/-capa\.jpg$/, "-perola.jpg");
+  if (perola !== imageUrl && existsSync(path.join(process.cwd(), "public", perola))) return perola;
+  return imageUrl;
 }
