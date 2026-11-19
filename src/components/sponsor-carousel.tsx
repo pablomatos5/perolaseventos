@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { sponsors2026 } from "@/content/site";
+import { sponsors2027 } from "@/content/site";
 
-type Sponsor = (typeof sponsors2026)[number];
+type Sponsor = (typeof sponsors2027)[number];
 
 const COPIES = 3; // 3 cópias: dá para arrastar para os dois lados e "dar a volta" sem emenda
 const SPEED = 38; // px por segundo
@@ -155,7 +155,7 @@ export function SponsorCarousel() {
     };
   }, []);
 
-  const loop = Array.from({ length: COPIES }, (_, copy) => sponsors2026.map((s) => ({ s, copy }))).flat();
+  const loop = Array.from({ length: COPIES }, (_, copy) => sponsors2027.map((s) => ({ s, copy }))).flat();
   return (
     <div ref={ref} className="sponsor-marquee">
       <ul className="sponsor-track" aria-label="Patrocinadores">

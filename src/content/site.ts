@@ -93,6 +93,32 @@ export const pastVideos: { src: string; poster: string; alt: string; quote?: str
 ];
 
 /**
+ * Patrocinadores oficiais do Réveillon 2027 (mesma lista dos flyers "Patrocinador Oficial").
+ * `image`: logo sobre a placa do flyer, 720x360, em /public/patrocinadores/2027.
+ * Sem `image`: cartão só com o nome. Sheik do Pod fica assim, sem logo e sem link, porque a propaganda
+ * de cigarro eletrônico é proibida (Anvisa, RDC 855/2024).
+ */
+export const sponsors2027: { name: string; instagram?: string; image?: string; light?: boolean }[] = [
+  { name: "Açaí Puro Sabor", image: "/patrocinadores/2027/acai-puro-sabor.jpg" },
+  { name: "Luis Vieira", image: "/patrocinadores/2027/luis-vieira.jpg" },
+  { name: "Cursinho Integral", image: "/patrocinadores/2027/cursinho-integral.jpg" },
+  { name: "FB Import & Perfumaria", instagram: "fb.import__", image: "/patrocinadores/2027/fb-import-perfumaria.jpg" },
+  { name: "Lucas Monfredo", image: "/patrocinadores/2027/lucas-monfredo.jpg" },
+  { name: "Sr Drink", instagram: "sr.drink_oficial", image: "/patrocinadores/2027/sr-drink.jpg" },
+  { name: "Kasa das Armas", image: "/patrocinadores/2027/kasa-das-armas.jpg" },
+  { name: "Woods Vibe", image: "/patrocinadores/2027/woods-vibe.jpg" },
+  { name: "Sandra Cakes", image: "/patrocinadores/2027/sandra-cakes.jpg" },
+  { name: "Linda Flor", image: "/patrocinadores/2027/linda-flor.jpg" },
+  { name: "Arena Sports Beach", image: "/patrocinadores/2027/arena-sports-beach.jpg" },
+  { name: "Quiosque da Cika", image: "/patrocinadores/2027/quiosque-da-cika.jpg" },
+  { name: "AH Crédito e Empréstimos", image: "/patrocinadores/2027/ah-credito.jpg" },
+  { name: "Boutique FFN", image: "/patrocinadores/2027/boutique-ffn.jpg" },
+  { name: "Suh Paixão", image: "/patrocinadores/2027/suh-paixao.jpg" },
+  { name: "Drogarias Big Farma", image: "/patrocinadores/2027/drogarias-big-farma.jpg" },
+  { name: "Sheik do Pod" },
+];
+
+/**
  * Patrocinadores anunciados para o Réveillon 2026 (posts "Patrocinador Oficial Confirmado!" de dez/2025).
  * Confirmar quem renova para 2027. `instagram`: perfil marcado no anúncio.
  * `image`: painel do logo recortado do cartaz-anúncio da Pérolas (720x360, em /public/patrocinadores);

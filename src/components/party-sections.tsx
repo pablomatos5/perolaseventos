@@ -77,7 +77,7 @@ export function Lineup({ attractions }: { attractions: Attraction[] }) {
 
         <span className="eyebrow rule mt-24 flex">Patrocinadores</span>
         <h3 className="display mt-4 text-[clamp(2rem,4.5vw,3.4rem)]!">
-          Quem brindou com a gente em <em>2026</em>
+          Quem brinda com a gente em <em>2027</em>
         </h3>
         <div className="mt-10">
           <SponsorCarousel />
