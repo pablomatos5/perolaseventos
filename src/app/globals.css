@@ -1066,17 +1066,26 @@ body {
 .card-rail-xl .video-caption { padding: 4rem 1.5rem 2rem; }
 .card-rail-xl .card-media img { transition: transform 1.2s var(--ease); }
 .card-rail-xl .flip-card:hover .card-media img { transform: scale(1.05); }
-/* Atração "em breve" com arte de revelação: o pôster (9:16) preenche o card inteiro, sem cortar.
-   O card-pôster é mais alto que os cards com foto, então o rail não estica os vizinhos (alinha ao topo). */
-.card-rail-xl { align-items: start; }
-.card-rail-xl .attraction-card.mystery-reveal { display: block; height: auto; aspect-ratio: 9 / 16; }
+/* Atração "em breve" com arte de revelação: o card tem o MESMO tamanho dos outros (estica na grade).
+   O pôster (9:16) aparece inteiro, sem cortar, centralizado; uma cópia borrada preenche as laterais
+   para não deixar borda dura nem vão vazio. */
+.card-rail-xl .attraction-card.mystery-reveal { display: block; }
+.attraction-card.mystery-reveal .poster-blur,
 .attraction-card.mystery-reveal .poster-fill {
   position: absolute;
   inset: 0;
-  z-index: 1;
   width: 100%;
   height: 100%;
+}
+.attraction-card.mystery-reveal .poster-blur {
+  z-index: 0;
   object-fit: cover;
+  transform: scale(1.15);
+  filter: blur(28px) saturate(1.1);
+}
+.attraction-card.mystery-reveal .poster-fill {
+  z-index: 1;
+  object-fit: contain;
 }
 /* faixa embaixo: mostra que o card é tocável, sem cobrir o panda nem o texto do pôster */
 .attraction-card.mystery-reveal .poster-hint {
