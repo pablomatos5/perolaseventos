@@ -184,9 +184,6 @@ function MysteryCard({ n, poster }: { n: number; poster?: string }) {
         <span className="flip-face">
           {poster ? (
             <Frame className="mystery-reveal">
-              {/* cópia borrada preenchendo as laterais (o card tem o tamanho dos outros, o pôster é 9:16) */}
-              {/* eslint-disable-next-line @next/next/no-img-element -- arte do anúncio, servida de /public */}
-              <img src={poster} alt="" aria-hidden loading="lazy" className="poster-blur" />
               {/* eslint-disable-next-line @next/next/no-img-element -- arte do anúncio, servida de /public */}
               <img src={poster} alt={label} loading="lazy" className="poster-fill" />
               <span className="poster-hint">
