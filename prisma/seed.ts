@@ -61,7 +61,10 @@ async function main() {
             videoUrl: "/atracoes/guilherme-menezes.mp4",
             sortOrder: 3,
           },
-          { name: "", announced: false, sortOrder: 4 },
+          // 4ª atração: ainda "em breve" (não anunciada), mas já com a arte de revelação do Swing do Panda
+          // preenchendo o card (o toque continua mostrando o recado de anúncio). Foto oficial da banda em
+          // /atracoes/swing-do-panda.jpg, usada quando for de fato anunciada.
+          { name: "", announced: false, imageUrl: "/atracoes/swing-do-panda-revelacao.jpg", sortOrder: 4 },
         ],
       },
       ticketTypes: {

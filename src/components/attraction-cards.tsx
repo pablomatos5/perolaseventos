@@ -157,14 +157,20 @@ function AnnouncedCard({ a, hint }: { a: CardAttraction; hint?: string }) {
   );
 }
 
-/** "Em breve": a carta vira (hover no desktop, toque no celular) e mostra o recado do story Perguntas. */
-function MysteryCard({ n }: { n: number }) {
+/**
+ * "Em breve": a carta vira (hover no desktop, toque no celular) e mostra o recado do story Perguntas.
+ * Se a atração tiver uma arte de revelação (`poster`), ela preenche o card inteiro (formato 9:16, sem
+ * cortar), continuando a virar no toque para o mesmo recado de anúncio.
+ */
+function MysteryCard({ n, poster }: { n: number; poster?: string }) {
   const [flipped, setFlipped] = useState(false);
+  const label = `Atração ${String(n).padStart(2, "0")}`;
   return (
     <div
       role="button"
       tabIndex={0}
       aria-pressed={flipped}
+      aria-label={poster ? `${label}: toque para o recado do anúncio` : undefined}
       className={`flip-card ${flipped ? "is-flipped" : ""}`}
       onClick={() => setFlipped((f) => !f)}
       onKeyDown={(e) => {
@@ -176,18 +182,29 @@ function MysteryCard({ n }: { n: number }) {
     >
       <span className="flip-inner">
         <span className="flip-face">
-          <Frame>
-            <div className="card-media">
-              <CardArt mystery initials="" />
-            </div>
-            <div className="card-body">
-              <span className="eyebrow eyebrow-center">Atração {String(n).padStart(2, "0")}</span>
-              <span className="card-title">
-                Revelação <em className="text-accent">em breve</em>
+          {poster ? (
+            <Frame className="mystery-reveal">
+              {/* eslint-disable-next-line @next/next/no-img-element -- arte do anúncio, servida de /public */}
+              <img src={poster} alt={label} loading="lazy" className="poster-fill" />
+              <span className="poster-hint">
+                <span className="eyebrow eyebrow-center">{label}</span>
+                <span className="poster-hint-cta">Toque para espiar</span>
               </span>
-              <span className="text-sm text-fg-faint">Toque para espiar</span>
-            </div>
-          </Frame>
+            </Frame>
+          ) : (
+            <Frame>
+              <div className="card-media">
+                <CardArt mystery initials="" />
+              </div>
+              <div className="card-body">
+                <span className="eyebrow eyebrow-center">{label}</span>
+                <span className="card-title">
+                  Revelação <em className="text-accent">em breve</em>
+                </span>
+                <span className="text-sm text-fg-faint">Toque para espiar</span>
+              </div>
+            </Frame>
+          )}
         </span>
         <span className="flip-face flip-back">
           <span className="attraction-card flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
@@ -345,7 +362,7 @@ export function AttractionCards({ attractions }: { attractions: CardAttraction[]
     <ul className="card-rail card-rail-xl">
       {attractions.map((a, i) => (
         <li key={a.id}>
-          {!a.announced ? <MysteryCard n={i + 1} /> : a.videoUrl ? <VideoFlipCard a={a} /> : <AnnouncedCard a={a} />}
+          {!a.announced ? <MysteryCard n={i + 1} poster={a.imageUrl || undefined} /> : a.videoUrl ? <VideoFlipCard a={a} /> : <AnnouncedCard a={a} />}
         </li>
       ))}
     </ul>
