@@ -148,7 +148,7 @@ function AnnouncedCard({ a, hint }: { a: CardAttraction; hint?: string }) {
         {a.time && <p className="text-sm text-fg-muted">No palco: {a.time}</p>}
         {hint && <p className="text-sm text-fg-faint">{hint}</p>}
         {a.instagram && (
-          <a href={igUrl(a.instagram)} target="_blank" rel="noopener noreferrer" className="btn ig-link mt-4 px-5! py-2.5!" onClick={(e) => e.stopPropagation()}>
+          <a href={igUrl(a.instagram)} target="_blank" rel="noopener noreferrer" className="btn ig-link mt-2 px-5! py-2!" onClick={(e) => e.stopPropagation()}>
             <InstagramIcon />@{a.instagram}
           </a>
         )}
