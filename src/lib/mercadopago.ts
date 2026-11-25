@@ -2,7 +2,7 @@ import MercadoPagoConfig, { Payment, PaymentRefund } from "mercadopago";
 import { db } from "@/lib/db";
 import { cardTotalCents } from "@/lib/format";
 import { deliverTickets, notifyFirstInstallment } from "@/lib/delivery";
-import { firstInstallmentCents, markFirstInstallmentPaid, markOrderPaid, refundOrder } from "@/lib/orders";
+import { firstInstallmentCents, firstInstallmentFeeCents, markFirstInstallmentPaid, markOrderPaid, refundOrder } from "@/lib/orders";
 import { sellerAccessToken, sellerPublicKey } from "@/lib/mp-account";
 
 // Pagamento DENTRO do site (Checkout Transparente do Mercado Pago):
@@ -71,7 +71,7 @@ export function amountFor(order: OrderForPay, kind: CheckoutKind) {
 
 /** Parte dos desenvolvedores neste pagamento: a taxa de serviço; no Pix em 2x, metade em cada parcela. */
 const feeFor = (order: OrderForPay, kind: CheckoutKind) =>
-  kind === "pix2x-1" ? Math.floor(order.feeCents / 2) : kind === "pix2x-2" ? order.feeCents - Math.floor(order.feeCents / 2) : order.feeCents;
+  kind === "pix2x-1" ? firstInstallmentFeeCents(order.feeCents) : kind === "pix2x-2" ? order.feeCents - firstInstallmentFeeCents(order.feeCents) : order.feeCents;
 
 const describe = (order: OrderForPay, kind: CheckoutKind) =>
   `${order.event.name} ${order.event.edition} · ${order.tickets.length} ingresso(s)${kind === "pix2x-1" ? " · 1ª parcela" : kind === "pix2x-2" ? " · 2ª parcela" : ""}`;

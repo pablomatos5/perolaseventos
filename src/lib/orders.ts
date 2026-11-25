@@ -192,6 +192,8 @@ export async function refundOrder(orderId: string) {
 
 /** 1ª parcela do Pix em 2x: metade do total, arredondada para cima (a 2ª é o que falta). */
 export const firstInstallmentCents = (totalCents: number) => Math.ceil(totalCents / 2);
+/** Parte da taxa de serviço que vai na 1ª parcela (metade, para baixo); a 2ª leva o resto. */
+export const firstInstallmentFeeCents = (feeCents: number) => Math.floor(feeCents / 2);
 
 const DAY = 86_400_000;
 /** Fim do dia (23h59 em Belém, UTC−3) da data `d`. */

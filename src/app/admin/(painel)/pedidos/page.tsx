@@ -12,7 +12,7 @@ const STATUS: Record<string, string> = {
   PENDING: "aguardando pagamento",
   PARTIAL: "Pix 2x · 1ª parcela paga",
   PAID: "pago",
-  EXPIRED: "expirado",
+  EXPIRED: "reserva expirada",
   CANCELED: "cancelado",
   REFUNDED: "estornado",
 };
@@ -31,8 +31,12 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
   const dev = await isDev();
   const refundResult = sp.estorno === "ok" ? "ok" : sp.estorno === "erro" ? (typeof sp.msg === "string" ? sp.msg : "erro desconhecido") : null;
 
+  const now = new Date();
   const where: Prisma.OrderWhereInput = { eventId: event.id };
-  if (status && status in STATUS) where.status = status as Prisma.OrderWhereInput["status"];
+  // reserva vencida sem pagar continua PENDING no banco: o filtro segue o que a lista mostra
+  if (status === "PENDING") Object.assign(where, { status: "PENDING", expiresAt: { gt: now } });
+  else if (status === "EXPIRED") where.AND = [{ OR: [{ status: "EXPIRED" }, { status: "PENDING", expiresAt: { lte: now } }] }];
+  else if (status && status in STATUS) where.status = status as Prisma.OrderWhereInput["status"];
   if (q) {
     where.OR = [
       { code: { equals: q.toUpperCase() } },
@@ -139,6 +143,7 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                   status={o.status}
                   createdAt={o.createdAt}
                   paymentRef={o.paymentRef}
+                  firstPaymentRef={o.firstPaymentRef}
                   pix={o.pixCharges}
                   card={cardBy.get(o.code) ?? []}
                 />
@@ -147,11 +152,12 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                   {lastEmail && ` · e-mail: ${lastEmail.ok ? "enviado" : `falhou (${lastEmail.detail})`}`}
                 </div>
               </div>
-              {o.status === "PARTIAL" && dev && o.firstPaymentRef && /^\d+$/.test(o.firstPaymentRef) && (
+              {o.status === "PARTIAL" && (
                 <div className="flex flex-wrap gap-2">
                   <a href={orderLink(o.id)} target="_blank" rel="noopener noreferrer" className="btn px-4! py-2!">
                     Ver pedido
                   </a>
+                  {dev && o.firstPaymentRef && /^\d+$/.test(o.firstPaymentRef) && (
                   <form action={refundOrderAction.bind(null, o.id)}>
                     <ConfirmButton
                       className="btn btn-danger px-4! py-2!"
@@ -160,6 +166,7 @@ export default async function PedidosPage({ searchParams }: PageProps<"/admin/pe
                       Estornar 1ª parcela
                     </ConfirmButton>
                   </form>
+                  )}
                 </div>
               )}
               {o.status === "PAID" && (
@@ -227,20 +234,30 @@ function PaymentTrail({
   status,
   createdAt,
   paymentRef,
+  firstPaymentRef,
   pix,
   card,
 }: {
   status: string;
   createdAt: Date;
   paymentRef: string | null;
+  firstPaymentRef: string | null;
   pix: { kind: string; createdAt: Date; paymentId: string }[];
   card: { at: Date; action: string; detail: string }[];
 }) {
   const steps: { text: string; tone: "ok" | "bad" | "info" }[] = [];
-  if (status === "PAID" && paymentRef && /^\d+$/.test(paymentRef)) {
-    steps.push({ text: pix.some((p) => p.paymentId === paymentRef) ? "pago no Pix" : "pago no cartão", tone: "ok" });
+  // pagamentos confirmados: o à vista (ou a 2ª parcela) e a 1ª parcela do Pix 2x
+  const paidIds = new Set<string>();
+  if (firstPaymentRef && /^\d+$/.test(firstPaymentRef)) {
+    steps.push({ text: "1ª parcela paga no Pix", tone: "ok" });
+    paidIds.add(firstPaymentRef);
   }
-  for (const p of pix) if (!(status === "PAID" && p.paymentId === paymentRef)) steps.push({ text: `${PIX_KIND[p.kind] ?? "Pix"} gerado ${hhmm(p.createdAt)}`, tone: "info" });
+  if (status === "PAID" && paymentRef && /^\d+$/.test(paymentRef)) {
+    const onPix = pix.some((p) => p.paymentId === paymentRef);
+    steps.push({ text: `${firstPaymentRef ? "2ª parcela paga" : "pago"} no ${onPix ? "Pix" : "cartão"}`, tone: "ok" });
+    paidIds.add(paymentRef);
+  }
+  for (const p of pix) if (!paidIds.has(p.paymentId)) steps.push({ text: `${PIX_KIND[p.kind] ?? "Pix"} gerado ${hhmm(p.createdAt)}`, tone: "info" });
   for (const l of card) {
     const part = l.detail.split(" · ");
     if (l.action === "abriu o pagamento com cartão") steps.push({ text: `abriu o cartão ${hhmm(l.at)}`, tone: "info" });

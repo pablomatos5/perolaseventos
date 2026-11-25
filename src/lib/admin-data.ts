@@ -1,6 +1,6 @@
-import { holdingOrder } from "@/lib/batches";
-import { currentBatch } from "@/lib/batches";
+import { currentBatch, holdingOrder } from "@/lib/batches";
 import { db } from "@/lib/db";
+import { firstInstallmentFeeCents } from "@/lib/orders";
 
 /** Evento que o painel administra: o próximo publicado (o mesmo que a página inicial vende). */
 export function activeEvent() {
@@ -82,15 +82,23 @@ export async function batchReport(eventId: string) {
 
 export async function kpis(eventId: string) {
   const now = new Date();
-  const [paid, courtesies, checkins, pending, revenue, late, partial] = await Promise.all([
+  const [paid, courtesies, checkins, pending, revenue, late, partials] = await Promise.all([
     db.ticket.count({ where: { status: "VALID", priceCents: { gt: 0 }, order: { eventId } } }),
     db.ticket.count({ where: { status: "VALID", priceCents: 0, order: { eventId } } }),
     db.ticket.count({ where: { status: "VALID", usedAt: { not: null }, order: { eventId } } }),
     db.order.count({ where: { eventId, status: "PENDING", expiresAt: { gt: now } } }),
     db.order.aggregate({ where: { eventId, status: "PAID" }, _sum: { totalCents: true, feeCents: true } }),
     db.order.count({ where: { eventId, status: "PAID", paidLate: true } }),
-    db.order.count({ where: { eventId, status: "PARTIAL", expiresAt: { gt: now } } }),
+    db.order.findMany({ where: { eventId, status: "PARTIAL" }, select: { firstPaidCents: true, feeCents: true, expiresAt: true } }),
   ]);
-  const feeCents = revenue._sum.feeCents ?? 0;
-  return { paid, courtesies, checkins, pending, partial, revenueCents: (revenue._sum.totalCents ?? 0) - feeCents, feeCents, late };
+  // Pix 2x com só a 1ª parcela: esse dinheiro já caiu (metade da taxa com os devs, o resto com o evento),
+  // inclusive nos que venceram sem a 2ª — a vaga voltou à venda, mas a 1ª parcela não é devolvida sozinha.
+  const partialFee = partials.reduce((s, o) => s + firstInstallmentFeeCents(o.feeCents), 0);
+  const partial = {
+    active: partials.filter((o) => o.expiresAt > now).length,
+    overdue: partials.filter((o) => o.expiresAt <= now).length,
+    receivedCents: partials.reduce((s, o) => s + o.firstPaidCents, 0) - partialFee,
+  };
+  const feeCents = (revenue._sum.feeCents ?? 0) + partialFee;
+  return { paid, courtesies, checkins, pending, partial, revenueCents: (revenue._sum.totalCents ?? 0) - (revenue._sum.feeCents ?? 0), feeCents, late };
 }

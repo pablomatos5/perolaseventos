@@ -34,14 +34,21 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
   const money = [
     { label: "Receita confirmada", value: formatBRL(k.revenueCents), hint: "ingressos pagos (sem a taxa de serviço)" },
-    { label: "Taxa de serviço", value: formatBRL(k.feeCents), hint: "vai para os desenvolvedores" },
+    {
+      label: "Pix 2x · 1ª parcela recebida",
+      value: formatBRL(k.partial.receivedCents),
+      hint: k.partial.overdue
+        ? `já na conta · ${k.partial.overdue} com a 2ª vencida (vaga liberada, decidir a devolução)`
+        : "já na conta, ingresso sai depois da 2ª (sem a taxa)",
+    },
+    { label: "Taxa de serviço", value: formatBRL(k.feeCents), hint: "vai para os desenvolvedores (inclui metade da taxa das 1ª parcelas)" },
   ];
   const cards = [
     { label: "Ingressos vendidos", value: k.paid },
     { label: "Cortesias", value: k.courtesies },
     { label: "Check-ins", value: k.checkins },
     { label: "Pagamentos em aberto", value: k.pending },
-    { label: "Pix 2x esperando a 2ª", value: k.partial },
+    { label: "Pix 2x esperando a 2ª", value: k.partial.active },
   ];
 
   return (
@@ -59,7 +66,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       </div>
 
       <div className="grid gap-4">
-        <dl className="grid gap-4 sm:grid-cols-2">
+        <dl className="grid gap-4 sm:grid-cols-3">
           {money.map((c) => (
             <div key={c.label} className="kpi is-money">
               <dt>{c.label}</dt>

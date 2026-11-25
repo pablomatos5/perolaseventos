@@ -10,7 +10,7 @@ import { paymentMode } from "@/lib/payment-mode";
 const DAY_MS = 86_400_000;
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
-  PENDING: "Aguardando pagamento",
+  PENDING: "Aguardando pagamento (no prazo)",
   PARTIAL: "Pix 2x · 1ª parcela paga",
   PAID: "Pago",
   EXPIRED: "Expirado (reserva perdida)",
@@ -54,8 +54,14 @@ export default async function InsightsPage() {
   const mpDaysLeft = mpAcc ? Math.round((mpAcc.expiresAt.getTime() - new Date().getTime()) / DAY_MS) : 0;
 
   const earnings = [
-    { label: "Taxa recebida", value: formatBRL(d.feeConfirmedCents), hint: `${d.paidTickets} ingresso(s) pago(s) × ${formatBRL(SERVICE_FEE_CENTS)}` },
-    { label: "Taxa em aberto", value: formatBRL(d.feePendingCents), hint: "pedidos pendentes / Pix 2x na 1ª parcela" },
+    {
+      label: "Taxa recebida",
+      value: formatBRL(d.feeConfirmedCents),
+      hint: `${d.paidTickets} ingresso(s) pago(s) × ${formatBRL(SERVICE_FEE_CENTS)} + metade nas 1ª parcelas do Pix 2x${
+        d.feeOverdueCents ? ` (${formatBRL(d.feeOverdueCents)} de Pix 2x com a 2ª vencida)` : ""
+      }`,
+    },
+    { label: "Taxa em aberto", value: formatBRL(d.feePendingCents), hint: "reservas no prazo + metade que falta nos Pix 2x no prazo" },
   ];
 
   return (
@@ -106,7 +112,7 @@ export default async function InsightsPage() {
           <div className="kpi">
             <dt>Perdidos</dt>
             <dd>{d.status.EXPIRED + d.status.CANCELED}</dd>
-            <span>expirados + cancelados</span>
+            <span>reservas vencidas sem pagar + cancelados</span>
           </div>
         </dl>
         <div className="glass-card grid gap-3 p-6 md:p-8">

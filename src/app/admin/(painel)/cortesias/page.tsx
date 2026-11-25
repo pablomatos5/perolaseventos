@@ -13,6 +13,8 @@ export default async function CortesiasPage() {
 
   const report = await batchReport(event.id);
   const hidden = report.flatMap((t) => t.rows.filter((r) => r.hidden).map((r) => ({ id: r.id, label: `${t.name} · ${r.name}`, remaining: r.remaining })));
+  // total de verdade (a lista abaixo mostra só as 100 mais recentes)
+  const issuedTickets = await db.ticket.count({ where: { status: "VALID", priceCents: 0, order: { eventId: event.id, status: "PAID", totalCents: 0 } } });
   const issued = await db.order.findMany({
     where: { eventId: event.id, status: "PAID", totalCents: 0 },
     orderBy: { createdAt: "desc" },
@@ -39,7 +41,7 @@ export default async function CortesiasPage() {
       )}
 
       <section>
-        <h2 className="eyebrow rule">Emitidas ({issued.reduce((s, o) => s + o._count.tickets, 0)})</h2>
+        <h2 className="eyebrow rule">Emitidas ({issuedTickets})</h2>
         <ul className="mt-5 divide-y divide-line-soft border-y border-line-soft text-sm">
           {issued.map((o) => (
             <li key={o.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 py-3">

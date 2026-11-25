@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { checkPassword, endSession, requireAdmin, requireDev, startSession } from "@/lib/admin-auth";
+import { checkPassword, endSession, isDev, requireAdmin, requireDev, startSession } from "@/lib/admin-auth";
 import { activeEvent } from "@/lib/admin-data";
 import { db } from "@/lib/db";
 import { deliverTickets } from "@/lib/delivery";
@@ -51,13 +51,16 @@ export async function logoutAction() {
   redirect("/admin/login");
 }
 
+/** Quem fez a ação, para o Registro: o acesso dos devs também usa as telas da equipe. */
+const actor = async () => ((await isDev()) ? "dev" : "painel");
+
 // ───────── lotes ─────────
 
 /** Virada manual: encerra o lote agora; o próximo da fila abre sozinho. */
 export async function closeBatchAction(batchId: string) {
   await requireAdmin();
   const b = await db.batch.update({ where: { id: batchId }, data: { closedAt: new Date() }, include: { ticketType: true } });
-  await audit("painel", "virou o lote", `${b.ticketType.name} · ${b.name}`);
+  await audit(await actor(), "virou o lote", `${b.ticketType.name} · ${b.name}`);
   revalidatePath("/admin");
 }
 
@@ -65,7 +68,7 @@ export async function closeBatchAction(batchId: string) {
 export async function reopenBatchAction(batchId: string) {
   await requireAdmin();
   const b = await db.batch.update({ where: { id: batchId }, data: { closedAt: null, endsAt: null }, include: { ticketType: true } });
-  await audit("painel", "reabriu o lote", `${b.ticketType.name} · ${b.name}`);
+  await audit(await actor(), "reabriu o lote", `${b.ticketType.name} · ${b.name}`);
   revalidatePath("/admin");
 }
 
@@ -73,7 +76,7 @@ export async function togglePauseAction(ticketTypeId: string) {
   await requireAdmin();
   const t = await db.ticketType.findUniqueOrThrow({ where: { id: ticketTypeId } });
   await db.ticketType.update({ where: { id: ticketTypeId }, data: { paused: !t.paused } });
-  await audit("painel", t.paused ? "retomou as vendas" : "pausou as vendas", t.name);
+  await audit(await actor(), t.paused ? "retomou as vendas" : "pausou as vendas", t.name);
   revalidatePath("/admin");
 }
 
@@ -91,7 +94,7 @@ export async function updateQuantityAction(batchId: string, _prev: FormState, fo
     }));
   if (qty < taken) return { error: `Mínimo ${taken}: já vendidos/reservados${offline ? ` (inclui ${offline} vendidos fora do site)` : ""}.` };
   const b = await db.batch.update({ where: { id: batchId }, data: { quantity: qty }, include: { ticketType: true } });
-  await audit("painel", "mudou a quantidade do lote", `${b.ticketType.name} · ${b.name}: ${qty}`);
+  await audit(await actor(), "mudou a quantidade do lote", `${b.ticketType.name} · ${b.name}: ${qty}`);
   revalidatePath("/admin");
   return { ok: "Quantidade atualizada." };
 }
@@ -119,7 +122,7 @@ export async function updatePriceAction(batchId: string, _prev: FormState, form:
     include: { ticketType: true },
   });
   const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  await audit("painel", "mudou o preço do lote", `${b.ticketType.name} · ${b.name}: masc ${brl(masc)} · fem ${brl(fem ?? masc)}`);
+  await audit(await actor(), "mudou o preço do lote", `${b.ticketType.name} · ${b.name}: masc ${brl(masc)} · fem ${brl(fem ?? masc)}`);
   revalidatePath("/admin");
   revalidatePath("/");
   return { ok: "Preço salvo." };
@@ -134,7 +137,7 @@ export async function updateSplitPixAction(eventId: string, _prev: FormState, fo
   if (!Number.isInteger(days) || days < 1 || days > 90) return { error: "Prazo de 1 a 90 dias." };
   const enabled = form.get("enabled") === "on";
   await db.event.update({ where: { id: eventId }, data: { splitPixEnabled: enabled, splitPixDays: days } });
-  await audit("painel", enabled ? "ligou o Pix em 2x" : "desligou o Pix em 2x", `prazo da 2ª parcela: ${days} dia(s)`);
+  await audit(await actor(), enabled ? "ligou o Pix em 2x" : "desligou o Pix em 2x", `prazo da 2ª parcela: ${days} dia(s)`);
   revalidatePath("/admin");
   return { ok: enabled ? `Pix em 2x ligado · 2ª parcela em até ${days} dia(s).` : "Pix em 2x desligado." };
 }
@@ -155,7 +158,7 @@ export async function disconnectMpAction() {
   await requireAdmin();
   const acc = await connectedAccount();
   await disconnectAccount();
-  if (acc) await audit("painel", "desconectou a conta Mercado Pago do evento", `${acc.nickname || "conta"} (${acc.mpUserId})`);
+  if (acc) await audit(await actor(), "desconectou a conta Mercado Pago do evento", `${acc.nickname || "conta"} (${acc.mpUserId})`);
   revalidatePath("/admin");
 }
 
@@ -166,7 +169,7 @@ export async function updateCardFeeAction(eventId: string, _prev: FormState, for
   const bps = Math.round(pct * 100);
   await db.event.update({ where: { id: eventId }, data: { cardFeeBps: bps } });
   const label = `${(bps / 100).toFixed(2).replace(".", ",")}%`;
-  await audit("painel", "mudou a taxa do cartão repassada", label);
+  await audit(await actor(), "mudou a taxa do cartão repassada", label);
   revalidatePath("/admin");
   return { ok: bps > 0 ? `Cartão com acréscimo de ${label} (o evento recebe o valor cheio).` : "Cartão pelo mesmo preço do Pix." };
 }
@@ -180,7 +183,7 @@ export async function createCourtesyAction(_prev: FormState, form: FormData): Pr
   try {
     const order = await createCourtesy({ eventId: event.id, ...parsed.data });
     await deliverTickets(order.id);
-    await audit("painel", "emitiu cortesia", `${parsed.data.qty}x para ${parsed.data.name} (${order.code})${parsed.data.note ? ` · ${parsed.data.note}` : ""}`);
+    await audit(await actor(), "emitiu cortesia", `${parsed.data.qty}x para ${parsed.data.name} (${order.code})${parsed.data.note ? ` · ${parsed.data.note}` : ""}`);
     revalidatePath("/admin/cortesias");
     return { ok: `Cortesia ${order.code} emitida e enviada para ${parsed.data.email}.` };
   } catch (e) {
@@ -196,7 +199,7 @@ export async function resendAction(orderId: string) {
   const order = await db.order.findUniqueOrThrow({ where: { id: orderId } });
   if (order.status !== "PAID") throw new Error("Só pedidos pagos têm ingresso para reenviar.");
   await deliverTickets(orderId);
-  await audit("painel", "reenviou ingressos", `pedido ${order.code}`);
+  await audit(await actor(), "reenviou ingressos", `pedido ${order.code}`);
   revalidatePath("/admin/pedidos");
 }
 
@@ -210,11 +213,14 @@ export async function refundOrderAction(orderId: string) {
   let to = "/admin/pedidos?estorno=ok";
   try {
     const { order, payments } = await refundPayments(orderId);
-    await audit("dev", "estornou o pedido", `pedido ${order.code} · ${formatBRL(order.totalCents)} · pagamento(s) ${payments.join(", ")}`);
+    // Pix 2x só com a 1ª parcela: o estorno devolve só ela
+    const amount = order.status === "PARTIAL" ? `1ª parcela ${formatBRL(order.firstPaidCents)}` : formatBRL(order.totalCents);
+    await audit("dev", "estornou o pedido", `pedido ${order.code} · ${amount} · pagamento(s) ${payments.join(", ")}`);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[mercadopago] estorno falhou:", e);
-    await audit("dev", "estorno falhou", `pedido ${orderId}: ${msg}`);
+    const code = (await db.order.findUnique({ where: { id: orderId }, select: { code: true } }))?.code ?? orderId;
+    await audit("dev", "estorno falhou", `pedido ${code}: ${msg}`);
     to = `/admin/pedidos?estorno=erro&msg=${encodeURIComponent(msg.slice(0, 160))}`;
   }
   revalidatePath("/admin/pedidos");
@@ -231,7 +237,7 @@ export async function reissueAction(orderId: string) {
   if (order.status !== "PAID") throw new Error("Só pedidos pagos têm QR para reemitir.");
   const { count } = await db.ticket.updateMany({ where: { orderId, status: "VALID", usedAt: null }, data: { qrVersion: { increment: 1 } } });
   await deliverTickets(orderId);
-  await audit("painel", "reemitiu QR", `pedido ${order.code}: ${count} ingresso(s); os QR anteriores não valem mais`);
+  await audit(await actor(), "reemitiu QR", `pedido ${order.code}: ${count} ingresso(s); os QR anteriores não valem mais`);
   revalidatePath("/admin/pedidos");
 }
 
@@ -252,7 +258,7 @@ export async function createDeviceAction(_prev: DeviceState, form: FormData): Pr
   // o código vai depois do "#": não aparece em log de servidor nem é enviado em requisições
   const link = `${proto}://${host}/portaria/ativar#${token}`;
   const qr = await QRCode.toDataURL(link, { margin: 1, width: 320 });
-  await audit("painel", "autorizou aparelho da portaria", name);
+  await audit(await actor(), "autorizou aparelho da portaria", name);
   revalidatePath("/admin/portaria");
   return { name, link, qr };
 }
@@ -260,6 +266,6 @@ export async function createDeviceAction(_prev: DeviceState, form: FormData): Pr
 export async function revokeDeviceAction(deviceId: string) {
   await requireAdmin();
   const d = await db.portariaDevice.update({ where: { id: deviceId }, data: { revokedAt: new Date() } });
-  await audit("painel", "desautorizou aparelho da portaria", d.name);
+  await audit(await actor(), "desautorizou aparelho da portaria", d.name);
   revalidatePath("/admin/portaria");
 }

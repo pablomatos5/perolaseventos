@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { OrderStatus } from "@/generated/prisma/enums";
+import { firstInstallmentFeeCents } from "@/lib/orders";
 
 // Números mais detalhados do evento, só para a visão de desenvolvedor (/admin/insights).
 // Tudo derivado do banco: ganho da taxa de serviço, funil de conversão, formas de pagamento,
@@ -16,13 +17,14 @@ export type StatusCounts = Record<OrderStatus, number>;
 
 export type DevInsights = {
   // ganho dos desenvolvedores (taxa de serviço)
-  feeConfirmedCents: number; // já recebido (pedidos pagos)
-  feePendingCents: number; // em aberto (pendentes + Pix 2x na 1ª parcela)
+  feeConfirmedCents: number; // já recebido (pedidos pagos + metade da taxa nas 1ª parcelas do Pix 2x)
+  feePendingCents: number; // em aberto (pendentes no prazo + metade que falta nos Pix 2x no prazo)
+  feeOverdueCents: number; // metade já recebida em Pix 2x com a 2ª vencida (fica, salvo estorno)
   paidTickets: number; // ingressos pagos (base da taxa)
   // funil de conversão (só pedidos que cobram; cortesia não entra)
   attempts: number; // pedidos iniciados que cobram
   paidPaying: number; // desses, pagos
-  status: StatusCounts; // contagem por situação
+  status: StatusCounts; // contagem por situação (reserva vencida sem pagar conta como EXPIRED)
   revenueByStatusCents: Record<OrderStatus, number>; // valor em jogo por situação (total do cliente)
   // formas de pagamento (pedidos pagos que cobram)
   pay: { pixAvista: number; pix2x: number; cartaoOutros: number };
@@ -46,7 +48,9 @@ const ZERO_STATUS: StatusCounts = { PENDING: 0, PARTIAL: 0, PAID: 0, EXPIRED: 0,
 
 export async function devInsights(eventId: string): Promise<DevInsights> {
   const now = new Date();
-  const since = new Date(now.getTime() - 13 * DAY_MS); // janela de 14 dias (hoje inclusive)
+  // janela de 14 dias (hoje inclusive), a partir da meia-noite de Belém (UTC−3 fixo)
+  const todayStart = new Date(`${dayKeyFmt.format(now)}T00:00:00-03:00`);
+  const since = new Date(todayStart.getTime() - 13 * DAY_MS);
   const soon = new Date(now.getTime() + 3 * 60 * 60_000); // "expira em breve" = nas próximas 3h
   const inEvent = { order: { eventId } };
 
@@ -56,10 +60,11 @@ export async function devInsights(eventId: string): Promise<DevInsights> {
     paidPaying,
     feeConfirmed,
     feePending,
+    partials,
+    lapsed,
     paidTicketsAgg,
-    pixAvista,
+    paidFull,
     pix2x,
-    withPix,
     genderRows,
     cortesias,
     avgTicket,
@@ -81,11 +86,14 @@ export async function devInsights(eventId: string): Promise<DevInsights> {
     db.order.count({ where: { eventId, totalCents: { gt: 0 } } }),
     db.order.count({ where: { eventId, status: "PAID", totalCents: { gt: 0 } } }),
     db.order.aggregate({ where: { eventId, status: "PAID" }, _sum: { feeCents: true } }),
-    db.order.aggregate({ where: { eventId, status: { in: ["PENDING", "PARTIAL"] }, expiresAt: { gt: now } }, _sum: { feeCents: true } }),
+    db.order.aggregate({ where: { eventId, status: "PENDING", expiresAt: { gt: now } }, _sum: { feeCents: true } }),
+    db.order.findMany({ where: { eventId, status: "PARTIAL" }, select: { feeCents: true, expiresAt: true } }),
+    // reserva que passou do prazo sem pagar continua PENDING no banco: aqui conta como expirada
+    db.order.aggregate({ where: { eventId, status: "PENDING", expiresAt: { lte: now } }, _count: { _all: true }, _sum: { totalCents: true } }),
     db.ticket.count({ where: { status: "VALID", priceCents: { gt: 0 }, ...inEvent } }),
-    db.order.count({ where: { eventId, status: "PAID", paymentPlan: "FULL", totalCents: { gt: 0 }, pixCharges: { some: { kind: "pix" } } } }),
+    // pago no Pix = o pagamento que confirmou é uma cobrança Pix (gerar um Pix e pagar no cartão conta como cartão)
+    db.order.findMany({ where: { eventId, status: "PAID", paymentPlan: "FULL", totalCents: { gt: 0 } }, select: { paymentRef: true, pixCharges: { select: { paymentId: true } } } }),
     db.order.count({ where: { eventId, status: "PAID", paymentPlan: "PIX_2X" } }),
-    db.order.count({ where: { eventId, status: "PAID", paymentPlan: "FULL", totalCents: { gt: 0 } } }),
     db.ticket.groupBy({ by: ["gender"], where: { status: "VALID", priceCents: { gt: 0 }, ...inEvent }, _count: { _all: true } }),
     db.ticket.count({ where: { status: "VALID", priceCents: 0, ...inEvent } }),
     db.ticket.aggregate({ where: { status: "VALID", priceCents: { gt: 0 }, ...inEvent }, _avg: { priceCents: true } }),
@@ -100,7 +108,8 @@ export async function devInsights(eventId: string): Promise<DevInsights> {
     db.order.count({ where: { eventId, status: "PARTIAL", expiresAt: { lt: now } } }),
     db.order.count({ where: { eventId, status: "PAID", paidLate: true } }),
     db.order.findMany({
-      where: { eventId, createdAt: { gte: since } },
+      // pedidos criados OU pagos na janela (um pedido de antes pago hoje conta hoje); cortesia fora
+      where: { eventId, totalCents: { gt: 0 }, OR: [{ createdAt: { gte: since } }, { paidAt: { gte: since } }] },
       select: { createdAt: true, paidAt: true, status: true, totalCents: true, feeCents: true },
     }),
     db.ticketType.count({ where: { eventId } }),
@@ -113,11 +122,27 @@ export async function devInsights(eventId: string): Promise<DevInsights> {
     status[r.status] = r._count._all;
     revenueByStatusCents[r.status] = r._sum.totalCents ?? 0;
   }
+  status.PENDING -= lapsed._count._all;
+  status.EXPIRED += lapsed._count._all;
+  revenueByStatusCents.PENDING -= lapsed._sum.totalCents ?? 0;
+  revenueByStatusCents.EXPIRED += lapsed._sum.totalCents ?? 0;
+
+  // Pix 2x: a 1ª parcela já levou metade da taxa; a outra metade só vem com a 2ª
+  let partialFirstFee = 0;
+  let partialSecondFee = 0;
+  let feeOverdueCents = 0;
+  for (const o of partials) {
+    const first = firstInstallmentFeeCents(o.feeCents);
+    partialFirstFee += first;
+    if (o.expiresAt > now) partialSecondFee += o.feeCents - first;
+    else feeOverdueCents += first;
+  }
+  const pixAvista = paidFull.filter((o) => o.paymentRef && o.pixCharges.some((c) => c.paymentId === o.paymentRef)).length;
 
   // linha do tempo: 14 baldes por dia (do mais antigo ao hoje)
   const buckets = new Map<string, { label: string; created: number; paid: number; revenueCents: number; feeCents: number }>();
   for (let i = 0; i < 14; i++) {
-    const d = new Date(since.getTime() + i * DAY_MS);
+    const d = new Date(since.getTime() + i * DAY_MS + 12 * 3_600_000); // meio-dia: rótulo sempre no dia certo
     buckets.set(dayKeyFmt.format(d), { label: dayLabelFmt.format(d), created: 0, paid: 0, revenueCents: 0, feeCents: 0 });
   }
   for (const o of recent) {
@@ -137,14 +162,15 @@ export async function devInsights(eventId: string): Promise<DevInsights> {
   const genderOf = (g: "MASCULINO" | "FEMININO" | null) => genderRows.find((r) => r.gender === g)?._count._all ?? 0;
 
   return {
-    feeConfirmedCents: feeConfirmed._sum.feeCents ?? 0,
-    feePendingCents: feePending._sum.feeCents ?? 0,
+    feeConfirmedCents: (feeConfirmed._sum.feeCents ?? 0) + partialFirstFee,
+    feePendingCents: (feePending._sum.feeCents ?? 0) + partialSecondFee,
+    feeOverdueCents,
     paidTickets: paidTicketsAgg,
     attempts,
     paidPaying,
     status,
     revenueByStatusCents,
-    pay: { pixAvista, pix2x, cartaoOutros: Math.max(0, withPix - pixAvista) },
+    pay: { pixAvista, pix2x, cartaoOutros: paidFull.length - pixAvista },
     timeline,
     gender: { masculino: genderOf("MASCULINO"), feminino: genderOf("FEMININO"), cortesia: cortesias },
     avgTicketCents: Math.round(avgTicket._avg.priceCents ?? 0),
